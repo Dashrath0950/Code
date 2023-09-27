@@ -1,0 +1,783 @@
+-------First we install three packages----
+1-Microsoft.EntityFrameworkCore----
+2-Microsoft.EntityFrameworkCore.sqlserver----
+3-Microsoft.EntityFrameworkCore.Tools----
+Choose version as ur visual studio version 2013,2014,2015,2017,2019,2022 etc
+database ke liye only two commands pm>add-migration 'a' and pm>update-database
+Build project
+database apne aap ban jayega bs value add krni hai sql me gender,country,state,hobby ki-----
+mvc core me thoda sa changes view me or thoda sa controller me
+-------------------------------------------------------------------d:\corecrud+db\corecrud\appsettings.json-----------------------------------------------
+////////////// using Entity Framework database Code first approach////////////////////////
+{
+  "ConnectionStrings": {
+    "xyz": "data source=DESKTOP-UTVKD93;initial catalog=dbCoreCrud;trusted_connection=true;MultipleActiveResultSets=true"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft": "Warning",
+      "Microsoft.Hosting.Lifetime": "Information"
+    }
+  },
+  "AllowedHosts": "*"
+}
+--------------------------------------------------------------d:\corecrud+db\corecrud\Models\DatabaseContext.cs--------------------------------------------------
+using Microsoft.EntityFrameworkCore;// install to pahle kr liya, ab use karenge using Microsoft.EntityFrameworkCore
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace CoreCrud.Models
+{
+    public class DatabaseContext : DbContext // databaseContext class ko inherit kiya colon lga kr DbContext se
+    {                                                // .net core Enable Migrations command nhi chalti sirf do chalti hai (add-migration,update-database)
+        public DatabaseContext(DbContextOptions<DatabaseContext> options) :base(options) // databaseContext class ka constructor same class ke name se hota hai, yaha thoda diff hai agr web.config hota to base keyword ke help se attach kr lete apne "xyz" name ko  
+        {                                                                                // xyz ko pahle startup.cs me attach karenge or jo database context hai usko startup.cs se attach karenge
+
+        }
+
+        public DbSet<tblemployee> tblemployees { get; set; }
+        public DbSet<tblcountry> tblcountries { get; set; }
+        public DbSet<tblstate> tblstates { get; set; }
+        public DbSet<tblgender> tblgenders { get; set; }
+        public DbSet<tblhobby> tblhobbies { get; set; }
+
+
+
+    }
+}
+-----------------------------------------------------------------------------d:\corecrud+db\corecrud\Startup.cs---------------------------------------------
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore; // namespace add karenge
+using CoreCrud.Models; // model class ka folder add karenge agr ni karenge to vo samjhega ni
+
+namespace CoreCrud
+{
+    public class Startup
+    {
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
+        public IConfiguration Configuration { get; }
+
+        // This method gets called by the runtime. Use this method to add services to the container.
+        public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddControllersWithViews();
+            services.AddDbContext<DatabaseContext>(option => option.UseSqlServer(Configuration.GetConnectionString("xyz"))); // ye line add karenge
+        }
+
+        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        {
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+            else
+            {
+                app.UseExceptionHandler("/Home/Error");
+                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                app.UseHsts();
+            }
+            app.UseHttpsRedirection();
+            app.UseStaticFiles();
+
+            app.UseRouting();
+
+            app.UseAuthorization();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllerRoute(
+                    name: "default",
+                    pattern: "{controller=Home}/{action=Index}/{id?}");
+            });
+        }
+    }
+}
+
+-------------------------------------------------------d:\corecrud+db\corecrud\Models\tblemployee.cs-----------------------------------
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace CoreCrud.Models
+{
+    public class tblemployee
+    {
+        [Key]
+        public int empid { get; set; }
+        public string name { get; set; }
+        public int salary { get; set; }
+        public int country { get; set; }
+        public int state { get; set; }
+        public int gender { get; set; }
+        public string hobby { get; set; }
+        public string img { get; set; }
+    }
+}
+--------------------------------------------------------------d:\corecrud+db\corecrud\Models\tblemployee1.cs-----------------------------------------------
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace CoreCrud.Models
+{
+    public class tblemployee1
+    {
+        
+        public int empid { get; set; }
+        public string name { get; set; }
+        public int salary { get; set; }
+        public int country { get; set; }
+        public int state { get; set; }
+        public int gender { get; set; }
+        public string hobby { get; set; }
+        public string img { get; set; }
+        public  List<tblcountry> lstcountry{ get; set; }
+        public List<tblstate> lststate { get; set; }
+        public List<tblgender> lstgender { get; set; }
+        public List<tblhobby1> lsthobby1 { get; set; } // tbl hobby1 ka collection banayenge kyuki usme saari property milegi including ischecked property
+    }
+}
+-------------------------------------------------------------------------------------d:\corecrud+db\corecrud\Models\tblhobby.cs----------------------------------------
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace CoreCrud.Models
+{
+    public class tblhobby   // tbl hobby ki duplicate class banegi usme banega is checked property
+    {
+        [Key]
+        public int hid { get; set; }
+        public string hname { get; set; }
+
+    }
+}
+--------------------------------------------------------------d:\corecrud+db\corecrud\Models\tblhobby1.cs------------------------------------------------------
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace CoreCrud.Models
+{
+    public class tblhobby1
+    {                               // key original class me lagegi duplicate class me key nhi lagegi
+        public bool ischecked { get; set; }
+        public int hid { get; set; }
+        public string hname { get; set; }
+    }
+}
+
+--------------------------------------------------------------d:\corecrud+db\corecrud\Models\join.cs----------------------------------
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace CoreCrud.Models
+{
+    public class join
+    {
+        public int empid { get; set; }
+        public string name { get; set; }
+        public int salary { get; set; }
+        public string country { get; set; }
+        public string state { get; set; }
+        public string gender { get; set; }
+        public string hobby { get; set; }
+        public string img { get; set; }
+    }
+}
+-------------------------------------------------------------------------d:\corecrud+db\corecrud\Models\tblcountry.cs------------------------------------
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace CoreCrud.Models
+{
+    public class tblcountry
+    {
+        [Key]
+        public int cid { get; set; }
+        public string cname { get; set; }
+    }
+}
+----------------------------------------------------------------d:\corecrud+db\corecrud\Models\tblstate.cs-------------------------------------------------
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace CoreCrud.Models
+{
+    public class tblstate
+    {
+        [Key]
+        public int sid { get; set; }
+        public int cid { get; set; }
+        public string sname { get; set; }
+    }
+}
+--------------------------------------------------d:\corecrud+db\corecrud\Models\tblgender.cs------------------------------------------------------------------
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace CoreCrud.Models
+{
+    public class tblgender
+    {
+        [Key]
+        public int gid { get; set; }
+        public string gname { get; set; }
+
+    }
+}
+------------------------------------------------------------------------------------------Sql Database-------------------
+----- mvc core entity framework database code first approach se 
+----- sql me database likhne ki jarurat nhi padti code se apne aap create ho jata hai
+use dbCoreCrud
+select *from tblemployees
+truncate table tblemployees
+select *from tblcountries
+insert into tblcountries(cname)values('India'),('Pakistan')
+select *from tblstates
+insert into tblstates(cid,sname)values(1,'Delhi')
+insert into tblstates(cid,sname)values(1,'uP')
+insert into tblstates(cid,sname)values(2,'khayber')
+insert into tblstates(cid,sname)values(2,'sind')
+select *from tblgenders
+insert into tblgenders(gname)values('male'),('female'),('other')
+select *from tblhobbies
+insert into tblhobbies(hname)values('Reading'),('Playing Games'),('Wondering')
+
+-----------------------------------------------------------d:\corecrud+db\corecrud\Controllers\EmpController1.cs--------------------------------
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using CoreCrud.Models; // ye model class 
+using Microsoft.AspNetCore.Http; // img ke liye use krte hai
+using System.IO; // img ke liye use krte hai
+
+namespace CoreCrud.Controllers
+{
+    public class EmpController1 : Controller   // mvc core me controller page par koi diff nhi hai, view par 10 % change hai bas, Razor view pakad kr add krna hai
+    {
+        public readonly DatabaseContext _db; // readonly banane se isko memory bar bar reallocate nhi hoti
+        
+        public EmpController1(DatabaseContext context) // constructor class ke name se hota hai
+        {
+            _db = context;
+        }
+        
+        
+        public IActionResult Add(int id = 0) // .net mvc core me id hi use karenge parameter empid eid etc or kuchh nhi le sakte
+        {
+            ViewBag.BT = "Save";
+            tblemployee1 obj1 = new tblemployee1();
+            obj1.lstcountry = _db.tblcountries.ToList(); // core me tblcountries ki country sql database me jakar insert command se insert karenge
+            obj1.lstgender = _db.tblgenders.ToList();   // 
+            var hdata = _db.tblhobbies.ToList();    // saare record fetch karenge to ye error dega kyuki usme database me ischecked property nhi hai pr duplicate model class me hai or vo khali ho jaa rhi hai iske liye 
+            obj1.lsthobby1 = hdata.Select(h=>new tblhobby1  // yaha h means hdata
+            {
+                 hid=h.hid,
+                 hname=h.hname,
+                 ischecked=false                           // ischecked bhi aayega ab usko false kr denge
+            }).ToList();
+            if(id>0)
+            {
+                var data = (from a in _db.tblemployees where a.empid == id select a).ToList();
+                obj1.empid = data[0].empid;
+                obj1.name = data[0].name;
+                obj1.salary = data[0].salary;
+                obj1.country = data[0].country;
+                obj1.state = data[0].state;
+                obj1.gender = data[0].gender;
+                obj1.img = data[0].img;
+
+                string[] arr = data[0].hobby.Split(','); // edit ke liye coma se split karenge
+                foreach(var a in obj1.lsthobby1)
+                {
+                    foreach(var b in arr)
+                    {
+                        if (a.hname == b)
+                        {
+                            a.ischecked = true;
+                            break;
+                        }
+                            
+                    }
+                }
+                ViewBag.BT = "Update";
+
+            }
+            obj1.lststate = (from a in _db.tblstates where a.cid == obj1.country select a).ToList();
+            return View(obj1);
+        }
+
+        [HttpPost]
+        public IActionResult Add(tblemployee1 _emp1, IFormFile file)  // img ke liye IFormFile or namespace-using Microsoft.AspNetCore.Http; // lsthobby tblemployee1 ke ander milega isliye tblemployee1 object _emp1 use karenge 
+        {                                                             // mvc me httppostedfilebase me krte the img  ke liye
+            string HOB = "";
+            foreach(var a in _emp1.lsthobby1)
+            {
+                if(a.ischecked==true)
+                {
+                    HOB += a.hname + ",";  // hname ko access karne ke liye view pr se hname ko hidden me lekar aaye hai 
+                }
+            }
+            HOB = HOB.TrimEnd(',');
+
+            tblemployee _emp = new tblemployee();
+            // id nhi liya yaha id ki jarurat nhi hai
+            _emp.name = _emp1.name;
+            _emp.salary = _emp1.salary;
+            _emp.country = _emp1.country;   // sara data tblemployee1 se tblemployee me transfer kiya kyoki add ke liye tblemployee use ho rhi hai
+            _emp.state = _emp1.state;
+            _emp.gender = _emp1.gender;
+            _emp.hobby = HOB;             // HOB me hname hai isliye yaha HOB use kiya hai
+            _emp.img = _emp1.img;
+            if (_emp1.empid>0)
+            {
+                _emp.empid = _emp1.empid;                                     // yaha pr id ki jarurat hai update ke liye isliye empid ko transfer karenge _emp1 se _emp me
+                if (file != null)
+                {
+                    string FN = Path.GetFileName(file.FileName);            // img ka folder wwwroot ke ander banega
+                    string pth = Path.Combine("wwwroot/pics", FN);             // mvc .netcore me img ko folder me dalne ka tarika alag hai
+                    using (FileStream fs = System.IO.File.Create(pth))
+                    {
+                        file.CopyTo(fs);
+                        fs.Flush();                                   // file ko khali karne ke liye flush() use karenge
+                    }
+                    string pth1 = Path.Combine("wwwroot/pics", _emp1.img);   // update ke time par img ko folder se replace or delete krne ke liye
+                    System.IO.File.Delete(pth1);                            // update ke time par img ko folder se replace or delete krne ke liye
+                    _emp.img = FN;                                   // database me img ka naam daalenge
+                }                                             
+                _db.Entry(_emp).State = EntityState.Modified;      // mvc me jo likhte the modifed se pahle vo core me inbuilt hota ha likhne ki jarurat nhi
+            }
+            else
+            {
+                string FN = Path.GetFileName(file.FileName); // img ka folder wwwroot ke ander banega
+                string pth = Path.Combine("wwwroot/pics", FN);       // mvc core me img ko folder me dalne ka tarika alag hai
+                using (FileStream fs=System.IO.File.Create(pth))
+                {
+                    file.CopyTo(fs);
+                    fs.Flush(); // file ko khali karne ke liye flush() use karenge
+                }
+                    _emp.img = FN; // database me img ka naam daalenge
+                _db.tblemployees.Add(_emp);
+            }
+            
+            _db.SaveChanges();
+            return RedirectToAction("Show");
+        }
+
+        public IActionResult Delete(int id=0) // .net mvc core me id hi use karenge parameter empid eid etc or kuchh nhi le sakte
+        {
+            var data=_db.tblemployees.Find(id);
+            string pth = Path.Combine("wwwroot/pics", data.img); // img folder se delete karne ke liye
+            System.IO.File.Delete(pth);                          // img folder se delete karne ke liye
+            _db.tblemployees.Remove(data);
+            _db.SaveChanges();
+            
+            return RedirectToAction("Show");
+        }  
+
+        public IActionResult Show()
+        {
+           var data= (from a in _db.tblemployees
+                      join b in _db.tblcountries on a.country equals b.cid
+                      join c in _db.tblstates on a.state equals c.sid
+                      join d in _db.tblgenders on a.gender equals d.gid
+                      select new @join { empid=a.empid,name=a.name,salary=a.salary,gender=d.gname,hobby=a.hobby,img=a.img,country=b.cname,state=c.sname }).ToList();
+            
+            return View(data);
+        }
+
+        public JsonResult GetState(int A)
+        {
+            var data = (from a in _db.tblstates where a.cid == A select a).ToList();
+            return Json(data); // mvc core me json request behavior allow get nhi hota
+        }
+    }
+}
+
+---------------------------------------------------d:\corecrud+db\corecrud\Views\EmpController1\Add.cshtml------------------------------------------------------
+@model CoreCrud.Models.tblemployee1
+
+@{
+    ViewData["Title"] = "Add";
+}
+
+<h1>Add</h1>
+
+<h4>tblemployee</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Add" method="post" enctype="multipart/form-data">
+            @*// img ke liye enctype=multipar/form-data use karenge or method=post likhenge*@
+            @Html.HiddenFor(x => x.empid)
+            @Html.HiddenFor(x => x.img)   @*update ke time pr folder se img replace or delete krne ke liye hidden me lekar jaayenge*@
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="name" class="control-label"></label>
+                <input asp-for="name" class="form-control" />
+                <span asp-validation-for="name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="salary" class="control-label"></label>
+                <input asp-for="salary" class="form-control" />
+                <span asp-validation-for="salary" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="country" class="control-label"></label>
+                <select asp-for="country" class="form-control" asp-items="@(new SelectList(Model.lstcountry,"cid","cname"))" onchange="BindState()">
+                    <option value="0">--Select--</option>
+                </select>
+                <span asp-validation-for="country" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="state" class="control-label"></label>
+                <select asp-for="state" class="form-control" asp-items="@(new SelectList(Model.lststate,"sid","sname"))">
+                    <option value="0">--Select--</option>
+                </select>
+                <span asp-validation-for="state" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="gender" class="control-label"></label>
+                @foreach (var a in Model.lstgender)
+                {
+                    <input type="radio" asp-for="gender" value="@a.gid" /> @a.gname
+                    @*radiobtn banega input se mvc me @html se banta tha value me gid jaegi kyuki database me id jaati hai naam dikhane ke liye @a.gname*@
+                }
+                <span asp-validation-for="gender" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="hobby" class="control-label"></label>
+                @for (var i = 0; i < Model.lsthobby1.Count; i++)
+                {
+                    <input type="checkbox" asp-for="@Model.lsthobby1[i].ischecked" /> @Model.lsthobby1[i].hname
+                    <input type="hidden" asp-for="@Model.lsthobby1[i].hname" />
+                }
+
+                <span asp-validation-for="hobby" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="img" class="control-label"></label>
+                <input type="file" name="file" class="form-control" />
+                <span asp-validation-for="img" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="@ViewBag.BT" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script type="text/javascript">
+    function BindState()
+    {
+        if ($("#empid").val() > 0) {
+            $.ajax({
+                url: '../GetState',
+                type: 'post',
+                data: { A: $("#country").val() },
+                success: function (data) {
+                    $("#state").empty();
+                    $("#state").append($('<option></option>').html("--Select--").val(0));
+                    for (var i = 0; i < data.length; i++) {
+                        $("#state").append($('<option></option>').html(data[i].sname).val(data[i].sid));
+                    }
+
+                },
+                error: function () {
+                    alert('state not bind !!');
+                }
+            });
+        }
+        else {
+            $.ajax({
+                url: '../EmpController1/GetState',
+                type: 'post',
+                data: { A: $("#country").val() },
+                success: function (data) {
+                    $("#state").empty();
+                    $("#state").append($('<option></option>').html("--Select--").val(0));
+                    for (var i = 0; i < data.length; i++) {
+                        $("#state").append($('<option></option>').html(data[i].sname).val(data[i].sid));
+                    }
+                },
+                error: function () {
+                    alert('state not bind !!');
+                }
+            });
+        }
+    }
+</script>
+
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+
+------------------------------------------------------------------d:\corecrud+db\corecrud\Views\EmpController1\Show.cshtml----------------------------------------
+@model IEnumerable<CoreCrud.Models.join>
+
+@{
+    ViewData["Title"] = "Show";
+}
+
+<h1>Show</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.name)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.salary)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.country)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.state)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.gender)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.hobby)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.img)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.salary)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.country)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.state)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.gender)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.hobby)
+            </td>
+            @*<td>
+                @Html.DisplayFor(modelItem => item.img) img ka sirf naam  display karega
+            </td>*@
+            <td>
+                <img src="~/pics/@item.img" width="50px" height="40px" />
+            </td>
+            <td>
+                <a asp-action="Add" asp-route-id="@item.empid">Edit</a> |  @*asp-route-id controller page par parameter wali id se match krta hai isliye id hi jayega*@
+
+                <a asp-action="Delete" asp-route-id="@item.empid">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+----------------------------------------------------------------D:\CoreCrud+Db\CoreCrud\Views\Shared\_Layout.cshtml------------------------------------------------
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CoreCrud</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">CoreCrud</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="EmpController1" asp-action="Add">Add Employee</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="EmpController1" asp-action="Show">Show List Employee</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2023 - CoreCrud - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>
+----------------------------------------------------migration command files----------d:\corecrud+db\corecrud\Migrations\20230915072706_b1.cs-------------------------------
+using Microsoft.EntityFrameworkCore.Migrations;
+
+namespace CoreCrud.Migrations
+{
+    public partial class b1 : Migration
+    {
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.AddColumn<int>(
+                name: "gender",
+                table: "tblemployees",
+                type: "int",
+                nullable: false,
+                defaultValue: 0);
+
+            migrationBuilder.AddColumn<string>(
+                name: "hobby",
+                table: "tblemployees",
+                type: "nvarchar(max)",
+                nullable: true);
+
+            migrationBuilder.CreateTable(
+                name: "tblgenders",
+                columns: table => new
+                {
+                    gid = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    gname = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tblgenders", x => x.gid);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "tblhobbies",
+                columns: table => new
+                {
+                    hid = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    hname = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tblhobbies", x => x.hid);
+                });
+        }
+
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropTable(
+                name: "tblgenders");
+
+            migrationBuilder.DropTable(
+                name: "tblhobbies");
+
+            migrationBuilder.DropColumn(
+                name: "gender",
+                table: "tblemployees");
+
+            migrationBuilder.DropColumn(
+                name: "hobby",
+                table: "tblemployees");
+        }
+    }
+}
+------------------------------------------------migration command files----------d:\corecrud+db\corecrud\Migrations\20230915111051_c1.cs--------------------
+using Microsoft.EntityFrameworkCore.Migrations;
+
+namespace CoreCrud.Migrations
+{
+    public partial class c1 : Migration
+    {
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.AddColumn<string>(
+                name: "img",
+                table: "tblemployees",
+                type: "nvarchar(max)",
+                nullable: true);
+        }
+
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropColumn(
+                name: "img",
+                table: "tblemployees");
+        }
+    }
+}
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+///////// visual studio 2022 me //startup.cs// ki file nhi hoti uski jagah //program.cs// file me ye line add karenge
+-------------services.AddDbContext<DatabaseContext>(option => option.UseSqlServer(Configuration.GetConnectionString("xyz"))); // ye line add karenge
+------------------------------version VS 2022 me MARS ki jagah---TrustServerCertificate=True----krna hai 
