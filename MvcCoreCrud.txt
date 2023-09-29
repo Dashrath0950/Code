@@ -1,3 +1,4 @@
+//Mvc Core Crud using Entity framework database code first approach, sql using table without Sp Show in table not in Gridview
 -------First we install three packages----
 1-Microsoft.EntityFrameworkCore----
 2-Microsoft.EntityFrameworkCore.sqlserver----
