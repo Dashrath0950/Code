@@ -1,0 +1,608 @@
+-------------------------------Mvc Crud With Sp Js with validation ado.net webconfig--------------------------
+create database mvcwithspjs
+use mvcwithspjs
+create table tblemp
+(
+empid int primary key identity,
+name varchar (50),
+city varchar (50),
+age int,
+country int,
+state int
+)
+--img varchar(100)
+truncate table tblemp
+select *from tblemp
+alter table tblemp add img varchar(100)
+alter table tblemp drop column img
+create table tblcountry
+(
+cid int primary key identity,
+cname varchar(50)
+)
+insert into tblcountry(cname)values('India'),('Pakistan')
+select *from tblcountry
+create table tblstate
+(
+sid int primary key identity,
+cid int,
+sname varchar(50)
+)
+select *from tblstate
+insert into tblstate(cid,sname)values(1,'New Delhi')
+insert into tblstate(cid,sname)values(1,'UP')
+insert into tblstate(cid,sname)values(2,'sind')
+insert into tblstate(cid,sname)values(2,'khayber')
+
+create proc Employee_Insert
+@name varchar(50),
+@city varchar(50),
+@age int
+as
+begin
+insert into tblemp(name,city,age)values(@name,@city,@age)
+end
+
+create proc Employee_Get
+as
+begin
+select * from tblemp
+join tblcountry on country=cid
+join tblstate on state=sid
+end
+
+sp_helptext Employee_Insert
+alter proc Employee_Insert  
+@name varchar(50),  
+@city varchar(50),  
+@age int,
+@country int,
+@state int --@img varchar(100)
+as  
+begin                                      --,img                                     ,@img
+insert into tblemp(name,city,age,country,state)values(@name,@city,@age,@country,@state)  
+end
+
+create proc Employee_Update
+@empid int,
+@name varchar(50),  
+@city varchar(50),  
+@age int,
+@country int,
+@state int
+as  
+begin  
+update tblemp set name=@name,city=@city,age=@age,country=@country,state=@state
+where empid=@empid
+end
+
+alter proc Employee_Edit
+@empid int
+as  
+begin  
+select *from tblemp
+end
+
+create proc Employee_Delete
+@empid int
+as  
+begin  
+delete from tblemp where empid=@empid
+end
+
+-----------------------------------------------------------------d:\mvcwithspjs\Web.config-------------------------------------------------
+	
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  For more information on how to configure your ASP.NET application, please visit
+  https://go.microsoft.com/fwlink/?LinkId=301880
+  -->
+<configuration>
+  <appSettings>
+    <add key="webpages:Version" value="3.0.0.0"/>
+    <add key="webpages:Enabled" value="false"/>
+    <add key="ClientValidationEnabled" value="true"/>
+    <add key="UnobtrusiveJavaScriptEnabled" value="true"/>
+  </appSettings>
+  <system.web>
+    <compilation debug="true" targetFramework="4.7.2"/>
+    <httpRuntime targetFramework="4.7.2"/>
+  </system.web>
+  <runtime>
+    <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
+      <dependentAssembly>
+        <assemblyIdentity name="Antlr3.Runtime" publicKeyToken="eb42632606e9261f"/>
+        <bindingRedirect oldVersion="0.0.0.0-3.5.0.2" newVersion="3.5.0.2"/>
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="Newtonsoft.Json" publicKeyToken="30ad4fe6b2a6aeed"/>
+        <bindingRedirect oldVersion="0.0.0.0-12.0.0.0" newVersion="12.0.0.0"/>
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="System.Web.Optimization" publicKeyToken="31bf3856ad364e35"/>
+        <bindingRedirect oldVersion="1.0.0.0-1.1.0.0" newVersion="1.1.0.0"/>
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="WebGrease" publicKeyToken="31bf3856ad364e35"/>
+        <bindingRedirect oldVersion="1.0.0.0-1.6.5135.21930" newVersion="1.6.5135.21930"/>
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="System.Web.Helpers" publicKeyToken="31bf3856ad364e35"/>
+        <bindingRedirect oldVersion="1.0.0.0-3.0.0.0" newVersion="3.0.0.0"/>
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="System.Web.WebPages" publicKeyToken="31bf3856ad364e35"/>
+        <bindingRedirect oldVersion="1.0.0.0-3.0.0.0" newVersion="3.0.0.0"/>
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="System.Web.Mvc" publicKeyToken="31bf3856ad364e35"/>
+        <bindingRedirect oldVersion="1.0.0.0-5.2.7.0" newVersion="5.2.7.0"/>
+      </dependentAssembly>
+    </assemblyBinding>
+  </runtime>
+  <system.codedom>
+    <compilers>
+      <compiler language="c#;cs;csharp" extension=".cs"
+        type="Microsoft.CodeDom.Providers.DotNetCompilerPlatform.CSharpCodeProvider, Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=2.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"
+        warningLevel="4" compilerOptions="/langversion:default /nowarn:1659;1699;1701"/>
+      <compiler language="vb;vbs;visualbasic;vbscript" extension=".vb"
+        type="Microsoft.CodeDom.Providers.DotNetCompilerPlatform.VBCodeProvider, Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=2.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"
+        warningLevel="4" compilerOptions="/langversion:default /nowarn:41008 /define:_MYTYPE=\&quot;Web\&quot; /optionInfer+"/>
+    </compilers>
+  </system.codedom>
+	<connectionStrings>
+		<add name="DatabaseContext" connectionString="data source=DESKTOP-UTVKD93;initial catalog=mvcwithspjs;integrated security=True;" providerName="System.Data.SqlClient" />
+	</connectionStrings>
+	
+</configuration>
+
+--------------------------------------------------------d:\mvcwithspjs\Models\EmpModel.cs---------------------------------------------------
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Web;
+
+namespace MvcWithSpJs.Models
+{
+    public class EmpModel
+    {
+        public int empid { get; set; }
+        [Required]
+
+        public string name { get; set; }
+        [Required]
+        public string city { get; set; }
+        [Required]
+        public int age { get; set; }
+        [Required]
+        public int country { get; set; }
+        [Required]
+        public int state { get; set; }
+        
+        //public string img { get; set; }
+
+
+    }
+}
+
+
+-------------------------------------------------------D:\MvcWithSpJs\Controllers\EmpController.cs--------------------------------------------------
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+using System.Data; // for data table
+using System.Data.SqlClient; // connectivity
+using Newtonsoft.Json; // for json
+using MvcWithSpJs.Models; // add model folder as name with project
+using System.IO; // for img
+using System.Configuration; // use this for connectivity
+
+namespace MvcWithSpJs.Controllers
+{
+    public class EmpController : Controller
+    {
+       // SqlConnection con = new SqlConnection("data source=DESKTOP-UTVKD93; initial catalog=mvcwithspjs; integrated security=true");
+        SqlConnection con = new SqlConnection(ConfigurationManager.ConnectionStrings["DatabaseContext"].ConnectionString);
+
+        public ActionResult Add() //jis method ka type action result hota hai vo hi view return krta hai
+        {
+            return View();
+        }
+
+        public void Insert(EmpModel obj) //, HttpPostedFileBase file
+        {
+            //string FN = Path.GetFileName(file.FileName);
+            //file.SaveAs(Path.Combine(Server.MapPath("~/pics/"), FN));
+            ////System.IO.File.Delete(Server.MapPath(obj.img));
+            //obj.img = "~/pics/" + FN; // image path with file name
+            con.Open();
+            SqlCommand cmd = new SqlCommand("Employee_Insert",con);
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@name", obj.name);
+            cmd.Parameters.AddWithValue("@city", obj.city);
+            cmd.Parameters.AddWithValue("@age", obj.age);
+            cmd.Parameters.AddWithValue("@country", obj.country);
+            cmd.Parameters.AddWithValue("@state", obj.state);
+            //cmd.Parameters.AddWithValue("@img", obj.img);
+            cmd.ExecuteNonQuery();
+            con.Close();
+        }
+
+        public void Update(EmpModel obj)
+        {
+            con.Open();
+            SqlCommand cmd = new SqlCommand("Employee_Update", con);
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@empid", obj.empid);
+            cmd.Parameters.AddWithValue("@name", obj.name); 
+            cmd.Parameters.AddWithValue("@city", obj.city);
+            cmd.Parameters.AddWithValue("@age", obj.age);
+            cmd.Parameters.AddWithValue("@country", obj.country);
+            cmd.Parameters.AddWithValue("@state", obj.state);
+            cmd.ExecuteNonQuery();
+            con.Close();
+        }
+
+        public void Delete(EmpModel obj)
+        {
+            con.Open();
+            SqlCommand cmd = new SqlCommand("Employee_Delete", con);
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@empid", obj.empid);
+            cmd.ExecuteNonQuery();
+            con.Close();
+        }
+
+        public JsonResult Edit(EmpModel obj)
+        {
+            con.Open();
+            SqlCommand cmd = new SqlCommand("Employee_Edit", con);
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@empid", obj.empid);
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+            con.Close();
+            string kk = JsonConvert.SerializeObject(dt);
+            return Json(kk, JsonRequestBehavior.AllowGet);
+        }
+
+
+        public JsonResult GetData()
+        {
+            con.Open();
+            SqlCommand cmd = new SqlCommand("Employee_Get", con);
+            cmd.CommandType = CommandType.StoredProcedure;
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+            con.Close();
+            string kk = JsonConvert.SerializeObject(dt);
+            return Json(kk,JsonRequestBehavior.AllowGet);
+        }
+
+        public JsonResult CountryGet()
+        {
+            con.Open();
+            SqlCommand cmd = new SqlCommand("select *from tblcountry", con);
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+            con.Close();
+            string kk = JsonConvert.SerializeObject(dt);
+            return Json(kk, JsonRequestBehavior.AllowGet);
+        }
+
+        public JsonResult StateGet(int A)
+        {
+            con.Open();
+            SqlCommand cmd = new SqlCommand("select *from tblstate where cid='"+A+"'  ", con);
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+            con.Close();
+            string kk = JsonConvert.SerializeObject(dt);
+            return Json(kk, JsonRequestBehavior.AllowGet);
+        }
+    }
+}
+
+--------------------------------------------------d:\mvcwithspjs\Views\Emp\Add.cshtml---------------------------------------------------------------------
+
+
+@{
+    ViewBag.Title = "Add";
+}
+
+<h2>Add</h2>
+@*@using (Html.BeginForm("Insert", "Emp", FormMethod.Post, new { enctype = "multipart/form-data" }))  for image upload
+{*@
+    <table>
+        <tr>
+            <td>Name :</td>
+            <td><input type="text" id="txtname" /></td>
+        </tr>
+        <tr>
+            <td>City :</td>
+            <td><input type="text" id="txtcity" /></td>
+        </tr>
+        <tr>
+            <td>Age :</td>
+            <td><input type="text" id="txtage" /></td>
+        </tr>
+        <tr>
+            <td>Country :</td>
+            <td>
+                <select id="ddlcountry" onchange="ShowState()">
+                    <option value="0">--Select--</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td>State :</td>
+            <td>
+                <select id="ddlstate">
+                    <option value="0">--Select--</option>
+                </select>
+            </td>
+        </tr>
+        @*<tr>
+            <td>Image Upload</td>
+            <td>
+                <input type="file" id="imgfile" name="file" />
+            </td>
+        </tr>*@
+
+        <tr>
+            <td></td>
+            <td><input type="button" id="btnsave" value="Save" onclick="VALIDATION()" /></td>
+        </tr>
+    </table>
+
+
+@*}*@
+
+<table id="tbldata">
+    @*// table ki jagah gridview me bhi show kra skte hai*@
+    <tr>
+        <th>Edit</th>
+
+        <th>Delete</th>
+
+        <th>Employee Id  </th>
+
+        <th>Employee Name  </th>
+
+        <th>Employee City  </th>
+
+        <th>Employee Age  </th>
+
+        <th>Employee Country  </th>
+
+        <th>Employee State  </th>
+
+        @*<th>Employee Image  </th>*@
+    </tr>
+</table>
+
+<script src="~/Scripts/jquery-3.4.1.min.js"></script> @*// mvc me ajax method me content type or datatype btane ki jarurat ni hoti kewal 5 hi parameter
+    dene hote hai, newtonsoft ka reference bhi mvc me pahle se add hota hai*@
+<script type="text/javascript">
+    function VALIDATION() {
+        var dabba = "";
+        dabba += checkname();
+        dabba += checkcity();
+        dabba += checkage();
+        dabba += checkcountry();
+        dabba += checkstate();
+        if (dabba == "") {
+            Save();
+
+            //INSERTUPDATE();
+        }
+        else {
+            alert(dabba);
+        }
+    }
+    function checkname() {
+        TBN = $("#txtname").val();
+        var exp = /^[a-zA-Z ]*$/
+        if (TBN == "") {
+            return 'Please Enter Your Name!!\n';
+        }
+        else if (!exp.test(TBN)) {
+            return 'Please Enter Your Name Charater!!\n';
+        }
+        else {
+            return "";
+        }
+    }
+    function checkcity() {
+        if ($("#txtcity").val() == "") {
+            return 'Please Enter Your Address!!\n';
+        }
+        else {
+            return "";
+        }
+    }
+    function checkcountry() {
+        if ($("#ddlcountry").val() == "0") {
+            return 'Please Enter Your Country!!\n';
+        }
+        else {
+            return "";
+        }
+    }
+    function checkstate() {
+        if ($("#ddlstate").val() == "0") {
+            return 'Please Enter Your State!!\n';
+        }
+        else {
+            return "";
+        }
+    }
+    function checkage() {
+        TBA = $("#txtage").val();
+        var exp = /^[0-9 ]*$/
+        if (TBA == "") {
+            return 'Please Enter Your Age!!\n';
+        }
+        else if (!exp.test(TBA)) {
+            return 'Please Enter Your Age Numeric!!\n';
+        }
+        else if (!(TBA >= 18 && TBA <= 100)) {
+            return 'Please Enter Your Age Only 18 Between 100!!\n';
+        }
+        else {
+            return "";
+        }
+    }
+
+    var idd = 0;
+    $(document).ready(function () {
+        Show();
+        ShowCountry();
+    });
+    function Clear() {
+        $("#txtname").val("");
+        $("#txtcity").val("");
+        $("#txtage").val("");
+        $("#ddlcountry").val(0);
+        $("#ddlstate").val(0);
+        $("#btnsave").val("Save");
+        idd = 0;
+    }
+    function ShowCountry() {
+        $.ajax({
+            url: 'Emp/CountryGet',
+            type: 'post',
+            data: {},
+            success: function (kk) {
+                kk = JSON.parse(kk);
+
+                for (var i = 0; i < kk.length; i++) {
+                    $("#ddlcountry").append($('<option></option>').html(kk[i].cname).val(kk[i].cid));
+                }
+
+            },
+            error: function () {
+                alert('Country data has not been Found !!');
+            }
+        });
+    }
+    function ShowState() {
+        $.ajax({
+            url: 'Emp/StateGet',
+            type: 'post',
+            data: { A: $("#ddlcountry").val() },
+            async: false,  // do function eksaath call honge Edit() ka or ShowState() uske liye async ko false kr denge jisse vo ek saath dono ko call ni karega jisse edit krte time state me value aa jayegi
+            success: function (kk) {
+                kk = JSON.parse(kk);
+                $("#ddlstate").empty();
+                $("#ddlstate").append($('<option></option>').html("--Select--").val(0));
+                for (var i = 0; i < kk.length; i++) {
+                    $("#ddlstate").append($('<option></option>').html(kk[i].sname).val(kk[i].sid));
+                }
+
+            },
+            error: function () {
+                alert('State data has not been Found !!');
+            }
+        });
+    }
+    function Show() {
+        $.ajax({
+            url: 'Emp/GetData',
+            type: 'post',
+            data: {},
+            success: function (kk) {
+                kk = JSON.parse(kk);
+                $("#tbldata").find("tr:gt(0)").remove();
+                for (var i = 0; i < kk.length; i++) {
+                    $("#tbldata").append('<tr><td><input type="button" id="btnedit" value="Edit" onclick="Edit(' + kk[i].empid + ')" /></td><td><input type="button" id="btndelete" value="Delete" onclick="Delete(' + kk[i].empid + ')" /></td><td>' + kk[i].empid + '</td><td>' + kk[i].name + '</td><td>' + kk[i].city + '</td><td>' + kk[i].age + '</td><td>' + kk[i].cname + '</td><td>' + kk[i].sname + '</td></tr>'); //<td>' + kk[i].img + '</td>
+                }
+
+            },
+            error: function () {
+                alert('Show data not saved !!');
+            }
+        });
+    }
+    function Save() {
+        if ($("#btnsave").val() == "Save") {
+            $.ajax({
+                url: 'Emp/Insert',
+                type: 'post',
+                data: { name: $("#txtname").val(), city: $("#txtcity").val(), age: $("#txtage").val(), country: $("#ddlcountry").val(), state: $("#ddlstate").val() }, //, img: $("#imgfile").val()
+                success: function () {
+                    Show();
+                    Clear();
+                }, 
+
+                error: function () {
+                    alert('data has not been saved !!');
+                }
+            });
+        }
+        else {
+            $.ajax({
+                url: 'Emp/Update',
+                type: 'post',
+                data: { empid: idd, name: $("#txtname").val(), city: $("#txtcity").val(), age: $("#txtage").val(), country: $("#ddlcountry").val(), state: $("#ddlstate").val() },
+                success: function () {
+
+                    Show();
+                    Clear();
+                },
+                error: function () {
+                    alert('data has not been saved !!');
+                }
+            });
+        }
+    }
+
+    function Delete(empid) {
+        if (confirm(' are you sure want to delete ??'))
+            $.ajax({
+                url: 'Emp/Delete',
+                type: 'post',
+                data: { empid: empid },
+                success: function () {
+                    alert('data has been saved !!');
+                    Show();
+                },
+                error: function () {
+                    alert('data has not been saved !!');
+                }
+            });
+    }
+    function Edit(empid) {
+
+        $.ajax({
+            url: 'Emp/Edit',
+            type: 'post',
+            data: { empid: empid },
+            async: false, // do function eksaath call honge Edit() ka or ShowState() uske liye async ko false kr denge jisse vo ek saath dono ko call ni karega jisse edit krte time state me value aa jayegi
+            success: function (kk) {
+                kk = JSON.parse(kk);
+                $("#txtname").val(kk[0].name);
+                $("#txtcity").val(kk[0].city);
+                $("#txtage").val(kk[0].age);
+                $("#ddlcountry").val(kk[0].country);
+                ShowState();
+                $("#ddlstate").val(kk[0].state);
+                $("#btnsave").val("Update");
+                idd = empid;
+
+            },
+            error: function () {
+                alert('data has not been Edited !!');
+            }
+        });
+    }
+
+</script>
