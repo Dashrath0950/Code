@@ -1,0 +1,409 @@
+-----------------------Mvc Login With Bootstrap With Razor Control With Entity Frmwk DBFST template Ado entity data model
+
+create database db_login
+use db_login
+create table tblemp
+(
+empid int primary key identity,
+name varchar(50),
+age int,
+email varchar(50),
+password varchar(50)
+)
+
+--------------------------------------------D:\MvcLogin\Controllers\EmployeeController.cs---------------------------------
+using MvcLogin.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+
+namespace MvcLogin.Controllers
+{
+    public class EmployeeController : Controller
+    {
+        DatabaseContext _db = new DatabaseContext();
+        public ActionResult Add(int id=0)
+        {
+            ViewBag.BT = "Save";
+            tblemp obj = new tblemp();
+            if(id>0)
+            {
+                var data = _db.tblemps.Where(x=>x.empid==id).ToList();
+                obj.empid = data[0].empid;
+                obj.name = data[0].name;
+                obj.age = data[0].age;
+                obj.email = data[0].email;
+                obj.password = data[0].password;
+                ViewBag.BT = "Update";
+            }
+            return View(obj);
+
+        }
+        [HttpPost]
+        public ActionResult Add(tblemp _emp)
+        {
+           
+            if (_emp.empid > 0)
+            {
+                _db.Entry(_emp).State = System.Data.Entity.EntityState.Modified;
+            }
+            else
+            {
+                _db.tblemps.Add(_emp);
+            }
+            _db.SaveChanges();
+            return RedirectToAction("Show");
+
+        }
+        public ActionResult Delete(int id=0)
+        {
+            var data = _db.tblemps.Find(id);
+            _db.tblemps.Remove(data);
+            _db.SaveChanges();
+            return RedirectToAction("Show");
+        }
+        public ActionResult Show(int id = 0)
+        {
+            var data = _db.tblemps.ToList();
+            return View(data);
+        }
+
+    }
+}
+
+-------------------------------------------------------------------D:\MvcLogin\Views\Employee\Add.cshtml------------------------------------
+@model MvcLogin.Models.tblemp
+
+@{
+    ViewBag.Title = "Add";
+}
+
+<h2>Add</h2>
+
+
+@using (Html.BeginForm()) 
+{
+    @Html.AntiForgeryToken()
+    
+    <div class="form-horizontal">
+        <h4>tblemp</h4>
+        <hr />
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        <div class="form-group">
+            @Html.LabelFor(model => model.name, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.name, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.name, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.age, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.age, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.age, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.email, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.email, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.email, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.password, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.password, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.password, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="submit" value="@ViewBag.BT" class="btn btn-default" />
+            </div>
+        </div>
+    </div>
+}
+
+<div>
+    @Html.ActionLink("Back to List", "Index")
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
+--------------------------------------------------------------------D:\MvcLogin\Views\Employee\Show.cshtml--------------
+@model IEnumerable<MvcLogin.Models.tblemp>
+
+@{
+    ViewBag.Title = "Show";
+}
+
+<h2>Show</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.name)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.age)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.email)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.password)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.name)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.age)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.email)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.password)
+        </td>
+        <td>
+            @Html.ActionLink("Edit", "Add", new { id=item.empid }) |
+
+            @Html.ActionLink("Delete", "Delete", new { id=item.empid })
+        </td>
+    </tr>
+}
+
+</table>
+----------------------------------------------------------------D:\MvcLogin\Controllers\LoginController.cs--------------------------------
+using MvcLogin.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+
+namespace MvcLogin.Controllers
+{
+    public class LoginController : Controller
+    {
+        DatabaseContext _db = new DatabaseContext();
+        public ActionResult LoginForm()
+        {
+            return View();
+        }
+        [HttpPost]
+        public ActionResult LoginForm(tblemp _emp)
+        {
+            var data = (from a in _db.tblemps where a.email==_emp.email && a.password==_emp.password select a).ToList();
+            if(data.Count >0)
+            {
+                return RedirectToAction("AddHome", "Home1");
+            }
+            else
+            {
+                ViewBag.msg = "Your Email id or password is Incorrect !!";
+                return View();
+            }
+            
+        }
+        public ActionResult Logout()
+        {
+            return RedirectToAction("LoginForm");
+        }
+    }
+}
+
+-----------------------------------------------------------------D:\MvcLogin\Views\Login\LoginForm.cshtml---------------------------
+@model MvcLogin.Models.tblemp
+
+@{
+    ViewBag.Title = "LoginForm";
+}
+
+<h2>LoginForm</h2>
+
+
+@using (Html.BeginForm()) 
+{
+    @Html.AntiForgeryToken()
+    
+<div class="form-horizontal">
+    <h4>tblemp</h4>
+    <hr />
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.email, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-10">
+            @Html.EditorFor(model => model.email, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.ValidationMessageFor(model => model.email, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.password, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-10">
+            @Html.EditorFor(model => model.password, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.ValidationMessageFor(model => model.password, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="col-md-offset-2 col-md-10">
+            <input type="submit" value="Login" class="btn btn-default" />
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-offset-2 col-md-10">
+            @if(ViewBag.msg!=null)
+            {
+            <span style="color:red">@ViewBag.msg</span>
+            }
+            
+        </div>
+    </div>
+</div>
+}
+
+<div>
+    @Html.ActionLink("Back to List", "Index")
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
+
+-----------------------------------------------------------------D:\MvcLogin\Controllers\Home1Controller.cs-----------------------
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+
+namespace MvcLogin.Controllers
+{
+    public class Home1Controller : Controller
+    {
+        // GET: Home1
+        public ActionResult AddHome()
+        {
+            return View();
+        }
+    }
+}
+
+-----------------------------------------------------------D:\MvcLogin\Views\Home1\AddHome.cshtml-----------------------------
+
+@{
+    ViewBag.Title = "AddHome";
+    Layout ="~/Views/Shared/_Layout1.cshtml";
+
+}
+<h2>Welcome Home..........</h2>
+
+-----------------------------------------------------------D:\MvcLogin\Views\Shared\_Layout.cshtml-----------------------------
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - My ASP.NET Application</title>
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+</head>
+<body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                @Html.ActionLink("Application name", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li>@Html.ActionLink("Home", "Index", "Home")</li>
+                    <li>@Html.ActionLink("Add", "Add", "Employee")</li>
+                    <li>@Html.ActionLink("Show", "Show", "Employee")</li>
+                    <li>@Html.ActionLink("Sign In", "LoginForm", "Login")</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="container body-content">
+        @RenderBody()
+        <hr />
+        <footer>
+            <p>&copy; @DateTime.Now.Year - My ASP.NET Application</p>
+        </footer>
+    </div>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+</body>
+</html>
+
+-------------------------------------------------------------D:\MvcLogin\Views\Shared\_Layout1.cshtml-----------------------------------
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - My ASP.NET Application</title>
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+</head>
+<body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                @Html.ActionLink("Application name", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li>@Html.ActionLink("Home", "AddHome", "Home1")</li>
+                    <li>@Html.ActionLink("Sign Out", "Logout", "Login")</li>
+                    
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="container body-content">
+        @RenderBody()
+        <hr />
+        <footer>
+            <p>&copy; @DateTime.Now.Year - My ASP.NET Application</p>
+        </footer>
+    </div>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+</body>
+</html>
+
+
