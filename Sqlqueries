@@ -1,0 +1,387 @@
+create database Dashrath_family
+use Dashrath_family---------- to find datbase and entre in database
+
+create table family
+(
+id int primary key identity ,----- use identity for auto increament id-----
+name varchar(50),
+city varchar(50),
+age int
+)
+insert into family(name,city,age)values('mon','hr',25)-----in varchar we need to use codes like ' 'but in int you can use or not codes like ' '--
+insert family(name,city,age)values('nav','pun',13)--------------without use of into we can insert data---------
+insert into family values('kom','kl',1000)----------------------without define column we can insert data,but in sequence of column---
+insert family(age,city,name)values(26,'hr','mon')---------- we can insert value in column changing column before or after but value also--
+select * from family
+update family set city ='kl' where id=5
+update family set name ='vijay singh', city='swarg', age='58' where id=1
+delete from family where id=6
+---------------------------------------------------------------------------	---------
+--- add column any time in table use alter table family add address varchar(1000)-------
+alter table family add address varchar(1000)
+alter table family add unknown varchar(1000)
+--- drop column any time in table use alter table family drop column unknown(column name)----
+alter table family drop column unknown --- column ko drop karne ke liye use only column name, not use datatype but add karte time datatype use karna hai--
+-- to rename column name if entered wrong column name use sp_rename 'family.unkown', 'unknown'( column name)--
+
+update family set address='a 42 kunwar singh nagar ' where id=1--- if don't use where condition with id overall id & address, same address---
+ --- add multiple column use alter table family add x varchar(10),gender varchar(10),course varchar(10) use coma (,) and datatype like int or varchar---
+ alter table family add xyz varchar(10),gender varchar(10),course varchar(10)
+ --- drop multiple column use coma drop query and use coma , , , ,---
+ --- create another table in same database
+ create table student
+ (
+ id int primary key identity,
+ nme varchar(50),
+ age varchar(50),
+ salary int
+ )
+ insert into student (nme,age,salary)values('chaman',89,'89334')
+ insert into student (nme,age,salary)values('aman',45,'10000')
+ select *from students
+ 
+ sp_rename 'student','students' --- for change table name  sp_rename 'student','students' old and new table name---
+ sp_rename 'students.nme','name' --for change column name
+ alter table students alter column age int --- for change datatype varchar to int
+ sp_renamedb 'data_structure','pawan_family' --- for change database name
+select *from family 
+ select *from students -----show table
+ select nme,salary from students ---- show only name and salary
+ select *from students where id=2 ---- SHOW ONLY id 2 from table
+ select *from students where id=2 or id=1 ---show only id 2 and id 1 from table students
+ select *from family where id in(5,7,8,9) ----- show only id 5,7,8,9 from table family
+ delete from family where name in('nav','mon') --- delete from table use name column with name like mon,vijay etc
+ select *from family where id <4 --- show only less than id 4
+ select *from family where id >=2 ---show only greater than or equal to id 2  
+ select *from family where id between 3 and 1004 --- show only 3 to 1004  including 3 or 1004 and which id is deleted that not show--
+ update family set city='delhi' where name in('san','paw') --- update city by using name 
+ sp_renamedb 'dashrath_family','pawan_family'
+ use pawan_family
+ select *from family
+
+ select * from tblregistration -------------------table joint query
+join tblgender on gender=gender_id ------------------table joint query
+join tbldepartment on department=department_id--------table joint query
+join tblcountry on country=country_id----------------table joint query
+
+truncate table tblreg--------------------------------for delete all table data(table khali karne ke liye)
+sp_helptext sp_reg-----------------------------------for open procedure
+
+
+--------------------------------------------------------------------------------------------------------------------------------------
+
+create database db5457_161122
+use db5457_161122
+
+select * from Employee
+select * from Employee order by name
+select * from Employee order by salary
+select * from Employee order by salary desc
+
+select * from Employee
+select * from Employee where empid=1 or empid=2
+select top(2)* from Employee
+select top(2)* from Employee order by empid desc
+
+
+select * from Employee
+select max(salary) from Employee
+select max(salary)as maximum_salary from Employee
+select max(salary) maximum_salary from Employee
+select max(salary) maximum salary from Employee -- error
+select max(salary) [maximum salary] from Employee
+select min(salary) from Employee
+select avg(salary) from Employee
+select sum(salary) from Employee
+select count(salary) from Employee -- no null count
+
+
+select name from Employee where salary=(select max(salary) from Employee)
+select name from Employee where salary > (select avg(salary) from Employee)
+
+select min(salary)from
+(select top(3)salary from Employee order by salary desc)as A
+
+
+select top(1)salary from
+(select top(3)salary from Employee order by salary desc)as A order by salary asc
+
+
+select max(salary)from
+(select top(3)salary from Employee order by salary )as A
+
+select top(1) salary from
+(select top(3)salary from Employee order by salary )as A order by salary desc
+
+------------------------- 17 Nov 2022 ------------------------------------------------------
+select * from Employee
+
+
+select * from Employee
+select name,city from Employee
+select name+city from Employee
+select (name+city)as Details from Employee
+select (name+' '+city)as Details from Employee
+select (name+space(2)+city)as Details from Employee
+select (name+space(2)+city+space(2)+salary)as Details from Employee -- error
+select (name+space(2)+city+space(2)+convert(varchar(50),salary))as Details from Employee
+select (name+space(2)+city+space(2)+cast(salary as varchar(50)))as Details from Employee
+
+
+select GETDATE()
+select convert(varchar(50), GETDATE())
+select cast(GETDATE() as varchar(50))
+
+select convert(varchar(50), GETDATE(),106)
+
+alter table Employee add dob datetime
+update Employee set dob='01-01-1998' where empid=1
+update Employee set dob='01-01-1988' where empid=2
+update Employee set dob='01-01-1983' where empid=3
+update Employee set dob='01-01-1973' where empid=4
+update Employee set dob='01-01-1999' where empid=5
+update Employee set dob='01-01-1993' where empid=6
+update Employee set dob='06-10-1984' where empid=7
+update Employee set dob='01-01-1975' where empid=8
+
+
+select empid,name,salary,gender,city,convert(varchar(50),dob,106)as dob from Employee
+----------------------------------------------------------------------------------------------
+select GETDATE()
+
+select DATEPART(DAY,GETDATE())
+select DATEPART(YEAR,GETDATE())
+
+select DATENAME(DW,GETDATE())
+select DATENAME(DW,'04-10-1984')
+select DATENAME(DW,'08-15-1947')
+
+select DATEADD(DAY,6,GETDATE())
+select DATEADD(DAY,-6,GETDATE())
+select DATEADD(MONTH,-6,GETDATE())
+
+select * from Employee where inserted_date between DATEADD(DAY,-7,GETDATE()) and GETDATE()
+
+select DATEDIFF(year,'02-05-1991',GETDATE())  
+select DATEDIFF(year,'04-10-1984',GETDATE()) 
+select DATEDIFF(day,'04-10-1984',GETDATE()) 
+select DATEDIFF(hour,'04-10-1984',GETDATE()) 
+
+-----------------------------------------------------------------------------------------
+
+--how to interchange data between 2 columns
+update Employee set name=city,city=name
+update Employee set name=salary,salary=name -- error - int column does not support varchar values
+
+
+update Employee set gender=
+case
+	when gender=1 then 2
+	when gender=2 then 1
+end
+
+update Employee set gender=
+case
+	when gender=1 then 2
+	when gender=2 then 1
+	else gender
+end
+
+update Employee set gender=3 where empid=7
+
+--------------------------------------------------------------------
+select ASCII('Z')
+select CHAR(66)
+
+declare @start int
+set @start=65
+while(@start <= 90)
+begin
+	print char(@start)
+	set @start = @start + 1
+end
+---------------------- 21 Nob 2022 ------------------------------------------------------
+select * from Employee
+select * from tblcountry
+sp_rename 'Employee.cid','country'
+sp_rename 'tblcountry.name','cname'
+
+select * from Employee join tblcountry on country=cid
+select * from Employee join tblcountry on cid=cid -- error
+select * from Employee join tblcountry on Employee.cid=tblcountry.cid
+select empid,name,salary,dob,cname from Employee join tblcountry on Employee.cid=tblcountry.cid
+
+select empid,Employee.name,salary,dob,tblcountry.name 
+from Employee join tblcountry on Employee.cid=tblcountry.cid
+
+select Employee.empid,Employee.name,Employee.salary,Employee.dob,tblcountry.name 
+from Employee join tblcountry on Employee.cid=tblcountry.cid -- SQL OK but NOT OK in Gridview
+
+select Employee.empid,Employee.name as empname,Employee.salary,Employee.dob,tblcountry.name as countryname 
+from Employee join tblcountry on Employee.cid=tblcountry.cid -- OK in Gridview
+
+select E.empid,E.name as empname,E.salary,E.dob,C.name as countryname 
+from Employee as E join tblcountry as C on E.cid=C.cid
+
+select E.empid,E.name empname,E.salary,E.dob,C.name countryname 
+from Employee E join tblcountry C on E.cid=C.cid
+
+------------------------------------------------------------------------
+insert into tblcountry(cname)values('Canada')
+select * from Employee join tblcountry on country=cid
+select * from Employee inner join tblcountry on country=cid
+select * from Employee left join tblcountry on country=cid
+select * from Employee left outer join tblcountry on country=cid
+select * from Employee right join tblcountry on country=cid
+select * from Employee right outer join tblcountry on country=cid
+select * from Employee full join tblcountry on country=cid
+select * from Employee full outer join tblcountry on country=cid
+select * from Employee cross join tblcountry
+
+
+
+--- JOIN
+--1)INNER JOIN
+--2)OUTER JOIN -- A)LEFT  B)RIGHT  C)FULL
+--3)CROSS JOIN
+---------------------------------------------------08-1-2023-------------------------------------------------------------------------------
+USE MVC5859_171222
+select *from tblemployee
+select *from tblcountry
+---DML TRIGGER
+create trigger trg on tblcountry for insert
+as 
+begin
+select *from tblemployee
+end
+
+insert into tblcountry(cname)values('japan')
+
+drop trigger trg---------trigger ko delete krne ke liye
+
+create trigger trg on tblcountry for insert,update,delete---trigger me tino ek saath laga skte hai
+as 
+begin
+select *from tblemployee
+end
+ 
+select *from tblemployee
+select *from tblcountry
+
+drop trigger trg---------- trigger ko drop ya delelte krne ke liye
+alter trigger trg on tblcountry for delete------- alter trigger krne ke liye
+
+create trigger trg on tblcountry for delete
+as 
+begin
+delete from tblemployee where country=(select cid from deleted)
+end
+
+delete from tblemployee where cid=2
+
+select * from inserted--------they are magic table they not to show data, its only create on run time
+select * from deleted---------they are magic table they not to show data, its only create on run time
+
+-----old table record transer into new create table----------
+create table tblreg
+(
+rid int primary key identity,
+name varchar(50),
+country int
+)
+
+insert into tblreg(name,country)select name,country from tblemployee--------fetch old table record into new table
+
+alter trigger trg on tblcountry for delete
+as 
+begin
+delete from tblreg where country=(select cid from deleted)
+end
+
+delete from tblreg where cid=2
+
+select * from tblreg
+select * from tblcountry
+
+----types of trigger
+--1 DDL TRIGGER (FOR)---its used for database
+--only this important-2DML TRIGGER ---(A)FOR (AFTER) (B)INSTEAD OF (BEFORE)----its used for table
+--3LOGON TRIGER---(FOR)
+
+--DDL TRIGGER
+create trigger trg1 on database for create_table,alter_table,drop_table ----tino ek saath run kr skte hai
+as
+begin
+print'your table is created successfully'
+end
+
+create trigger trg1 on database for alter_table
+as
+begin
+print'your table is created successfully'
+end
+
+create table tbl
+(
+id int primary key identity,
+name varchar(50)
+)
+ 
+----LOGON TRIGGER
+--:> its used when lots of user access the website and website gone slowdown then logon trigger used in database to permission,
+--   how many user access website same time
+
+----------------------------------------------------08-01-2023-----------------------------------------------------------------
+---/// View/// its used just create 'select' sql statement--  view ke ander sirf select query chalegi
+--- View is considered as a table and we can used for insert, update, delete, join, orderby 
+----view is a virtual table(just like),view me begin end use ni hota only as use hota hai
+---- view is used to reduce complexity, and view is used to insert update delete two or more multiple table
+---agar view single table se bna hai to insert update delete kr skte hai or agar multiple table se bna hai to insert update delete ni kr skte
+---- jugad se kr skte hai vo hai instead of (trigger) se
+
+create view aa
+as 
+select * from tblreg
+
+select * from aa
+insert into aa(name,country)values('manoj',3)
+
+create view bb
+as
+select rid,name,cname from tblreg join tblcountry on country=cid
+
+
+select *from tblreg
+select *from tblcountry
+select *from bb
+insert into bb(name,cname)values('mohan','South Africa')
+
+alter trigger trg on bb instead of insert
+as
+begin
+	declare @p int
+	select @p=cid from tblcountry where cname=(select cname from inserted)
+	if(@p is null)
+	begin
+		insert into tblcountry(cname)select cname from inserted
+		select @p=scope_identity()
+	end
+	insert into tblreg(name,country)select name,@p from inserted
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
