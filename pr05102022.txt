@@ -1,0 +1,3085 @@
+--------------------------------------------------------------pr05102022 DatabaseWithStoreProcedureWithTable--------------------------------------------------
+
+create database db54_05102022
+use db54_05102022
+create table tblregistration
+(
+rid int primary key identity,
+rname varchar(50),
+rgender int,
+rcountry int,
+rstate int,
+rcity int,
+age int,
+salary bigint,
+mobile bigint,
+rdepartment int,
+rbloodgroup varchar(50),
+rhobbies varchar(100),
+rimage varchar(100),
+remail varchar(100),
+rpassword varchar(100),
+status int default 0
+)
+alter table tblregistration add age int
+alter table tblregistration add salary bigint
+alter table tblregistration add mobile bigint
+alter table tblregistration add rdepartment int
+alter table tblregistration add rbloodgroup varchar(50)
+alter table tblregistration add rhobbies varchar(100)
+alter table tblregistration add rimage varchar(100)
+alter table tblregistration add remail varchar(100),rpassword varchar(100)
+alter table tblregistration drop column rhobbies 
+alter table tblregistration drop column inserted_date
+select * from tblregistration
+
+create table tbladdnewform
+(
+nid int primary key identity,
+nname varchar(50),
+ngender int,
+ncountry int,
+nstate int,
+ncity int,
+nge int,
+nsalary bigint,
+nmobile bigint,
+ndepartment int,
+nbloodgroup varchar(50),
+nhobbies varchar(100),
+nimage varchar(100),
+nemail varchar(100),
+npassword varchar(100),
+inserted_date date, -- hamesa apne table me (inserted date) ka column lekar chalna hai jisse pta chle ki kons record kis date ko insert hua tha
+status int default 0, -- hamesa apne table me (status int default 0) ka column lekar chalna hai status me by default 0 jaayega, delete record ko recover karne ke liye status ka use krte hai,database se data kabhi delete nhi hoga status use krne se table me record rahega par uska status 1 ho jayega
+dob date
+)
+
+alter table tbladdnewform add nemail varchar(100),npassword varchar(100)
+alter table tbladdnewform add inserted_date date, status int default 0
+alter table tbladdnewform add dob date
+select *from tbladdnewform
+truncate table tbladdnewform
+
+create table tblhobbies
+(
+hid int primary key identity,
+hname varchar(100)
+)
+insert into tblhobbies(hname)values('Cricket'),('Hockey'),('Cooking'),('Playing'),('Dancing')
+select *from tblhobbies
+
+create table tblusers
+(
+uid int primary key  identity,
+uname varchar(50),
+uage int,
+uimage varchar(100)
+)
+
+select *from tblusers
+
+create table tblemployees
+(
+eid int primary key identity,
+ename varchar(50),
+egender int,
+ehobbies varchar(100)
+)
+
+select *from tblemployees
+
+create table tbldepartment
+(
+did int primary key identity,
+dname varchar(50)
+)
+insert into tbldepartment(dname)values('HR')
+insert into tbldepartment(dname)values('IT')
+insert into tbldepartment(dname)values('Sales')
+select *from tbldepartment
+
+create table tblbloodgroup
+(
+bgid int primary key identity,
+bgname varchar(50)
+)
+insert into tblbloodgroup(bgname)values('O+'),('O-'),('A+'),('A-'),('B+'),('B-'),('AB+'),('AB-')
+select *from tblbloodgroup
+
+create table tblgender
+(
+gid int primary key identity,
+gname varchar(50),
+)
+insert into tblgender(gname)values('male'),('female'),('other')
+
+create table tblcountry
+(
+cid int primary key identity,
+cname varchar(50)
+)
+insert into tblcountry(cname)values('India')
+insert into tblcountry(cname)values('Pakistan')
+insert into tblcountry(cname)values('USA')
+select *from tblcountry
+
+create table tblstate
+(
+sid int primary key identity,
+cid int,
+sname varchar(50),
+)
+insert into tblstate(cid,sname)values(1,'UP')
+insert into tblstate(cid,sname)values(1,'bihar')
+insert into tblstate(cid,sname)values(2,'khayber')
+insert into tblstate(cid,sname)values(2,'sind')
+insert into tblstate(cid,sname)values(3,'los vegas')
+insert into tblstate(cid,sname)values(3,'california')
+insert into tblstate(cid,sname)values(1,'Delhi')
+select * from tblstate
+
+create table tblcity
+(
+cityid int primary key identity,
+sid int,
+cityname varchar(50),
+)
+insert into tblcity(sid,cityname)values(1,'Ballia')
+insert into tblcity(sid,cityname)values(1,'varanasi')
+insert into tblcity(sid,cityname)values(1,'lucknow')
+insert into tblcity(sid,cityname)values(2,'patna')
+insert into tblcity(sid,cityname)values(2,'motihari')
+insert into tblcity(sid,cityname)values(3,'abbottabad')
+insert into tblcity(sid,cityname)values(3,'peshawar')
+insert into tblcity(sid,cityname)values(4,'karachi')
+insert into tblcity(sid,cityname)values(4,'hydrabad')
+insert into tblcity(sid,cityname)values(5,'losvegas1')
+insert into tblcity(sid,cityname)values(5,'losvegas2')
+insert into tblcity(sid,cityname)values(6,'los angeles')
+insert into tblcity(sid,cityname)values(6,'San francisco')
+
+select *from tblcity
+
+create proc addnewform_search 
+@key varchar(50)
+as
+begin
+select *from tbladdnewform
+join tblgender on ngender=gid
+join tbldepartment on ndepartment=did
+join tblcountry on ncountry=cid
+join tblstate on nstate=sid
+join tblcity on ncity=cityid
+join tblbloodgroup on nbloodgroup=bgid
+where nname like @key+'%' or cname like @key+'%' --.... aage or bhi use kr skte hai or likhte jao or column name
+end
+
+ ---- ek table ke liye ek hi procedure banega
+
+ ---- procedure ka rool hai jitne parameter hote hai utne parameter pass krne hote hai,
+ ---- iske liye dusra tarka hota hai ki procedure ke har variable ko initialize kar do int ko 0 se or varchar ko null se 
+ ---- agar nhi karenge to saare parameter pass krne honge
+ -- in every change in sp please alter procedure 
+alter proc sp_tbladdnewform 
+@action varchar(50)=null,
+@nid int=0,
+@nname varchar(50)=null,
+@nge int=0,
+@nsalary bigint=0,
+@nmobile bigint=0,
+@ngender int=0,
+@ndepartment int=0,
+@ncountry int=0,
+@nstate int=0,
+@ncity int=0,
+@nbloodgroup varchar(50)=null,
+@nhobbies varchar(100)=null,
+@nimage varchar(100)=null,
+@nemail varchar(100)=null,
+@npassword varchar(100)=null,
+@key varchar(50)=null, ------- iski jagah ham @nname ka parameter bhi use kr skte hai isko hta denge kyuki @nname khali hota hai us time pr or niche bhi @nname use karenge
+@dob date=null
+as
+begin
+if(@action='Edit')
+begin
+select * from tbladdnewform where nid=@nid
+end
+else if(@action='Delete')
+begin
+update tbladdnewform set status=1 where nid=@nid -- hamesa apne table me (status int default 0) ka column lekar chalna hai status me by default 0 jaayega, delete record ko recover karne ke liye status ka use krte hai,database se data kabhi delete nhi hoga status use krne se table me record rahega par uska status 1 ho jayega
+end -- delete me status ko 1 set kar denge jisse vo database table me to rahega par show nhi hoga or status 1 ho jaayega table me
+else if(@action='Update')
+begin
+update tbladdnewform set nname=@nname,nge=@nge,nsalary=@nsalary,nmobile=@nmobile,ngender=@ngender,
+ndepartment=@ndepartment,ncountry=@ncountry,nstate=@nstate,ncity=@ncity,nbloodgroup=@nbloodgroup,
+nhobbies=@nhobbies,nimage=@nimage,nemail=@nemail,npassword=@npassword,dob=@dob where nid=@nid
+end
+else if(@action='Insert')
+begin                                                                                                                                       --its not an error sirf table me column insert krna hai inserted_date ka
+insert into tbladdnewform (nname,nge,nsalary,nmobile,ngender,ndepartment,ncountry,nstate,ncity,nbloodgroup,nhobbies,nimage,nemail,npassword,dob,inserted_date)
+values(@nname,@nge,@nsalary,@nmobile,@ngender,@ndepartment,@ncountry,@nstate,@ncity,@nbloodgroup,@nhobbies,@nimage,@nemail,@npassword,@dob,GETDATE())
+end
+else if(@action='Country')
+begin
+select * from tblcountry
+end
+else if(@action='State')
+begin
+select * from tblstate where cid=@ncountry
+end
+else if(@action='City')
+begin
+select * from tblcity where sid=@nstate
+end
+else if(@action='Department')
+begin
+select * from tbldepartment
+end
+else if(@action='Gender')
+begin
+select * from tblgender
+end
+else if(@action='BldGroup')
+begin
+select * from tblbloodgroup
+end
+else if(@action='Join')
+begin
+              --select *from tbladdnewform-- star(*) ka use sare column ke liye use karte hai jitne gridview me show karenge bina * ke sare column name likhne honge
+			  select tbladdnewform.nid,tbladdnewform.nname,tbladdnewform.nge,tbladdnewform.nsalary,tbladdnewform.nmobile,
+			  tblgender.gname,tblcountry.cname,tblstate.sname,tblcity.cityname,tbldepartment.dname,tblbloodgroup.bgname,
+			  tbladdnewform.nhobbies,tbladdnewform.nimage,tbladdnewform.nemail,tbladdnewform.npassword,convert(varchar(50),dob,106)as date_of_birth,
+			  convert(varchar(50),inserted_date,106)as Date from tbladdnewform
+              join tblgender on tbladdnewform.ngender=tblgender.gid   ---- ese bhi likh sakte hai ambigious column error ya confusion se bachne ke liye jab dono column name same ho cityid=cityid
+			  join tbldepartment on tbladdnewform.ndepartment=tbldepartment.did --- table ka name btana hoga ki konsi table ka column hai like tbladdnewform.ncity=tblcity.cityid 
+			  join tblcountry on tbladdnewform.ncountry=tblcountry.cid
+			  join tblstate on tbladdnewform.nstate=tblstate.sid
+			  join tblcity on tbladdnewform.ncity=tblcity.cityid
+			  join tblbloodgroup on tbladdnewform.nbloodgroup=tblbloodgroup.bgid
+			  where status=0
+end
+else if(@action='JoinOne') ---------gridview ya Home page par ek record show karane ke liye where condition ke saath
+begin
+              select *from tbladdnewform
+              join tblgender on ngender=gid
+			  join tbldepartment on ndepartment=did
+			  join tblcountry on ncountry=cid
+			  join tblstate on nstate=sid
+			  join tblcity on ncity=cityid
+			  join tblbloodgroup on nbloodgroup=bgid
+			  where nid=@nid and status=0
+end
+else if(@action='Login')
+begin
+select * from tbladdnewform where nemail=@nemail and npassword=@npassword
+end
+else if(@action='Search')
+begin
+select tbladdnewform.nid,tbladdnewform.nname,tbladdnewform.nge,tbladdnewform.nsalary,tbladdnewform.nmobile,
+tblgender.gname,tblcountry.cname,tblstate.sname,tblcity.cityname,tbldepartment.dname,tblbloodgroup.bgname,
+tbladdnewform.nhobbies,tbladdnewform.nimage,tbladdnewform.nemail,tbladdnewform.npassword,convert(varchar(50),dob,106)as date_of_birth,
+convert(varchar(50),inserted_date,106)as Date from tbladdnewform
+join tblgender on ngender=gid
+join tbldepartment on ndepartment=did
+join tblcountry on ncountry=cid
+join tblstate on nstate=sid
+join tblcity on ncity=cityid
+join tblbloodgroup on nbloodgroup=bgid
+where nname like @key+'%' or cname like @key+'%' and status=0 --.... aage or bhi use kr skte hai or likhte jao or column name
+end
+end
+
+--------------------------------------------------------------------------------------------------------------------------------------
+create table xyz
+(
+id int primary key identity,
+name varchar(50),
+age int,
+inserted_date date  ---- hamesha apne table me inserted_date lekar chalna hai jisse record ka pta chale ki konsi date ko konsa record enter hua hai
+)
+insert into xyz(name,age,inserted_date)values('mukesh',25,GETDATE()) --GETDATE predefine function hai jo current date insert krta hai
+select * from xyz where inserted_date='10-10-2023'
+
+--------------------------------------------16-Nov-2022-----------------------------------------------
+create table Employee
+(
+empid int primary key identity,
+name varchar(50),
+salary bigint,
+gender int,
+city varchar(50)
+)
+----by default table ka data primary key ke order me hota hai,primary key kisi bhi column pr laga skte hai
+insert into Employee values('alok',20000,1,'New Delhi')
+insert into Employee values('amir',25000,1,'Noida')
+insert into Employee values('vikas',30000,1,'Pune')
+insert into Employee values('ayushi',35000,2,'Chandigarh')
+insert into Employee values('tanu',32000,2,'Chennai')
+insert into Employee values('aman',42000,1,'kanpur')
+insert into Employee values('vijay',52000,1,'mohali')
+insert into Employee values('sony',62000,2,'mumbai')
+--*-means all column and all data
+----------------------order by-------------aliasing-------------aggregate function--------sub query-----------
+select * from Employee
+select *from Employee order by name --name ke order me show krne ke liye
+
+select *from Employee order by salary ----salary ke order me show krne ke liye
+
+select *from Employee order by salary desc--- salary ko descending order me show krne ke liye
+
+select *from Employee where empid=1 or empid=2 --- id ke base par record show krne ke liye
+
+select top(2)*from Employee --- without showing table show above two record of table using top keyword
+
+select top(2)*from Employee order by empid desc ---without showing table show last two record of table 
+
+select max(salary) from Employee --- without showing table show max salary of table using max aggregate function
+
+select min(salary) from Employee --- without showing table show min salary of table using min aggregate function
+
+select avg(salary) from Employee --- without showing table show avg salary of table using avg aggregate function
+
+select sum(salary) from Employee --- without showing table show sum salary of table using sum aggregate function
+
+select count(salary) from Employee --- without showing table show number of salary of table using count aggregate function
+
+select count(salary) from Employee --- agar salary column me ek salary missing hai to 8 ki jagah 7 count show hoga
+                                    -- because count aggregate function Null value ko count nhi krta no null count
+
+select name from Employee where salary=(select max(salary) from Employee) -- jiski salary sabse jyada hai uska name show karo 
+                                                                          --using sub query (query ke ander query likhte hai)
+
+select name from Employee where salary > (select avg(salary) from Employee) -- jiski salary average salary se jayada hai unka name show kro
+
+--- without showing table show second,third,fourth,fifth.6.7... highest salary of table using aggregate function
+select salary from Employee
+select top(3)salary from Employee order by salary desc
+
+select min(salary) from
+(select top(3)salary from Employee order by salary desc)as tbl  -- assume this as table-- as likho ya na likho aliasing ho jaayegi
+
+select min(salary) from
+(select top(5)salary from Employee order by salary desc)as tbl -- without showing table show Fifth highest salary
+
+select min(salary) from
+(select top(4)salary from Employee order by salary desc)as tbl -- without showing table show Fourth highest salary
+
+select min(salary) from
+(select top(3)salary from Employee order by salary desc)as tbl -- without showing table show third highest salary
+
+select min(salary) from
+(select top(2)salary from Employee order by salary desc)as tbl -- without showing table show second highest salary
+
+--- without showing table show second,third,fourth,fifth.6.7... highest salary of table  without aggregate function
+
+select top(1)salary from
+(select top(3)salary from Employee order by salary desc)as tbl order by salary asc
+
+--- without showing table show second,third,fourth,fifth.6.7... min salary of table using aggregate function
+select max(salary) from
+(select top(2)salary from Employee)as tb--second lowest salary
+
+select max(salary) from
+(select top(3)salary from Employee)as tb--third lowest salary
+
+select max(salary) from
+(select top(4)salary from Employee)as tb--fourth lowest salary
+
+--- without showing table show second,third,fourth,fifth.6.7... min salary of table without aggregate function
+select top(1)salary from
+(select top(2)salary from Employee order by salary asc)as tb order by salary desc--second lowest salary
+
+select top(1)salary from
+(select top(3)salary from Employee order by salary asc)as tb order by salary desc--third lowest salary
+
+select top(1)salary from
+(select top(4)salary from Employee order by salary asc)as tb order by salary desc--fourth lowest salary
+
+-----------------aliasing--------------------------------------------------
+
+select salary from Employee--display only one column data
+select *from Employee
+select max(salary)as maximum_salary from Employee --with as keyword without column name space aliasing
+select max(salary) [maximum salary] from Employee --without as keyword with column name space using braces[] aliasing
+
+
+-----------------------------------17-Nov-2022---------------------------
+truncate table Employee
+
+select *from Employee
+--how to interchange data between two column
+update Employee set name=city,city=name
+
+--Error converting data type varchar to bigint.
+update Employee set name=salary,salary=name-- varchar ki value ko intezer me nhi daal skte but intezer ki value ko varchar me daal skte hai
+
+select *from Employee
+select name,city from Employee
+--concatenate
+select name+city from Employee 
+-- for space
+select name+' '+city from Employee 
+--for space with space function
+select name+space(10)+city as Detail from Employee 
+--aliasing
+select name+city as[name city] from Employee 
+
+--Error converting data type varchar to bigint.error
+select (name+space(10)+city+salary) as Detail from Employee -- varchar ki value ko intezer me nhi daal skte but intezer ki value ko varchar me daal skte hai
+
+--solution-with convert function--convert intezer value into varchar
+select (name+space(10)+city+convert(varchar(50),salary)) as Detail from Employee 
+
+--solution with cast function--convert intezer value into varchar
+select (name+space(10)+city+cast(salary as varchar(50))) as Detail from Employee 
+
+--diff b/w convert and cast function
+select GETDATE()
+
+select CONVERT(varchar(50),GETDATE())
+
+select cast(GETDATE() as varchar(50))--- cast function dosn't support third parameter like date format
+
+--date format-100 to 132,133 normally we use 106 format
+select CONVERT(varchar(50),GETDATE(),106)--- convert function support third parameter like date format
+
+select *from Employee
+alter table Employee add dob datetime
+update Employee set dob='01-18-1998' where empid=1
+update Employee set dob='01-18-1997' where empid=2
+update Employee set dob='01-18-1996' where empid=3
+update Employee set dob='01-18-1995' where empid=4
+update Employee set dob='01-18-1994' where empid=5
+update Employee set dob='01-18-1992' where empid=6
+update Employee set dob='01-18-1993' where empid=7
+update Employee set dob='01-18-1991' where empid=8
+update Employee set country='1' where empid=3
+update Employee set country='2' where empid=4
+update Employee set country='3' where empid=5
+select empid,name,salary,gender,city,convert(varchar(50),dob,106)as dob from Employee
+
+--------------------------------------------18-Nov-2022----------------------------------------------
+
+select GETDATE()
+
+select DATEPART(DAY,GETDATE())-- show only current day date using DATEPART function
+
+select DATEPART(YEAR,GETDATE())-- show only current year using DATEPART function
+
+select DATEName(DW,GETDATE())-- show only current day of week using DATENAME function
+
+select DATEName(DW,'08-15-1984')-- show only previous year day of week using DATENAME function
+
+select DATEADD(day,6,GETDATE())--add days in current date using DATEADD function
+
+select DATEADD(day,-6,GETDATE())--minus days in current date using DATEADD function
+
+select DATEADD(Month,-6,GETDATE())--minus month in current date using DATEADD function
+
+select DATEADD(Month,6,GETDATE())--add month in current date using DATEADD function
+
+select DATEADD(YEAR,6,GETDATE())--add year in current date using DATEADD function
+
+select DATEADD(YEAR,-6,GETDATE())--minus month in current date using DATEADD function
+
+select *from Employee
+
+select *from Employee where inserted_date between DATEADD(day,-7,GETDATE()) and GETDATE() -- show last 7 day record inserted
+
+select DATEDIFF(year,'09-14-1991',GETDATE())--check diff b/w two dates year day month hour minute second millisecond
+
+select DATEDIFF(day,'09-14-1991',GETDATE())--check diff b/w two dates year day month hour minute second millisecond
+
+select DATEDIFF(MONTH,'09-14-1991',GETDATE())--check diff b/w two dates year day month hour minute second millisecond
+
+select DATEDIFF(hour,'09-14-1991',GETDATE())--check diff b/w two dates year day month hour minute second millisecond
+
+select DATEDIFF(MINUTE,'09-14-1991',GETDATE())--check diff b/w two dates year day month hour minute second millisecond
+
+select DATEDIFF(SECOND,'09-14-1991',GETDATE())--check diff b/w two dates year day month hour minute second millisecond
+
+select DATEDIFF(MILLISECOND,'09-14-1991',GETDATE())-- error--The datediff function resulted in an overflow. The number of dateparts separating two date/time instances is too large. Try to use datediff with a less precise datepart.
+
+
+
+-- interview me kam se kam bolna hai jitna puchche sirf utna jada nhi
+-- 50% question sql se aate hai
+----------------------------------------------------------------------------
+-- with in one column how to interchange data --- using case
+select *from Employee
+-- 1 ka 2 or 2 ka 1 karega baki ko chhod dega using else 
+update Employee set gender=
+case
+	when gender=1 then 2
+	when gender=2 then 1
+	else gender
+end
+
+update Employee set gender=3 where empid=7
+
+----------------------------------------------------
+-- key board me har key ki ek ascii value hoti hai capital ki alag small ki alag jo intezer me hoti hai
+select ASCII('A') --65
+select ASCII('a') --97
+--dono function ek dusre ke reverse hai
+
+select char(65)-- konse character ki value 65 hai btane ke liye char()
+select char(98)-- konse character ki value 98 hai btane ke liye char()
+
+
+-- sql me bhi loop chalta hai, for loop nhi chalta while loop chalta hai
+
+-- A to Z print karega
+declare @start int ---declare variable
+set @start=65 -- set value
+while(@start <= 90)----(@start < 91) ese bhi likh skte hai
+begin ---begin or end braces {} ki jagah use hota hai
+	print char(@start)
+	set @start=@start + 1
+end
+
+
+-----------------------------------21-Nov-2022---------inner join----Outer join(left & Right join)-----full join----cross join-------------
+
+
+select * from Employee
+alter table Employee add country int
+select  CONVERT(varchar(50),country,1) from Employee
+select * from tblcountry
+sp_rename 'Employee.country','cid' -- its used to change column name
+sp_rename 'Employee.cid','country' -- its used to change column name
+select * from Employee join tblcountry on country=cid
+
+select * from Employee join tblcountry on cid=cid -- error --Ambiguous column name 'cid'.---confuse same name column
+
+select * from Employee as E join tblcountry on E.cid=tblcountry.cid -- solution-- table name ko bhi alias kr skte hai
+
+-- table name ko bhi alias kr skte hai
+
+-------------------------------------------------------------------------------------------
+----Join-- join is used to combine data between two or more tables
+--1--inner join-- its show only matched data or record between two or more table, hamne sirf inner join use kiya hai
+--2--outer join--1)left join------its show all rows of left table and matching rows of right table,and not matched from right shows null 
+-----------------2)right join-----its show all rows of right table and matching rows of left table,and not matched from left shows null 
+-----------------3)Full join------its show all rows from both table a & table b, show null these rows are not matched
+--3--cross join
+
+insert into tblcountry(cname)values('canada')
+select *from tblcountry
+
+select * from Employee as E join tblcountry on E.country=tblcountry.cid-- table name aliasing
+
+select * from Employee join tblcountry on country=cid---inner join inner likh bhi skte ho or nhi bhi
+--inner join show data when data matched between two table otherwise don't show data, show only matched data and don't show null data
+select * from Employee inner join tblcountry on country=cid-- inner join inner likh bhi skte ho or nhi bhi
+
+select * from Employee left join tblcountry on country=cid----outer left join--show only left table data like Employee table data only tblcountry table data shows null, and shows matched records
+-- outer likh bhi skte hai or nhi bhi
+select * from Employee right join tblcountry on country=cid----outer right join----show only right table data like tblcountry table data only Employee table data shows null,and shows matched records
+
+select * from Employee full join tblcountry on country=cid----outer full join--show both table data, left & right table
+
+select * from Employee cross join tblcountry---- isme on condtion nhi lagegi, or country=cid bhi nhi likhna
+-- table 1 ke data ko table 2 ke har data se match karega 8 ki jagah 32 record show honge
+-- cross join cloth or color me use kr skte hai like har colour ka clothes ho skta hai, har kapde ko har colour se match karenge
+
+-------------------------------------------------23-Nov-2022--------Group By clause--------------------------
+--group by clause-The GROUP BY clause causes the rows of the items table to be collected into groups,
+---each group composed of rows that have identical order_num values (that is, the items of each order are grouped together). 
+--After the database server forms the groups, the aggregate functions COUNT and SUM are applied within each group.
+-- group by is used in repeated values in column, dusre column me bhi lga skte hai lekin jarurat nhi hoti kyuki value repeat nhi hoti, error show nhi hogi agar lagayenge to
+select * from Employee
+
+select sum(salary) from Employee -- total all salary
+select country,sum(salary) from Employee group by country-- sum salary according to country column using group by
+
+select cname,sum(salary) from Employee join tblcountry on country=cid group by cname-- sum salary according to country column using group by, using join show cname
+
+select cname,sum(salary)as Sum_salary from Employee join tblcountry on country=cid group by cname-- giving column name using aliasing
+
+select gender,sum(salary) from Employee group by gender --sum salary according to gender column using group by
+
+select gname,sum(salary)as Sum_salary from Employee join tblgender on gender=gid group by gname -- show sum(total) salary gender wise using group by, join use for show gender name 
+
+select gender,count(*) from Employee group by gender-- count person male, female and other in table using group by
+
+select name,gender,sum(salary)as sum_salary from Employee group by gender-- error-- kewal unhi column ko nikal skte hai jo ya to group by ke saath ho ya kisi aggregate function ke saath like sum or count otherwise error show hogi
+
+select count(name) as name,gender,sum(salary)as sum_salary from Employee group by gender-- solution
+ 
+-- group by rule- kewal usi column ko select kr skte hai jo ya to aggregate function ke saath ho ya group by ke saath other wise error
+
+-- diff between having and where
+--dono ka same kaam hai condtion lagana or filter krna, jab table me filter ya condition lagani hai to where
+--agar group by me filter krna hai to having ka use
+select * from Employee
+
+select gender,sum(salary) from Employee where salary >35000 group by gender 
+
+select gender,sum(salary)as sum_salary from Employee group by gender having sum(salary)  > 42000
+
+select gname,sum(salary)as Sum_salary from Employee join tblgender on gender=gid group by gname having Sum(salary)>42000
+
+select gname,sum(salary)as Sum_salary from Employee join tblgender on gender=gid where salary >35000 group by gname having Sum(salary)>42000 -- where or having ek saath
+
+select department,COUNT(*)as Sum_salary from Employee group by department --kis department me kitne log hai
+
+--- jitna important join hai utna hi group by important hai
+
+-- table me primary key identity lga hai to insert nhi kar skte identity ko hata ke insert kar skte hai identity auto increment
+
+
+
+
+-----------------------------------------------08-jan-2023-------------Trigger--------------------------------
+
+
+--DML Trigger hamesha kisi na kisi table ke action ke liye banta hai(table ka action matlab insert update delelte) select not a action
+--DML trigger hamesha dml query(insert update delete) ke liye bnate hai, select not a dml query
+--DML trigger hamesha fire hota hai, call nhi hota , jo chiz apne ho use fire bolte hai 
+--DML trigger is used to work on multiple table
+--DML trigger tab fire hoga jiske liye trigger bnaaya hai like tblcountry ke insert ke liye jab insert ki query run karenge tab trigger fire hoga
+--bassically DML trigger are two type like for(after),instead of (before)
+
+select * from Employee
+
+select * from tblcountry
+
+delete from tblcountry where cid=1010
+
+                                --after triger 
+alter trigger trg on tblcountry for insert,update,delete --sabke liye combine bhi bna skte hai 
+as
+begin
+select *from Employee
+end
+ 
+insert into tblcountry(cname)values('japan')
+
+-- this second type of trigger    --before trigger 
+--isme sirf trigger ke ander ki query hi execute hoti hai jiske liye trigger banaya hai vo execute nhi hoti
+--apne database ki table ke liye instead of trigger bna do taki usme koi insert update delete na kar ske
+create trigger trg2 on tblcountry instead of insert
+as
+begin
+select *from Employee
+end
+
+insert into tblcountry(cname)values('france')
+
+--data integrity problem--jab ham apne country table se like 3 number ki country like usa delete kar dete hai to employee table me jiski country- 
+--usa hogi vo bhi waha se delete ho jayegi or data integrated form me nhi hoga, isko data integrity problem kahenge
+
+--solution 1) for trigger- ye dono table se record delete kar deta hai, jisse data integrit problem nhi hoti
+--         2) foreign key -- foreign key country table se 3 number ki country usa delete nhi hone dega kyuki us pr foreign ke lagi hogi
+
+insert into tblreg(name,country)select name,country from tblemployee -- ek table ka data dusre table me khichne ke liye
+
+--solution using for trigger
+-- trigger me parameter nhi bnta
+-- jab trigger fire hota hai to database me do table bante hai -inserted & -deleted its called magic table trigger fire hone par bnte hai
+-- delete ki query execute krne par deleted wali table me record insert hoga
+-- insert ki query execute krne par inserted wali table me record insert hoga
+-- update ki query execute krne par purana record deleted me or naya record inserted table me store hoga
+-- magic table ko trigger ke trigger ke body me as begin end ke ander hi use kr skte hai or kahi ni use hogi
+-- table hai bhi or nhi bhi
+select *from inserted--ese dikhti nhi 
+select *from deleted--ese dikhti nhi
+
+select * from tblcountry
+select * from Employee
+
+create trigger trg3 on tblcountry for delete
+as
+begin
+delete from Employee where country=(select cid from deleted)
+end
+
+delete from tblcountry where cid=4
+
+-- Trigger
+-- 1)DDL Trigger--(for) - its created on database like -create,alter,drop,truncate
+--2)DML Trigger- its created on table (insert,update,delete) table me          --only this important---
+          -- A)for (after) B)instead of (before)
+--3)LOGON Trigger--(for)-
+
+
+--DDl Trigger
+create trigger trg4 on database for create_table
+as
+begin
+	print'your table is created successfully !!';
+end
+
+ create table tbl
+ (
+ id int primary key identity,
+ name varchar(50)
+ )
+ alter table tbl add city varchar(50)
+create trigger trg5 on database for alter_table 
+as
+begin
+	print'your table is alter successfully !!';
+end
+
+create trigger trg6 on database for create_table,alter_table,drop_table,truncate_table --sabke liye ek trigger bhi bna skte hai 
+as
+begin
+	print'your table is alter successfully !!';
+end
+
+--Logon trigger - jab bhi database banate hai or website banate hai, jab jayada log website access krte hai to vo hang hone lgti hai, performance 
+-- slow ho jaati hai, logon trigger use krne se user ko limited kr dete hai like one time me 1000 hi access kr skte hai
+
+
+----------------------------------------------------------------D:\pr05102022\AddNewForm.aspx-----------------------------------------------------
+
+<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="AddNewForm.aspx.cs" Inherits="pr05102022.AddNewForm" %>
+<%--jo page jis page par link hoga uspar vahi -MasterPageFile="~/Default.Master"/MasterPageFile="~/User.Master" - hoga--%>
+<%@ Register Assembly="AjaxControlToolkit" Namespace="AjaxControlToolkit" TagPrefix="ajax" %>  <%-- add this line for calender use --%>
+
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title></title>
+</head>
+<body>
+    <form id="form1" runat="server">
+        <div> 
+            <center>
+            <table> <%--page ko half me shif karne ke liye ek <tr> me (4) td bna do--%> 
+                <asp:ScriptManager ID="mng" runat="server"></asp:ScriptManager> <%-- add this line for calender use --%>
+                <tr>
+                    <td>Name:</td>
+                    <td><asp:TextBox ID="txtname" runat="server"></asp:TextBox></td>
+                </tr>
+                <tr>
+                    <td>Email:</td>
+                    <td><asp:TextBox ID="txtemail" runat="server"></asp:TextBox></td>
+                </tr>
+                <tr>
+                    <td>Password:</td>
+                    <td><asp:TextBox ID="txtpassword" runat="server"></asp:TextBox></td>
+                </tr>
+                <tr>
+                   <td>Date Of Birth:</td>
+                    <td><asp:TextBox ID="txtdob" runat="server"></asp:TextBox>
+                        <ajax:CalendarExtender ID="calender" runat="server" PopupButtonID="txtdob" PopupPosition="BottomRight" TargetControlID="txtdob" />
+                    </td> <%--PM> Install-Package AjaxControlToolkit -Version 19.1.0--%> <%--for install calender tool--%>
+
+                </tr>
+                <tr>
+                   <td>Age:</td>
+                    <td><asp:TextBox ID="txtage" runat="server"></asp:TextBox></td>
+                </tr>
+                <tr>
+                    <td>Salary:</td>
+                    <td><asp:TextBox ID="txtsalary" runat="server"></asp:TextBox></td>
+                </tr>
+                <tr>
+                
+                    <td>Mobile:</td>
+                    <td><asp:TextBox ID="txtmobile" runat="server"></asp:TextBox></td>
+                </tr>
+                <tr>
+                    <td>Gender:</td>
+                    <td><asp:RadioButtonList ID="rblgender" runat="server" RepeatColumns="3"> <%--Gender static binding --%>
+                        <%--<asp:ListItem Text="male" Value="1"></asp:ListItem> 
+                       <asp:ListItem Text="female" Value="2"></asp:ListItem>
+                       <asp:ListItem Text="other" Value="3"></asp:ListItem>--%>
+                        </asp:RadioButtonList></td>
+                </tr>
+                <tr>
+                
+                    <td>Blood Group:</td>
+                    <td><asp:RadioButtonList ID="rblbldgrp" runat="server" RepeatColumns="4"> <%--Blood Group static binding --%>
+                        <%--<asp:ListItem Text="O+" Value="1"></asp:ListItem> 
+                       <asp:ListItem Text="O-" Value="2"></asp:ListItem>
+                       <asp:ListItem Text="A+" Value="3"></asp:ListItem>
+                        <asp:ListItem Text="A-" Value="4"></asp:ListItem> 
+                       <asp:ListItem Text="B+" Value="5"></asp:ListItem>
+                       <asp:ListItem Text="B-" Value="6"></asp:ListItem>
+                        <asp:ListItem Text="AB+" Value="7"></asp:ListItem>
+                       <asp:ListItem Text="AB-" Value="8"></asp:ListItem>--%>
+                        </asp:RadioButtonList></td>
+                </tr>
+                <tr>
+                    <td>Department:</td>
+                    <td><asp:DropDownList ID="ddldepartment" runat="server"> <%--Department static binding--%>
+                        <%--<asp:ListItem Text="--Select--" Value="0"></asp:ListItem> 
+                       <asp:ListItem Text="Account" Value="1"></asp:ListItem>
+                       <asp:ListItem Text="IT" Value="2"></asp:ListItem>
+                       <asp:ListItem Text="HR" Value="3"></asp:ListItem>
+                       <asp:ListItem Text="Sales" Value="4"></asp:ListItem>--%>
+                        </asp:DropDownList></td>
+               </tr>
+                <tr>
+                
+                    <td>Country:</td>
+                    <td><asp:DropDownList ID="ddlcountry" runat="server" OnSelectedIndexChanged="ddlcountry_SelectedIndexChanged" AutoPostBack="true"></asp:DropDownList></td>
+                </tr>
+                <tr>
+                    <td>State:</td>  <%--autopostback true krna padega by default false rehta hai agar true ni karenge to event generate ni hoga--%>
+                    <td><asp:DropDownList ID="ddlstate" runat="server" OnSelectedIndexChanged="ddlstate_SelectedIndexChanged" AutoPostBack="true"></asp:DropDownList></td>
+               </tr>
+                <tr>
+                
+                    <td>City:</td>
+                    <td><asp:DropDownList ID="ddlcity" runat="server"></asp:DropDownList></td>
+                </tr>
+                <tr>
+                    <td>Hobbies:</td>
+                    <td><asp:CheckBoxList ID="cblhobbies" runat="server" RepeatColumns="3" ><%--RepeatColumns="5"--%>
+                        <asp:ListItem Text="Cricket" Value="0"></asp:ListItem> 
+                       <asp:ListItem Text="Hockey" Value="1"></asp:ListItem>
+                       <asp:ListItem Text="Cooking" Value="2"></asp:ListItem>
+                       <asp:ListItem Text="Playing" Value="3"></asp:ListItem>
+                       <asp:ListItem Text="Dancing" Value="4"></asp:ListItem>
+                        </asp:CheckBoxList></td>
+
+                </tr>
+                <tr>    
+                
+                    <td>Image Upload:</td>
+                    <td><asp:FileUpload ID="fuimage" runat="server"></asp:FileUpload></td>
+                </tr>
+               <tr> <%--<tr colspan="4">  in every tr have four td compulsory if you made in one tr four td(agar ek tr me 4 td bnate hai to har tr me 4 td banane honge ) colspan 4 ka mtlb 4 td--%>
+                     <%--<td></td>
+                    <td></td> //ya ese krlo ya colspan lga lo 4 or ek td me krlo
+                    <td></td>--%>
+                    <td>
+                        <asp:Button ID="btnsave" runat="server" Width="60px" Height="25px" BackColor="Green" ForeColor="White" Text="SAVE" OnClick="btnsave_Click" />
+                        <a href="LoginForm1.aspx">Sign In</a> <%--isko anchor tag bolte hai--%>
+                    </td>
+                </tr>
+                <tr> <%--<tr colspan="4"> in every tr have four td compulsory if you made in one tr four td(agar ek tr me 4 td bnate hai to har tr me 4 td banane honge ) colspan 4 ka mtlb 4 td--%>
+                    <%--<td></td>
+                    <td></td> //ya ese krlo ya colspan lga lo 4 or ek td me krlo
+                    <td></td>--%>
+                    <td>
+                        <asp:TextBox ID="txtsearch" runat="server"></asp:TextBox>
+                        <asp:Button ID="btnsearch" runat="server" Width="60px" Height="25px" BackColor="Green" ForeColor="White" Text="Search" OnClick="btnsearch_Click" />
+
+                    </td>
+                </tr>
+           </table>
+            </center>
+
+            <center>
+            <table>
+                <tr colspan="4"> <%--in every tr have four td compulsory if you made in one tr four td(agar ek tr me 4 td bnate hai to har tr me 4 td banane honge ) colspan 4 ka mtlb 4 td--%>
+                    <%--<td></td>
+                    <td></td> //ya ese krlo ya colspan lga lo 4 or ek td me krlo
+                    <td></td>--%>
+                    <td><asp:GridView ID="gvaddnew" runat="server" OnRowCommand="gvaddnew_RowCommand" AutoGenerateColumns="False" BackColor="White" BorderColor="#336666" BorderStyle="Double" BorderWidth="3px" CellPadding="4" GridLines="Horizontal"> <%--onrowcommand generate karenge gridview par na ki button par--%>
+                        <Columns>
+                            <asp:TemplateField HeaderText=" New Form ID">
+                                <ItemTemplate>
+                                    <%#Eval("nid") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" New Form Name">
+                                <ItemTemplate>
+                                    <%#Eval("nname") %> (<%#Eval("gname") %>)
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <%--<asp:TemplateField HeaderText=" New Form Email">
+                                <ItemTemplate>
+                                    <%#Eval("nemail") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>         do not show on gridview email id or password
+                            <asp:TemplateField HeaderText=" New Form Password">
+                                <ItemTemplate>
+                                    <%#Eval("npassword") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>--%>
+                            <asp:TemplateField HeaderText=" New Form Date Of Birth"> <%--// enter date in dob textbox mmddyy format on runtime on form other show error convert nvarchar datatype, isko calender laga kr remove kr skte hai--%>
+                                <ItemTemplate>
+                                    <%#Eval("date_of_birth") %> 
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" New Form Age">
+                                <ItemTemplate>
+                                    <%#Eval("nge") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" New Form Salary">
+                                <ItemTemplate>
+                                    <%#Eval("nsalary") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" New Form Mobile">
+                                <ItemTemplate>
+                                    <%#Eval("nmobile") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <%--<%--<asp:TemplateField HeaderText=" New Form Gender">
+                                <ItemTemplate>
+                                    <%#Eval("gname") %>
+                                   <%-- <%#Eval("ngender").ToString()=="1" ? "Male" :Eval("ngender").ToString()=="2" ? "Female" : "Other" %>--%>
+                                <%--</ItemTemplate>
+                            </asp:TemplateField>--%>
+                            <asp:TemplateField HeaderText=" New Form Blood Group">
+                                <ItemTemplate>
+                                    <%#Eval("bgname") %>
+                                    <%--<%#Eval("nbloodgroup").ToString()=="1" ? "O+" :Eval("nbloodgroup").ToString()=="2" ? "O-" : Eval("nbloodgroup").ToString()=="3" ? "A+" :Eval("nbloodgroup").ToString()=="4" ? "A-" : Eval("nbloodgroup").ToString()=="5" ? "B+" : Eval("nbloodgroup").ToString()=="6" ? "B-" : Eval("nbloodgroup").ToString()=="7" ? "AB+" : "AB-" %>--%>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" New Form Department">
+                                <ItemTemplate>
+                                    <%#Eval("dname") %>
+                                   <%-- <%#Eval("ndepartment").ToString()=="1" ? "Hr" :Eval("ndepartment").ToString()=="2" ? "Information Technology" : "Sales" %>--%>
+                                </ItemTemplate>
+                            </asp:TemplateField>                      
+                            <asp:TemplateField HeaderText=" New Form Address"> <%--Country--%>
+                                <ItemTemplate>
+                                    <%#Eval("cityname") %>, <%#Eval("sname") %>, <%#Eval("cname") %> <%--ese bhi kr sakte hai--%>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <%--<asp:TemplateField HeaderText=" New Form State">
+                                <ItemTemplate>
+                                    <%#Eval("sname") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                                <asp:TemplateField HeaderText=" New Form city">
+                                <ItemTemplate>
+                                    <%#Eval("cityname") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>--%>
+                             <asp:TemplateField HeaderText=" New Form Hobbies">
+                                <ItemTemplate>
+                                   <%-- <%#Eval("hname") %>--%>
+                                    <%#Eval("nhobbies") %>
+                                    
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" New Form Image">
+                                <ItemTemplate>
+                                   <asp:Image ID="img1" runat="server" Width="50px" Height="40px" ImageUrl='<%#Eval("nimage","~/pics/{0}") %>' />
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" Inserted Date">
+                                <ItemTemplate>
+                                    <%#Eval("Date") %>  <%--inserted_date--%>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField >
+                                <ItemTemplate>                                     <%--command name me edit delete update cancel ni le skte kyuki ye predefine keyword hai isliye A B C etc ka use krenge--%>
+                                    <asp:Button ID="btndelete" runat="server" Text="Delete" Height="25px" Width="60px" BackColor="Red" ForeColor="White" OnClientClick="return confirm('are confirm to delete')" CommandName="A" CommandArgument='<%#Eval("nid")+","+Eval("nimage") %>' />
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField> 
+                                <ItemTemplate>
+                                    <asp:Button ID="btnedit" runat="server" Text="EDIT" Height="25px" Width="60px" BackColor="Red" ForeColor="White" CommandName="B" CommandArgument='<%#Eval("nid") %>' />
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                        </Columns>
+                        <FooterStyle BackColor="White" ForeColor="#333333" />
+                        <HeaderStyle BackColor="#336666" Font-Bold="True" ForeColor="White" />
+                        <PagerStyle BackColor="#336666" ForeColor="White" HorizontalAlign="Center" />
+                        <RowStyle BackColor="White" ForeColor="#333333" />
+                        <SelectedRowStyle BackColor="#339966" Font-Bold="True" ForeColor="White" />
+                        <SortedAscendingCellStyle BackColor="#F7F7F7" />
+                        <SortedAscendingHeaderStyle BackColor="#487575" />
+                        <SortedDescendingCellStyle BackColor="#E5E5E5" />
+                        <SortedDescendingHeaderStyle BackColor="#275353" />
+                        </asp:GridView></td> <%--jo button gridview ke ander hoga uska code onrowcommand ke ander karenge--%>
+                </tr>
+            </table>
+               </center>
+        </div>
+    </form>
+</body>
+</html>
+
+
+------------------------------------------------------d:\pr05102022\AddNewForm.aspx.cs-----------------------------------------------------------------------------
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+using System.Data.SqlClient;
+using System.Configuration;
+using System.IO;
+
+
+namespace pr05102022
+{
+    public partial class AddNewForm : System.Web.UI.Page
+    {
+        // SqlConnection con = new SqlConnection("data source=DESKTOP-UTVKD93;initial catalog=db54_05102022;integrated security=true");
+        SqlConnection con = new SqlConnection(ConfigurationManager.ConnectionStrings["abc"].ConnectionString);
+
+        protected void Page_Load(object sender, EventArgs e) // agar koi error aati hai or run nhi ho rha to page ke load ka code comment kar do isse code nhi chalega or form run ho jaayega
+        {
+            if (!IsPostBack) // save ke button pr click krne par !ispostback ke ander ke function dubara page load par call ni honge ya ek hi bar call honge bar bar ni honge
+            {
+                BindGrid(); // page load par data show karane ke liye by Gridview agar is function ko !ispostback ke bahar rakhenge to link button use hoga ni to button use kr skte hai 
+                BindGender(); // page load par Gender Bind karne ke liye
+                BindDepartment();// page load par Department Bind karne ke liye
+                BindCountry(); // page load par Country Bind karne ke liye
+                BindBloodGroup(); // page load par Blood Group Bind karne ke
+
+                ddlstate.Items.Insert(0, new ListItem("--select--", "0"));
+                ddlcity.Items.Insert(0, new ListItem("--select--", "0"));
+                ddlstate.Enabled = false; // insert update ke baad state city show ni hoga
+                ddlcity.Enabled = false; // insert update ke baad state city show ni hoga
+            }
+        }
+        public void BindGender()
+        {
+            con.Open();
+            SqlCommand cmd = new SqlCommand("sp_tbladdnewform", con);
+            cmd.CommandType = CommandType.StoredProcedure; // procedure ka rool hai jitne parameter hote hai utne parameter pass krne hote hai 
+            cmd.Parameters.AddWithValue("@action", "Gender"); //iske liye dusra tarka hota hai ki procedure ke har variable ko initialize kar do int ko 0 se or varchar ko null se
+            SqlDataAdapter da = new SqlDataAdapter(cmd); //agar nhi karenge to saare parameter pass krne honge
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+            con.Close();
+            rblgender.DataValueField = "gid"; // static binding ye field yaha use ni hogi
+            rblgender.DataTextField = "gname"; // static binding ye field yaha use ni hogi
+            rblgender.DataSource = dt;
+            rblgender.DataBind();
+        }
+
+        public void BindBloodGroup()
+        {
+            con.Open();
+            SqlCommand cmd = new SqlCommand("sp_tbladdnewform", con);
+            cmd.CommandType = CommandType.StoredProcedure; // procedure ka rool hai jitne parameter hote hai utne parameter pass krne hote hai 
+            cmd.Parameters.AddWithValue("@action", "BldGroup"); //iske liye dusra tarka hota hai ki procedure ke har variable ko initialize kar do int ko 0 se or varchar ko null se
+            SqlDataAdapter da = new SqlDataAdapter(cmd); //agar nhi karenge to saare parameter pass krne honge
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+            con.Close();
+            rblbldgrp.DataValueField = "bgid"; // static binding ye field yaha use ni hogi
+            rblbldgrp.DataTextField = "bgname"; // static binding ye field yaha use ni hogi
+            rblbldgrp.DataSource = dt; 
+            rblbldgrp.DataBind();
+        }
+
+        public void BindDepartment()
+        {
+            con.Open();
+            SqlCommand cmd = new SqlCommand("sp_tbladdnewform", con);
+            cmd.CommandType = CommandType.StoredProcedure; // procedure ka rool hai jitne parameter hote hai utne parameter pass krne hote hai 
+            cmd.Parameters.AddWithValue("@action", "Department"); //iske liye dusra tarka hota hai ki procedure ke har variable ko initialize kar do int ko 0 se or varchar ko null se
+            SqlDataAdapter da = new SqlDataAdapter(cmd); //agar nhi karenge to saare parameter pass krne honge
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+            con.Close();
+            ddldepartment.DataValueField = "did"; //static binding ye field yaha use ni hogi
+            ddldepartment.DataTextField = "dname"; //static binding ye field yaha use ni hogi
+            ddldepartment.DataSource = dt;
+            ddldepartment.DataBind();
+            ddldepartment.Items.Insert(0, new ListItem("--select--", "0"));
+        }
+
+        public void BindCountry()
+        {
+            con.Open();
+            SqlCommand cmd = new SqlCommand("sp_tbladdnewform", con);
+            cmd.CommandType = CommandType.StoredProcedure; // procedure ka rool hai jitne parameter hote hai utne parameter pass krne hote hai 
+            cmd.Parameters.AddWithValue("@action", "Country"); //iske liye dusra tarka hota hai ki procedure ke har variable ko initialize kar do int ko 0 se or varchar ko null se
+            SqlDataAdapter da = new SqlDataAdapter(cmd); //agar nhi karenge to saare parameter pass krne honge
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+            con.Close();
+            ddlcountry.DataValueField = "cid";
+            ddlcountry.DataTextField = "cname";
+            ddlcountry.DataSource = dt;
+            ddlcountry.DataBind();
+            ddlcountry.Items.Insert(0, new ListItem("--select--", "0"));
+        }
+
+        public void BindState()
+        {
+            con.Open();
+            SqlCommand cmd = new SqlCommand("sp_tbladdnewform", con);
+            cmd.CommandType = CommandType.StoredProcedure; // procedure ka rool hai jitne parameter hote hai utne parameter pass krne hote hai 
+            cmd.Parameters.AddWithValue("@action", "State"); //iske liye dusra tarka hota hai ki procedure ke har variable ko initialize kar do int ko 0 se or varchar ko null se
+            cmd.Parameters.AddWithValue("@ncountry", ddlcountry.SelectedValue);
+            SqlDataAdapter da = new SqlDataAdapter(cmd); //agar nhi karenge to saare parameter pass krne honge
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+            con.Close();
+            ddlstate.Enabled = true;
+            ddlstate.DataValueField = "sid";
+            ddlstate.DataTextField = "sname";
+            ddlstate.DataSource = dt;
+            ddlstate.DataBind();
+            ddlstate.Items.Insert(0, new ListItem("--select--", "0"));
+        }
+
+        public void BindCity()
+        {
+            con.Open();
+            SqlCommand cmd = new SqlCommand("sp_tbladdnewform", con);
+            cmd.CommandType = CommandType.StoredProcedure; // procedure ka rool hai jitne parameter hote hai utne parameter pass krne hote hai 
+            cmd.Parameters.AddWithValue("@action", "City"); //iske liye dusra tarka hota hai ki procedure ke har variable ko initialize kar do int ko 0 se or varchar ko null se
+            cmd.Parameters.AddWithValue("@nstate", ddlstate.SelectedValue);
+            SqlDataAdapter da = new SqlDataAdapter(cmd); //agar nhi karenge to saare parameter pass krne honge
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+            con.Close();
+            ddlcity.Enabled = true;
+            ddlcity.DataValueField = "cityid";
+            ddlcity.DataTextField = "cityname";
+            ddlcity.DataSource = dt;
+            ddlcity.DataBind();
+            ddlcity.Items.Insert(0, new ListItem("--select--", "0"));
+        }
+
+        public void BindGrid() //same page par data show karane ke liye bindgrid ya show function
+        {
+            con.Open();
+            SqlCommand cmd = new SqlCommand("sp_tbladdnewform", con);
+            cmd.CommandType = CommandType.StoredProcedure; // procedure ka rool hai jitne parameter hote hai utne parameter pass krne hote hai 
+            cmd.Parameters.AddWithValue("@action", "Join"); //iske liye dusra tarka hota hai ki procedure ke har variable ko initialize kar do int ko 0 se or varchar ko null se
+            SqlDataAdapter da = new SqlDataAdapter(cmd); //agar nhi karenge to saare parameter pass krne honge
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+            con.Close();
+            gvaddnew.DataSource = dt;
+            gvaddnew.DataBind();
+
+
+        }
+
+        public void Clear()
+        {
+            txtname.Text = "";
+            txtemail.Text = "";
+            txtpassword.Text = "";
+            txtdob.Text = "";
+            txtage.Text = "";
+            txtsalary.Text = "";
+            txtmobile.Text = "";
+            rblgender.ClearSelection();
+            rblbldgrp.ClearSelection();
+            cblhobbies.ClearSelection();
+            ddldepartment.SelectedValue = "0";
+            ddlcountry.SelectedValue = "0";
+            ddlstate.SelectedValue = "0";
+            ddlcity.SelectedValue = "0";
+            ddlstate.Enabled = false; // insert update ke baad state city show ni hoga
+            ddlcity.Enabled = false; // insert update ke baad state city show ni hoga
+            btnsave.Text = "SAVE";
+        }
+
+
+        protected void ddlcountry_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if(ddlcountry.SelectedValue=="0")
+            {
+                ddlstate.Enabled = false;
+                ddlcity.Enabled = false;
+                ddlstate.SelectedValue = "0";
+                ddlcity.SelectedValue = "0";
+            }
+            else
+            {
+                BindState(); // cashcading dropdown page ke load par bind ni hota country ke onchanged index par bind hoga
+            }
+            
+        }
+
+        protected void ddlstate_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if(ddlstate.SelectedValue=="0")
+            {
+                ddlcity.Enabled = false;
+                ddlcity.SelectedValue = "0";
+            }
+            else
+            {
+                BindCity(); // cashcading dropdown page ke load par bind ni hota state ke onchanged index par bind hoga
+            }
+           
+        }
+
+        protected void btnsave_Click(object sender, EventArgs e) 
+        {
+            string kk = "";
+            for (int i = 0; i < cblhobbies.Items.Count; i++) // loop se bhi kr skte hai code chhota ho jayega
+            {
+                if (cblhobbies.Items[i].Selected == true)
+                {
+                    kk += cblhobbies.Items[i].Text + ","; // value ko overrite na kare isliye plus use krte hai
+                }
+            }
+            kk = kk.TrimEnd(',');
+            //if(cblhobbies.Items[0].Selected==true)
+            //{
+            //    kk += cblhobbies.Items[0].Text; // value ko overrite na kare isliye plus use krte hai
+            //}
+            //if (cblhobbies.Items[1].Selected == true)
+            //{
+            //    kk += cblhobbies.Items[1].Text; // value ko overrite na kare isliye plus use krte hai
+            //}
+            //if (cblhobbies.Items[2].Selected == true)
+            //{
+            //    kk += cblhobbies.Items[2].Text; // value ko overrite na kare isliye plus use krte hai
+            //}
+            //if (cblhobbies.Items[3].Selected == true)
+            //{
+            //    kk += cblhobbies.Items[3].Text; // value ko overrite na kare isliye plus use krte hai
+            //}
+            //if (cblhobbies.Items[4].Selected == true)
+            //{
+            //    kk += cblhobbies.Items[4].Text; // value ko overrite na kare isliye plus use krte hai
+            //}
+            if (btnsave.Text == "SAVE")
+            {
+                string FN = DateTime.Now.Ticks.ToString() + Path.GetFileName(fuimage.PostedFile.FileName); // database me image ka naam or current date time bhi jayega bhejne ke liye
+                                                                                                           // folder me same name ki image insert nhi ho skti par database me ho skti hai isliye date time bhi bhejenge
+                                                                                                           // ticks time ko integer number me convert kar dega jo kabhi match ni karega
+                fuimage.SaveAs(Server.MapPath("pics" + "\\" + FN)); // image ko folder me bhejne ke liye or folder ke under jane ke liye backslash(\\)
+                con.Open();                                                     //for  static binding ke liye text field use karenge--  '" + ddldepartment.SelectedItem.Text + "'
+                                                                //with query  // insert into tbladdnewform(nname,nemail,npassword,nge,nsalary,nmobile,ngender,nbloodgroup,ndepartment,ncountry,nstate,ncity,nhobbies,nimage)values('" + txtname.Text + "','" + txtemail.Text + "','" + txtpassword.Text + "','" + txtage.Text + "','" + txtsalary.Text + "','" + txtmobile.Text + "','" + rblgender.SelectedValue + "','" + rblbldgrp.SelectedValue + "','" + ddldepartment.SelectedValue + "','" + ddlcountry.SelectedValue + "','" + ddlstate.SelectedValue + "','" + ddlcity.SelectedValue + "','" + kk + "','" + FN + "')
+                SqlCommand cmd = new SqlCommand("sp_tbladdnewform", con); // with stored procedure
+                cmd.CommandType = CommandType.StoredProcedure; // procedure ka rool hai jitne parameter hote hai utne parameter pass krne hote hai 
+                cmd.Parameters.AddWithValue("@action", "Insert");
+                cmd.Parameters.AddWithValue("@nname",txtname.Text);
+                cmd.Parameters.AddWithValue("@nemail", txtemail.Text);
+                cmd.Parameters.AddWithValue("@npassword", txtpassword.Text);
+                cmd.Parameters.AddWithValue("@nge", txtage.Text);
+                cmd.Parameters.AddWithValue("@nsalary", txtsalary.Text);
+                cmd.Parameters.AddWithValue("@nmobile", txtmobile.Text);
+                cmd.Parameters.AddWithValue("@ngender", rblgender.SelectedValue);
+                cmd.Parameters.AddWithValue("@ndepartment", ddldepartment.SelectedValue);
+                cmd.Parameters.AddWithValue("@ncountry", ddlcountry.SelectedValue);
+                cmd.Parameters.AddWithValue("@nstate", ddlstate.SelectedValue);
+                cmd.Parameters.AddWithValue("@ncity", ddlcity.SelectedValue);
+                cmd.Parameters.AddWithValue("@nbloodgroup", rblbldgrp.SelectedValue);
+                cmd.Parameters.AddWithValue("@nhobbies", kk);
+                cmd.Parameters.AddWithValue("@nimage", FN);
+                cmd.Parameters.AddWithValue("@dob", txtdob.Text); // enter date in dob textbox mmddyy format on runtime on form other show error convert nvarchar datatype, isko calender laga kr remove kr skte hai
+                cmd.ExecuteNonQuery();
+                con.Close();
+
+
+            }
+            else
+            {
+                string FN = Path.GetFileName(fuimage.PostedFile.FileName); // database me image ka naam jaega
+                    con.Open(); // with query // SqlCommand cmd = new SqlCommand("update tbladdnewform set nname='" + txtname.Text + "',nemail='" + txtemail.Text + "',npassword='" + txtpassword.Text + "',nge='" + txtage.Text + "',nsalary='" + txtsalary.Text + "',nmobile='" + txtmobile.Text + "',ngender='" + rblgender.SelectedValue + "',nbloodgroup='" + rblbldgrp.SelectedValue + "',ndepartment='" + ddldepartment.SelectedValue + "',ncountry='" + ddlcountry.SelectedValue + "',nstate='" + ddlstate.SelectedValue + "',ncity='" + ddlcity.SelectedValue + "',nhobbies='" + kk + "',nimage='" + FN + "' where nid='" + ViewState["idd"] + "'", con);
+                    SqlCommand cmd = new SqlCommand("sp_tbladdnewform", con);
+                    cmd.CommandType = CommandType.StoredProcedure; // procedure ka rool hai jitne parameter hote hai utne parameter pass krne hote hai 
+                    cmd.Parameters.AddWithValue("@action", "Update");
+                    cmd.Parameters.AddWithValue("@nid", ViewState["idd"]);
+                    cmd.Parameters.AddWithValue("@nname", txtname.Text);
+                    cmd.Parameters.AddWithValue("@nemail", txtemail.Text);
+                    cmd.Parameters.AddWithValue("@npassword", txtpassword.Text);
+                    cmd.Parameters.AddWithValue("@nge", txtage.Text);
+                    cmd.Parameters.AddWithValue("@nsalary", txtsalary.Text);
+                    cmd.Parameters.AddWithValue("@nmobile", txtmobile.Text);
+                    cmd.Parameters.AddWithValue("@ngender", rblgender.SelectedValue);
+                    cmd.Parameters.AddWithValue("@ndepartment", ddldepartment.SelectedValue);
+                    cmd.Parameters.AddWithValue("@ncountry", ddlcountry.SelectedValue);
+                    cmd.Parameters.AddWithValue("@nstate", ddlstate.SelectedValue);
+                    cmd.Parameters.AddWithValue("@ncity", ddlcity.SelectedValue);
+                    cmd.Parameters.AddWithValue("@nbloodgroup", rblbldgrp.SelectedValue);
+                    cmd.Parameters.AddWithValue("@nhobbies", kk);
+                    cmd.Parameters.AddWithValue("@dob", txtdob.Text);
+                if (FN!="") // agar photo update nhi krte to purani photo jaayegi,agar photo krte hai fn me photo jaayegi // folder me same name ki image insert nhi ho skti par database me ho skti hai isliye date time bhi bhejenge
+                {
+                    FN = DateTime.Now.Ticks.ToString() + FN; //current date time bhi jayega bhejne ke liye
+                                                             // ticks time ko integer number me convert kar dega jo kabhi match ni karega
+                    fuimage.SaveAs(Server.MapPath("pics" + "\\" + FN)); // image ko folder me bhejne ke liye or folder ke under jane ke liye backslash(\\)
+                    File.Delete(Server.MapPath("pics" + "\\" + ViewState["img"])); // folder se image delete krne ke liye
+                    cmd.Parameters.AddWithValue("@nimage", FN); // jab photo upload hogi tab chalegi
+
+                }
+                else
+                {
+                    cmd.Parameters.AddWithValue("@nimage", ViewState["img"]); // jab photo upload nhi hogi ya blank jaayegi tab chalegi
+                }
+                    
+                    cmd.ExecuteNonQuery();
+                    con.Close();
+                    
+                
+                //else
+                //{
+                //    con.Open();  // with query                                  //for  static binding ke liye text field use karenge--  '" + ddldepartment.SelectedItem.Text + "'
+                //    SqlCommand cmd = new SqlCommand("update tbladdnewform set nname='" + txtname.Text + "',nemail='" + txtemail.Text + "',npassword='" + txtpassword.Text + "',nge='" + txtage.Text + "',nsalary='" + txtsalary.Text + "',nmobile='" + txtmobile.Text + "',ngender='" + rblgender.SelectedValue + "',nbloodgroup='" + rblbldgrp.SelectedValue + "',ndepartment='" + ddldepartment.SelectedValue + "',ncountry='" + ddlcountry.SelectedValue + "',nstate='" + ddlstate.SelectedValue + "',ncity='" + ddlcity.SelectedValue + "',nhobbies='" + kk + "',nimage='" + ViewState["img"] + "' where nid='" + ViewState["idd"] + "'", con);
+                //    cmd.ExecuteNonQuery();
+                //    con.Close();
+                //}
+
+
+
+            }
+            BindGrid(); // function overriding method overriding same name and same argument(paramenter)
+            Clear(); // function overriding method overriding same name and same argument(paramenter)
+        }
+
+        protected void gvaddnew_RowCommand(object sender, GridViewCommandEventArgs e) // jo button gridview ke ander hoga uska code onrowcommand ke ander karenge
+        {
+            if (e.CommandName == "A")
+            {
+                string[] arr = e.CommandArgument.ToString().Split(',');
+                con.Open(); // with query // SqlCommand cmd = new SqlCommand("delete from tbladdnewform where nid='" + arr[0] + "' ", con);
+                SqlCommand cmd = new SqlCommand("sp_tbladdnewform", con);
+                cmd.CommandType = CommandType.StoredProcedure; // procedure ka rool hai jitne parameter hote hai utne parameter pass krne hote hai 
+                cmd.Parameters.AddWithValue("@action", "Delete");
+                cmd.Parameters.AddWithValue("@nid", arr[0]);
+                cmd.ExecuteNonQuery();
+                con.Close();
+               
+                BindGrid(); // function overriding method overriding same name and same argument(paramenter)
+                File.Delete(Server.MapPath("pics" + "\\" + arr[1])); // yaha arr[1] me image milegi kyuki command argument ke command name (A) me hamne uid or uimage  liya hai 
+            }
+            else if (e.CommandName == "B") // procedure use krne se hacking ni hogi jese ki search box me query run ho jaati hai isiliye stored procedure use krte or name me special character bhi add kr skte hai using procedure
+            {
+                con.Open(); // with query // SqlCommand cmd = new SqlCommand("select * from tbladdnewform where nid='" + e.CommandArgument + "' ", con);
+                SqlCommand cmd = new SqlCommand("sp_tbladdnewform", con);
+                cmd.CommandType = CommandType.StoredProcedure; // procedure ka rool hai jitne parameter hote hai utne parameter pass krne hote hai 
+                cmd.Parameters.AddWithValue("@action", "Edit");
+                cmd.Parameters.AddWithValue("@nid", e.CommandArgument);
+                SqlDataAdapter da = new SqlDataAdapter(cmd);
+                DataTable dt = new DataTable();
+                da.Fill(dt);
+                con.Close();
+                BindGrid(); // function overriding method overriding same name and same argument(paramenter)
+                txtname.Text = dt.Rows[0]["nname"].ToString(); // tostring me convert krke textbox me show karenge agar isko use ni karenge to value ni jayegi text box me
+                txtemail.Text = dt.Rows[0]["nemail"].ToString();
+                txtpassword.Text = dt.Rows[0]["npassword"].ToString();
+                txtdob.Text = dt.Rows[0]["dob"].ToString();
+                txtage.Text = dt.Rows[0]["nge"].ToString();
+                txtsalary.Text = dt.Rows[0]["nsalary"].ToString();
+                txtmobile.Text = dt.Rows[0]["nmobile"].ToString();
+                rblgender.SelectedValue = dt.Rows[0]["ngender"].ToString();
+                rblbldgrp.SelectedValue = dt.Rows[0]["nbloodgroup"].ToString();
+                ddldepartment.SelectedValue = dt.Rows[0]["ndepartment"].ToString();
+                ddlcountry.SelectedValue = dt.Rows[0]["ncountry"].ToString();
+                BindState(); // cashcading dropdown me state ko edit karne se pahle bind krna pdta hai ni to edit ke time pr state show ni hoga
+                ddlstate.SelectedValue = dt.Rows[0]["nstate"].ToString();
+                BindCity(); // cashcading dropdown me city ko edit karne se pahle bind krna pdta hai ni to edit ke time pr city show ni hoga
+                ddlcity.SelectedValue = dt.Rows[0]["ncity"].ToString();
+                string[] arr = dt.Rows[0]["nhobbies"].ToString().Split(',');
+                cblhobbies.ClearSelection(); // old check ko remove krne ke liye
+                for (int i = 0; i < cblhobbies.Items.Count; i++)
+                {
+                    for (int j = 0; j < arr.Length; j++)
+                    {
+                        if (cblhobbies.Items[i].Text == arr[j])
+                        {
+                            cblhobbies.Items[i].Selected = true;
+                        }
+                    }
+                }
+                ViewState["img"] = dt.Rows[0]["nimage"].ToString(); // file upload control nimage ki value ko store ni kr skta isliye viewstate["img"] me store karate hai
+                btnsave.Text = "UPDATE";
+                ViewState["idd"] = e.CommandArgument; // its a global variable, e.CommandArugment ki value ko viewstate[] me store karke update vali query me use karenge
+                                                      // kyunki e.commandArgument ko row command ke bahar use ni kr skte
+            }
+        }
+
+        protected void btnsearch_Click(object sender, EventArgs e)
+        {
+            con.Open(); // single backside % add krne se alok se related sare name show honge or front or backside dono me % add krne se last name ke saath bhi search karega jese kumar alok 
+            SqlCommand cmd = new SqlCommand("sp_tbladdnewform", con);
+            cmd.CommandType = CommandType.StoredProcedure; // procedure use krne se hacking ni hogi jese ki search box me query run ho jaati hai isiliye stored procedure use krte or name me special character bhi add kr skte hai using procedure
+            cmd.Parameters.AddWithValue("@action","Search");
+            cmd.Parameters.AddWithValue("@key", txtsearch.Text);
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+            con.Close();
+            gvaddnew.DataSource = dt;
+            gvaddnew.DataBind();
+        }
+    }
+}
+
+--------------------------------------------------------------------D:\pr05102022\RegistrationForm.aspx-------------------------------------------------------------
+
+<%--<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="RegistrationForm.aspx.cs" Inherits="pr05102022.RegistrationForm" %>--%> <%-- use Without master page--%> 
+<%@ Page Language="C#" AutoEventWireup="true"  MasterPageFile="~/Default.Master" CodeBehind="RegistrationForm.aspx.cs" Inherits="pr05102022.RegistrationForm" %> <%--using master page--%>
+<%--jo page jis page par link hoga uspar vahi -MasterPageFile="~/Default.Master"/MasterPageFile="~/User.Master" - hoga--%>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server"> <%--Master page Header page Footer page ko debug nhi kr skte--%>
+<%--<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"> use without master page
+<head runat="server">
+    <title></title>
+</head>
+<body>
+    <form id="form1" runat="server">
+        <div>--%>
+            <table>
+                <tr>
+                    <td>Name:</td>
+                    <td><asp:TextBox ID="txtname" runat="server"></asp:TextBox></td>
+                </tr>
+                <tr>
+                    <td>Age:</td>
+                    <td><asp:TextBox ID="txtage" runat="server"></asp:TextBox></td>
+                </tr>
+                <tr>
+                    <td>Salary:</td>
+                    <td><asp:TextBox ID="txtsalary" runat="server"></asp:TextBox></td>
+                </tr>
+                <tr>
+                    <td>Mobile:</td>
+                    <td><asp:TextBox ID="txtmobile" runat="server"></asp:TextBox></td>
+                </tr>
+                <tr>
+                    <td>Gender:</td>
+                    <td><asp:RadioButtonList ID="rblgender" runat="server" RepeatColumns="3"> <%--Gender static binding --%>
+                        <%--<asp:ListItem Text="male" Value="1"></asp:ListItem> 
+                       <asp:ListItem Text="female" Value="2"></asp:ListItem>
+                       <asp:ListItem Text="other" Value="3"></asp:ListItem>--%>
+                        </asp:RadioButtonList></td>
+                </tr>
+                <tr>
+                    <td>Blood Group:</td>
+                    <td><asp:RadioButtonList ID="rblbldgrp" runat="server" RepeatColumns="8"> <%--Blood Group static binding --%>
+                        <%--<asp:ListItem Text="O+" Value="1"></asp:ListItem> 
+                       <asp:ListItem Text="O-" Value="2"></asp:ListItem>
+                       <asp:ListItem Text="A+" Value="3"></asp:ListItem>
+                        <asp:ListItem Text="A-" Value="4"></asp:ListItem> 
+                       <asp:ListItem Text="B+" Value="5"></asp:ListItem>
+                       <asp:ListItem Text="B-" Value="6"></asp:ListItem>
+                        <asp:ListItem Text="AB+" Value="7"></asp:ListItem>
+                       <asp:ListItem Text="AB-" Value="8"></asp:ListItem>--%>
+                        </asp:RadioButtonList></td>
+                </tr>
+                <tr>
+                    <td>Department:</td>
+                    <td><asp:DropDownList ID="ddldepartment" runat="server"> <%--Department static binding--%>
+                        <%--<asp:ListItem Text="--Select--" Value="0"></asp:ListItem> 
+                       <asp:ListItem Text="Account" Value="1"></asp:ListItem>
+                       <asp:ListItem Text="IT" Value="2"></asp:ListItem>
+                       <asp:ListItem Text="HR" Value="3"></asp:ListItem>
+                       <asp:ListItem Text="Sales" Value="4"></asp:ListItem>--%>
+                        </asp:DropDownList></td>
+                </tr>
+                <tr>
+                    <td>Country:</td>
+                    <td><asp:DropDownList ID="ddlcountry" runat="server" OnSelectedIndexChanged="ddlcountry_SelectedIndexChanged" AutoPostBack="true"></asp:DropDownList></td>
+                </tr>
+                <tr>
+                    <td>State:</td>  <%--autopostback true krna padega by default false rehta hai agar true ni karenge to event generate ni hoga--%>
+                    <td><asp:DropDownList ID="ddlstate" runat="server" OnSelectedIndexChanged="ddlstate_SelectedIndexChanged" AutoPostBack="true"></asp:DropDownList></td>
+                </tr>
+                <tr>
+                    <td>City:</td>
+                    <td><asp:DropDownList ID="ddlcity" runat="server"></asp:DropDownList></td>
+                </tr>
+                <tr>
+                    <td>Hobbies:</td>
+                    <td><asp:CheckBoxList ID="cblhobbies" runat="server" RepeatColumns="5">
+                        <asp:ListItem Text="Cricket" Value="0"></asp:ListItem> 
+                       <asp:ListItem Text="Hockey" Value="1"></asp:ListItem>
+                       <asp:ListItem Text="Cooking" Value="2"></asp:ListItem>
+                       <asp:ListItem Text="Playing" Value="3"></asp:ListItem>
+                       <asp:ListItem Text="Dancing" Value="4"></asp:ListItem>
+                        </asp:CheckBoxList>
+
+                    </td>
+                    </tr>
+                <tr>
+                    <td>Image Upload:</td>
+                    <td><asp:FileUpload ID="fuimage" runat="server"></asp:FileUpload></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td><asp:Button ID="btnsave" runat="server" Text="SAVE" OnClick="btnsave_Click" /></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>
+                        <asp:TextBox ID="txtsearch" runat="server"></asp:TextBox>
+                        <asp:Button ID="btnsearch" runat="server" Text="Search" OnClick="btnsearch_Click" />
+
+                    </td>
+                <tr>
+                    <td></td>
+                    <td><asp:GridView ID="gvregistration" runat="server" OnRowCommand="gvregistration_RowCommand" AutoGenerateColumns="False" BackColor="White" BorderColor="#336666" BorderStyle="Double" BorderWidth="3px" CellPadding="4" GridLines="Horizontal"> <%--onrowcommand generate karenge gridview par na ki button par--%>
+                        <Columns>
+                            <asp:TemplateField HeaderText=" Registration ID">
+                                <ItemTemplate>
+                                    <%#Eval("rid") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" Registration Name">
+                                <ItemTemplate>
+                                    <%#Eval("rname") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" Registration Age">
+                                <ItemTemplate>
+                                    <%#Eval("age") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" Registration Salary">
+                                <ItemTemplate>
+                                    <%#Eval("salary") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" Registration Mobile">
+                                <ItemTemplate>
+                                    <%#Eval("mobile") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" Registration Gender">
+                                <ItemTemplate>
+                                    <%--<%#Eval("gname") %>--%>
+                                    <%#Eval("rgender").ToString()=="1" ? "Male" :Eval("rgender").ToString()=="2" ? "Female" : "Other" %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" Registration Blood Group">
+                                <ItemTemplate>
+                                    <%#Eval("bgname") %>
+                                    <%--<%#Eval("rbloodgroup").ToString()=="1" ? "O+" :Eval("rbloodgroup").ToString()=="2" ? "O-" : Eval("rbloodgroup").ToString()=="3" ? "A+" :Eval("rbloodgroup").ToString()=="4" ? "A-" : Eval("rbloodgroup").ToString()=="5" ? "B+" : Eval("rbloodgroup").ToString()=="6" ? "B-" : Eval("rbloodgroup").ToString()=="7" ? "AB+" : "AB-" %>--%>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" Registration Department">
+                                <ItemTemplate>
+                                    <%--<%#Eval("dname") %>--%>
+                                    <%#Eval("rdepartment").ToString()=="1" ? "Hr" :Eval("rdepartment").ToString()=="2" ? "Information Technology" : "Sales" %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" Registration Country">
+                                <ItemTemplate>
+                                    <%#Eval("cname") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" Registration State">
+                                <ItemTemplate>
+                                    <%#Eval("sname") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                                <asp:TemplateField HeaderText=" Registration city">
+                                <ItemTemplate>
+                                    <%#Eval("cityname") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                             <asp:TemplateField HeaderText=" Registration Hobbies">
+                                <ItemTemplate>
+                                   <%-- <%#Eval("hname") %>--%>
+                                    <%#Eval("rhobbies") %>
+                                    
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" Registration Image">
+                                <ItemTemplate>
+                                   <asp:Image ID="img1" runat="server" Width="50px" Height="40px" ImageUrl='<%#Eval("rimage","~/pics/{0}") %>' />
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField >
+                                <ItemTemplate>                                     <%--command name me edit delete update cancel ni le skte kyuki ye predefine keyword hai isliye A B C etc ka use krenge--%>
+                                    <asp:Button ID="btndelete" runat="server" Text="Delete" Height="25px" Width="60px" BackColor="Red" ForeColor="White" OnClientClick="return confirm('are confirm to delete')" CommandName="A" CommandArgument='<%#Eval("rid")+","+Eval("rimage") %>' />
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" User city"> 
+                                <ItemTemplate>
+                                    <asp:Button ID="btnedit" runat="server" Text="EDIT" Height="25px" Width="60px" BackColor="Red" ForeColor="White" CommandName="B" CommandArgument='<%#Eval("rid") %>' />
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                        </Columns>
+                        <FooterStyle BackColor="White" ForeColor="#333333" />
+                        <HeaderStyle BackColor="#336666" Font-Bold="True" ForeColor="White" />
+                        <PagerStyle BackColor="#336666" ForeColor="White" HorizontalAlign="Center" />
+                        <RowStyle BackColor="White" ForeColor="#333333" />
+                        <SelectedRowStyle BackColor="#339966" Font-Bold="True" ForeColor="White" />
+                        <SortedAscendingCellStyle BackColor="#F7F7F7" />
+                        <SortedAscendingHeaderStyle BackColor="#487575" />
+                        <SortedDescendingCellStyle BackColor="#E5E5E5" />
+                        <SortedDescendingHeaderStyle BackColor="#275353" />
+                        </asp:GridView></td> <%--jo button gridview ke ander hoga uska code onrowcommand ke ander karenge--%>
+                </tr>
+            </table>
+    </asp:Content>
+      <%--  </div>
+    </form> use without master page
+</body>
+</html>--%>
+
+
+------------------------------------------------------------------D:\pr05102022\RegistrationForm.aspx.cs--------------------------------------------------------------
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data; // its use for datatable me data store krne ke liye
+using System.Data.SqlClient; // connectivity ke liye
+using System.Configuration; // web.config ke liye
+using System.IO; // image ke ya file upload ke liye
+
+namespace pr05102022
+{
+    public partial class RegistrationForm : System.Web.UI.Page
+    {
+       // SqlConnection con = new SqlConnection("data source=DESKTOP-UTVKD93;initial catalog=db54_05102022;integrated security=true");
+        SqlConnection con = new SqlConnection(ConfigurationManager.ConnectionStrings["abc"].ConnectionString);
+        protected void Page_Load(object sender, EventArgs e) // agar koi error aati hai or run nhi ho rha to page ke load ka code comment kar do isse code nhi chalega or form run ho jaayega
+        {
+            if(!IsPostBack) // save ke button pr click krne par !ispostback ke ander ke function dubara page load par call ni honge ya ek hi bar call honge bar bar ni honge
+            {
+                BindGrid(); // page load par data show karane ke liye by Gridview agar is function ko !ispostback ke bahar rakhenge to link button use hoga ni to button use kr skte hai 
+                BindGender(); // page load par Gender Bind karne ke liye
+                BindDepartment();// page load par Department Bind karne ke liye
+                BindCountry(); // page load par Country Bind karne ke liye
+                BindBloodGroup(); // page load par Blood Group Bind karne ke
+               
+                ddlstate.Items.Insert(0, new ListItem("--select--", "0"));
+                ddlcity.Items.Insert(0, new ListItem("--select--", "0"));
+                ddlstate.Enabled = false; // insert update ke baad state city show ni hoga
+                ddlcity.Enabled = false; // insert update ke baad state city show ni hoga
+            }
+        }
+        public void BindGender()
+        {
+            con.Open();
+            SqlCommand cmd = new SqlCommand("select * from tblgender",con);
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+            con.Close();
+            rblgender.DataValueField = "gid"; // static binding ye field yaha use ni hogi
+            rblgender.DataTextField = "gname"; // static binding ye field yaha use ni hogi
+            rblgender.DataSource = dt;
+            rblgender.DataBind();
+        }
+
+        public void BindBloodGroup()
+        {
+            con.Open();
+            SqlCommand cmd = new SqlCommand("select *from tblbloodgroup", con);
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+            con.Close();
+            rblbldgrp.DataValueField = "bgid"; // static binding ye field yaha use ni hogi
+            rblbldgrp.DataTextField = "bgname"; // static binding ye field yaha use ni hogi
+            rblbldgrp.DataSource = dt;
+            rblbldgrp.DataBind();
+        }
+        
+        public void BindDepartment()
+        {
+            con.Open();
+            SqlCommand cmd = new SqlCommand("select * from tbldepartment", con);
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+            con.Close();
+            ddldepartment.DataValueField = "did"; //static binding ye field yaha use ni hogi
+            ddldepartment.DataTextField = "dname"; //static binding ye field yaha use ni hogi
+            ddldepartment.DataSource = dt;
+            ddldepartment.DataBind();
+            ddldepartment.Items.Insert(0, new ListItem("--select--", "0"));
+        }
+        public void BindCountry()
+        {
+            con.Open();
+            SqlCommand cmd = new SqlCommand("select * from tblcountry", con);
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+            con.Close();
+            ddlcountry.DataValueField = "cid";
+            ddlcountry.DataTextField = "cname";
+            ddlcountry.DataSource = dt;
+            ddlcountry.DataBind();
+            ddlcountry.Items.Insert(0, new ListItem("--select--","0"));
+        }
+        public void BindState()
+        {
+            con.Open();
+            SqlCommand cmd = new SqlCommand("select * from tblstate where cid='"+ddlcountry.SelectedValue+"'", con);
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+            con.Close();
+            ddlstate.Enabled = true;
+            ddlstate.DataValueField = "sid";
+            ddlstate.DataTextField = "sname";
+            ddlstate.DataSource = dt;
+            ddlstate.DataBind();
+            ddlstate.Items.Insert(0, new ListItem("--select--", "0"));
+        }
+        public void BindCity()
+        {
+            con.Open();
+            SqlCommand cmd = new SqlCommand("select * from tblcity where sid='" + ddlstate.SelectedValue + "'", con);
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+            con.Close();
+            ddlcity.Enabled = true;
+            ddlcity.DataValueField = "cityid";
+            ddlcity.DataTextField = "cityname";
+            ddlcity.DataSource = dt;
+            ddlcity.DataBind();
+            ddlcity.Items.Insert(0, new ListItem("--select--", "0"));
+        }
+        public void BindGrid() //same page par data show karane ke liye bindgrid ya show function
+        {
+            con.Open();
+            SqlCommand cmd = new SqlCommand("select * from tblregistration join tblgender on rgender=gid join tblbloodgroup on rbloodgroup=bgid join tbldepartment on rdepartment=did join tblcountry on rcountry=cid join tblstate on rstate=sid join tblcity on rcity=cityid", con);
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+            con.Close();
+            gvregistration.DataSource = dt;
+            gvregistration.DataBind();
+
+
+        }
+
+        protected void ddlcountry_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            BindState(); // cashcading dropdown page ke load par bind ni hota country ke onchanged index par bind hoga
+        }
+
+        protected void ddlstate_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            BindCity(); // cashcading dropdown page ke load par bind ni hota state ke onchanged index par bind hoga
+        }
+        public void Clear()
+        {
+            txtname.Text = "";
+            txtage.Text = "";
+            txtsalary.Text = "";
+            txtmobile.Text = "";
+            rblgender.ClearSelection();
+            rblbldgrp.ClearSelection();
+            cblhobbies.ClearSelection();
+            ddldepartment.SelectedValue = "0";
+            ddlcountry.SelectedValue = "0";
+            ddlstate.SelectedValue = "0";
+            ddlcity.SelectedValue = "0";
+            ddlstate.Enabled = false; // insert update ke baad state city show ni hoga
+            ddlcity.Enabled = false; // insert update ke baad state city show ni hoga
+            btnsave.Text = "SAVE";
+        }
+
+        protected void btnsave_Click(object sender, EventArgs e)
+        {
+            string kk = "";
+            for (int i = 0; i < cblhobbies.Items.Count; i++) // loop se bhi kr skte hai code chhota ho jayega
+            {
+                if (cblhobbies.Items[i].Selected == true)
+                {
+                    kk += cblhobbies.Items[i].Text + ","; // value ko overrite na kare isliye plus use krte hai
+                }
+            }
+            kk = kk.TrimEnd(',');
+            //if(cblhobbies.Items[0].Selected==true)
+            //{
+            //    kk += cblhobbies.Items[0].Text; // value ko overrite na kare isliye plus use krte hai
+            //}
+            //if (cblhobbies.Items[1].Selected == true)
+            //{
+            //    kk += cblhobbies.Items[1].Text; // value ko overrite na kare isliye plus use krte hai
+            //}
+            //if (cblhobbies.Items[2].Selected == true)
+            //{
+            //    kk += cblhobbies.Items[2].Text; // value ko overrite na kare isliye plus use krte hai
+            //}
+            //if (cblhobbies.Items[3].Selected == true)
+            //{
+            //    kk += cblhobbies.Items[3].Text; // value ko overrite na kare isliye plus use krte hai
+            //}
+            //if (cblhobbies.Items[4].Selected == true)
+            //{
+            //    kk += cblhobbies.Items[4].Text; // value ko overrite na kare isliye plus use krte hai
+            //}
+            if (btnsave.Text == "SAVE")
+            {
+                string FN = DateTime.Now.Ticks.ToString() + Path.GetFileName(fuimage.PostedFile.FileName); // database me image ka naam or current date time bhi jayega bhejne ke liye
+                                                                                                           // folder me same name ki image insert nhi ho skti par database me ho skti hai isliye date time bhi bhejenge
+                                                                                                           // ticks time ko integer number me convert kar dega jo kabhi match ni karega
+                fuimage.SaveAs(Server.MapPath("pics" + "\\" + FN)); // image ko folder me bhejne ke liye or folder ke under jane ke liye backslash(\\)
+                con.Open();                                                     //for  static binding ke liye text field use karenge--  '" + ddldepartment.SelectedItem.Text + "'
+                SqlCommand cmd = new SqlCommand(" insert into tblregistration(rname,age,salary,mobile,rgender,rbloodgroup,rdepartment,rcountry,rstate,rcity,rhobbies,rimage)values('" + txtname.Text + "','" + txtage.Text + "','" + txtsalary.Text + "','" + txtmobile.Text + "','" + rblgender.SelectedValue + "','" + rblbldgrp.SelectedValue + "','" + ddldepartment.SelectedValue + "','" + ddlcountry.SelectedValue + "','" + ddlstate.SelectedValue + "','" + ddlcity.SelectedValue + "','" + kk + "','" + FN + "')", con);
+                cmd.ExecuteNonQuery();
+                con.Close();
+               
+
+            }
+            else
+            {
+                string FN = Path.GetFileName(fuimage.PostedFile.FileName); // database me image ka naam jaega
+                if (FN != "")                                       // folder me same name ki image insert nhi ho skti par database me ho skti hai isliye date time bhi bhejenge
+                {
+                    FN = DateTime.Now.Ticks.ToString() + FN; //current date time bhi jayega bhejne ke liye
+                                                             // ticks time ko integer number me convert kar dega jo kabhi match ni karega
+                    fuimage.SaveAs(Server.MapPath("pics" + "\\" + FN)); // image ko folder me bhejne ke liye or folder ke under jane ke liye backslash(\\)
+                    File.Delete(Server.MapPath("pics" + "\\" + ViewState["img"])); // folder se image delete krne ke liye
+                    con.Open();
+                    SqlCommand cmd = new SqlCommand("update tblregistration set rname='" + txtname.Text + "',age='" + txtage.Text + "',salary='" + txtsalary.Text + "',mobile='" + txtmobile.Text + "',rgender='" + rblgender.SelectedValue + "',rbloodgroup='" + rblbldgrp.SelectedValue + "',rdepartment='" + ddldepartment.SelectedValue + "',rcountry='" + ddlcountry.SelectedValue + "',rstate='" + ddlstate.SelectedValue + "',rcity='" + ddlcity.SelectedValue + "',rhobbies='" + kk + "',rimage='" + FN + "' where rid='" + ViewState["idd"] + "'", con);
+                    cmd.ExecuteNonQuery();
+                    con.Close();
+                    BindGrid();
+                }
+                else
+                {
+                    con.Open();                                                            //for  static binding ke liye text field use karenge--  '" + ddldepartment.SelectedItem.Text + "'
+                    SqlCommand cmd = new SqlCommand("update tblregistration set rname='" + txtname.Text + "',age='" + txtage.Text + "',salary='" + txtsalary.Text + "',mobile='" + txtmobile.Text + "',rgender='" + rblgender.SelectedValue + "',rbloodgroup='" + rblbldgrp.SelectedValue + "',rdepartment='" + ddldepartment.SelectedValue + "',rcountry='" + ddlcountry.SelectedValue + "',rstate='" + ddlstate.SelectedValue + "',rcity='" + ddlcity.SelectedValue + "',rhobbies='" + kk + "',rimage='" + ViewState["img"] + "' where rid='" + ViewState["idd"] + "'", con);
+                    cmd.ExecuteNonQuery();
+                    con.Close();
+                }
+                
+               
+
+            }
+            BindGrid(); // function overriding method overriding same name and same argument(paramenter)
+            Clear(); // function overriding method overriding same name and same argument(paramenter)
+        }
+
+        protected void gvregistration_RowCommand(object sender, GridViewCommandEventArgs e) // jo button gridview ke ander hoga uska code onrowcommand ke ander karenge
+        {
+            if (e.CommandName == "A")
+            {
+                string[] arr = e.CommandArgument.ToString().Split(',');
+                con.Open();
+                SqlCommand cmd = new SqlCommand("delete from tblregistration where rid='" + arr[0] + "' ", con);
+                cmd.ExecuteNonQuery();
+                con.Close();
+                File.Delete(Server.MapPath("pics" + "\\" + arr[1])); // yaha arr[1] me image milegi kyuki command argument ke command name (A) me hamne uid or uimage  liya hai 
+                BindGrid(); // function overriding method overriding same name and same argument(paramenter)
+            }
+            else if (e.CommandName=="B")
+            {
+                con.Open();
+                SqlCommand cmd = new SqlCommand("select * from tblregistration where rid='" + e.CommandArgument + "' ", con);
+                SqlDataAdapter da = new SqlDataAdapter(cmd);
+                DataTable dt = new DataTable();
+                da.Fill(dt);
+                con.Close();
+                BindGrid(); // function overriding method overriding same name and same argument(paramenter)
+                txtname.Text = dt.Rows[0]["rname"].ToString(); // tostring me convert krke textbox me show karenge agar isko use ni karenge to value ni jayegi text box me
+                txtage.Text = dt.Rows[0]["age"].ToString();
+                txtsalary.Text = dt.Rows[0]["salary"].ToString();
+                txtmobile.Text = dt.Rows[0]["mobile"].ToString();
+                rblgender.SelectedValue = dt.Rows[0]["rgender"].ToString();
+                rblbldgrp.SelectedValue = dt.Rows[0]["rbloodgroup"].ToString();
+                ddldepartment.SelectedValue = dt.Rows[0]["rdepartment"].ToString();
+                ddlcountry.SelectedValue = dt.Rows[0]["rcountry"].ToString();
+                BindState(); // cashcading dropdown me state ko edit karne se pahle bind krna pdta hai ni to edit ke time pr state show ni hoga
+                ddlstate.SelectedValue = dt.Rows[0]["rstate"].ToString();
+                BindCity(); // cashcading dropdown me city ko edit karne se pahle bind krna pdta hai ni to edit ke time pr city show ni hoga
+                ddlcity.SelectedValue = dt.Rows[0]["rcity"].ToString();
+                string[] arr = dt.Rows[0]["rhobbies"].ToString().Split(',');
+                cblhobbies.ClearSelection();
+                for (int i = 0; i < cblhobbies.Items.Count; i++)
+                {
+                    for (int j = 0; j < arr.Length; j++)
+                    {
+                        if (cblhobbies.Items[i].Text == arr[j])
+                        {
+                            cblhobbies.Items[i].Selected = true;
+                        }
+                    }
+                }
+                ViewState["img"] = dt.Rows[0]["rimage"].ToString();
+                btnsave.Text = "UPDATE";
+                ViewState["idd"] = e.CommandArgument; // its a global variable, e.CommandArugment ki value ko viewstate[] me store karke update vali query me use karenge
+                                                      // kyunki e.commandArgument ko row command ke bahar use ni kr skte
+            }
+        }
+
+        protected void btndelete_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        protected void btnsearch_Click(object sender, EventArgs e)
+        {
+            con.Open(); // single backside % add krne se alok se related sare name show honge or front or backside dono me % add krne se last name ke saath bhi search karega jese kumar alok 
+            SqlCommand cmd = new SqlCommand("select * from tblregistration join tblgender on rgender=gid join tblbloodgroup on rbloodgroup=bgid join tbldepartment on rdepartment=did join tblcountry on rcountry=cid join tblstate on rstate=sid join tblcity on rcity=cityid where rname like '%" + txtsearch.Text + "%'  ", con);
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+            con.Close();
+            gvregistration.DataSource = dt;
+            gvregistration.DataBind();
+        }
+    }
+}
+
+
+---------------------------------------------------------------------D:\pr05102022\StudentForm.aspx----------------------------------------------------------
+
+<%@ Page Title="" Language="C#" MasterPageFile="~/Default.Master" AutoEventWireup="true" CodeBehind="StudentForm.aspx.cs" Inherits="pr05102022.StudentForm" %>
+<%--jo page jis page par link hoga uspar vahi -MasterPageFile="~/Default.Master"/MasterPageFile="~/User.Master" - hoga--%>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server"> <%--Master page Header page Footer page ko debug nhi kr skte--%>
+    
+         <table>
+        <tr>
+                    <td>Name:</td>
+                    <td><asp:TextBox ID="txtname" runat="server"></asp:TextBox></td>
+                </tr>
+                <tr>
+                    <td>Age:</td>
+                    <td><asp:TextBox ID="txtage" runat="server"></asp:TextBox></td>
+                </tr>
+                <tr>
+                    <td>Salary:</td>
+                    <td><asp:TextBox ID="txtsalary" runat="server"></asp:TextBox></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td><asp:Button ID="btnsave" runat="server" Text="Save" /></td>
+                </tr>
+    </table>
+
+    
+   
+</asp:Content>
+
+
+------------------------------------------------------------------D:\pr05102022\StudentForm.aspx.cs------------------------------------------------------
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+namespace pr05102022
+{
+    public partial class StudentForm : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e) // agar koi error aati hai or run nhi ho rha to page ke load ka code comment kar do isse code nhi chalega or form run ho jaayega
+        {
+
+        }
+    }
+}
+
+
+-----------------------------------------------------------D:\pr05102022\UserForm.aspx----------------------------------------------------------------------------
+
+<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="UserForm.aspx.cs" Inherits="pr05102022.UserForm" %>
+<%--jo page jis page par link hoga uspar vahi -MasterPageFile="~/Default.Master"/MasterPageFile="~/User.Master" - hoga--%>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title></title>
+</head>
+<body>
+    <form id="form1" runat="server">
+        <div>
+            <table>
+                <tr>
+                    <td>Name:</td>
+                    <td><asp:TextBox ID="txtname" runat="server"></asp:TextBox></td>
+                </tr>
+                <tr>
+                    <td>Age:</td>
+                    <td><asp:TextBox ID="txtage" runat="server"></asp:TextBox></td>
+                </tr>
+                <tr>
+                    <td>Image Upload:</td>
+                    <td><asp:FileUpload ID="fuimage" runat="server"></asp:FileUpload></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td><asp:Button ID="btnsave" runat="server" Text="SAVE" OnClick="btnsave_Click" /></td> <%--onclick event copy paste nhi krte ise generate krte hai--%>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td><asp:GridView ID="gvusers" runat="server" OnRowCommand="gvusers_RowCommand"  AutoGenerateColumns="false"> <%--onrowcommand generate karenge gridview par na ki button par--%>
+                        <Columns>
+                            <asp:TemplateField HeaderText=" User ID">
+                                <ItemTemplate>
+                                    <%#Eval("uid") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" User Name">
+                                <ItemTemplate>
+                                    <%#Eval("uname") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" User Age">
+                                <ItemTemplate>
+                                    <%#Eval("uage") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" User Image">
+                                <ItemTemplate>
+                                   <asp:Image ID="img1" runat="server" Width="50px" Height="40px" ImageUrl='<%#Eval("uimage","~/pics/{0}") %>' />
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField >
+                                <ItemTemplate>                                     <%--command name me edit delete update cancel ni le skte kyuki ye predefine keyword hai isliye A B C etc ka use krenge--%>
+                                    <asp:Button ID="btndelete" runat="server" Text="Delete" OnClientClick="return confirm('are confirm to delete')" CommandName="A" CommandArgument='<%#Eval("uid")+","+Eval("uimage") %>' />
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" User city"> 
+                                <ItemTemplate>
+                                    <asp:Button ID="btnedit" runat="server" Text="EDIT" CommandName="B" CommandArgument='<%#Eval("uid")+","+Eval("uname")+","+Eval("uage")+","+Eval("uimage") %>' />
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            
+                        </Columns>
+                        </asp:GridView></td> <%--jo button gridview ke ander hoga uska code onrowcommand ke ander karenge--%>
+                </tr>
+            </table>
+        </div>
+    </form>
+</body>
+</html>
+
+
+---------------------------------------------------------------------D:\pr05102022\UserForm.aspx.cs---------------------------------------------------------------
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data; // for datatable me data store krne ke liye
+using System.Data.SqlClient; // connectivity ke liye
+using System.Configuration; // for web.config 
+using System.IO; // for image insert
+
+namespace pr05102022
+{
+    public partial class UserForm : System.Web.UI.Page
+    {
+        // SqlConnection con = new SqlConnection("data source=DESKTOP-UTVKD93;initial catalog=db54_05102022;integrated security=true");
+        SqlConnection con = new SqlConnection(ConfigurationManager.ConnectionStrings["abc"].ConnectionString);
+        protected void Page_Load(object sender, EventArgs e) // agar koi error aati hai or run nhi ho rha to page ke load ka code comment kar do isse code nhi chalega or form run ho jaayega
+        {
+            if (!IsPostBack) // save ke button pr click krne par !ispostback ke ander ke function dubara page load par call ni honge ya ek hi bar call honge bar bar ni honge
+            {
+                BindGrid(); // page load par data show karane ke liye by Gridview agar is function ko !ispostback ke bahar rakhenge to link button use hoga ni to button use kr skte hai 
+                
+            }
+        }
+        public void BindGrid() //same page par data show karane ke liye bindgrid ya show function
+        {
+            con.Open();
+            SqlCommand cmd = new SqlCommand("select * from tblusers", con);
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+            con.Close();
+            gvusers.DataSource = dt;
+            gvusers.DataBind();
+
+
+        }
+        protected void btnsave_Click(object sender, EventArgs e)
+        {
+            if (btnsave.Text == "SAVE")
+            {
+                string FN = DateTime.Now.Ticks.ToString() + Path.GetFileName(fuimage.PostedFile.FileName); // database me image ka naam or current date time bhi jayega bhejne ke liye
+                                                                                                           // folder me same name ki image insert nhi ho skti par database me ho skti hai isliye date time bhi bhejenge
+                                                                                                           // ticks time ko integer number me convert kar dega jo kabhi match ni karega
+                fuimage.SaveAs(Server.MapPath("pics" + "\\" + FN)); // image ko folder me bhejne ke liye or folder ke under jane ke liye backslash(\\)
+
+                con.Open(); // database ke table me image ko insert nhi krte image ka naam insert hota hai,image insert krne ke liye project me folder add karenge pics ya kisi bhi naam se
+                SqlCommand cmd = new SqlCommand("insert into tblusers(uname,uage,uimage)values('" + txtname.Text + "','" + txtage.Text + "','" + FN + "')", con);
+                cmd.ExecuteNonQuery();
+                con.Close();
+                BindGrid();
+            }
+            else
+            {
+                string FN = Path.GetFileName(fuimage.PostedFile.FileName); // database me image ka naam jaega
+                if (FN != "")                                       // folder me same name ki image insert nhi ho skti par database me ho skti hai isliye date time bhi bhejenge
+                {
+                    FN = DateTime.Now.Ticks.ToString() + FN; //current date time bhi jayega bhejne ke liye
+                                                              // ticks time ko integer number me convert kar dega jo kabhi match ni karega
+                    fuimage.SaveAs(Server.MapPath("pics" + "\\" + FN)); // image ko folder me bhejne ke liye or folder ke under jane ke liye backslash(\\)
+                    File.Delete(Server.MapPath("pics" + "\\" + ViewState["img"])); // folder se image delete krne ke liye
+                    con.Open();
+                    SqlCommand cmd = new SqlCommand("update tblusers set uname='" + txtname.Text + "',uage='" + txtage.Text + "',uimage='" + FN + "' where uid='" + ViewState["idd"] + "'", con);
+                    cmd.ExecuteNonQuery();
+                    con.Close();
+                    BindGrid();
+                }
+                else 
+                {
+                    con.Open();
+                    SqlCommand cmd = new SqlCommand("update tblusers set uname='" + txtname.Text + "',uage='" + txtage.Text + "',uimage='" + ViewState["img"] + "' where uid='" + ViewState["idd"] + "'", con);
+                    cmd.ExecuteNonQuery();
+                    con.Close();
+                    BindGrid();
+                }
+
+                }
+            BindGrid(); // function overriding method overriding same name and same argument(paramenter)
+            Clear(); // function overriding method overriding same name and same argument(paramenter)
+        }
+
+        protected void gvusers_RowCommand(object sender, GridViewCommandEventArgs e)
+        {
+            if (e.CommandName == "A")
+            {
+                string[] arr=e.CommandArgument.ToString().Split(',');
+                con.Open();
+                SqlCommand cmd = new SqlCommand("delete from tblusers where uid='" +arr[0] + "' ", con);
+                cmd.ExecuteNonQuery();
+                con.Close();
+                File.Delete(Server.MapPath("pics" + "\\" + arr[1])); // yaha arr[1] me image milegi kyuki command argument ke command name (A) me hamne uid or uimage  liya hai 
+                BindGrid(); // function overriding method overriding same name and same argument(paramenter)
+            }
+            else if (e.CommandName == "B")
+            {
+                // array me lekar bhi edit kar sakte hai with the help of command argument me value daal kar
+                string[] arr = e.CommandArgument.ToString().Split(',');
+                //con.Open();
+                //SqlCommand cmd = new SqlCommand("select * from tblusers where uid='" + e.CommandArgument + "' ", con);
+                //SqlDataAdapter da = new SqlDataAdapter(cmd);
+                //DataTable dt = new DataTable();
+                //da.Fill(dt);
+                //con.Close();
+                //BindGrid(); // function overriding method overriding same name and same argument(paramenter)
+                ////txtname.Text = dt.Rows[0]["uname"].ToString(); // tostring me convert krke textbox me show karenge agar isko use ni karenge to value ni jayegi text box me
+                ////txtage.Text = dt.Rows[0]["uage"].ToString();
+                ////ViewState["img"] = dt.Rows[0]["uimage"].ToString();
+                txtname.Text = arr[1]; // yaha arr[1] me name milegakyuki command argument ke command name (B) me hamne uid uname uage uimage  liya hai
+                txtage.Text = arr[2]; // yaha arr[2] me age milega kyuki command argument ke command name (B) me hamne uid uname uage uimage  liya hai
+                ViewState["img"] = arr[3]; //yaha arr[3] me img milega kyuki command argument ke command name (B) me hamne uid uname uage uimage  liya hai
+                                           //kyuki fuimage control image ko hold ni kar skta isliye viewstate me image ko hold karayenge
+
+                btnsave.Text = "UPDATE";
+                ViewState["idd"] = arr[0 ]; //yaha arr[0] me uid milegi kyuki command argument ke command name (B) me hamne uid uname uage uimage  liya hai
+                                            // its a global variable, e.CommandArugment ki value ko viewstate[] me store karke update vali query me use karenge
+                                            // kyunki e.commandArgument ko row command ke bahar use ni kr skte
+            }
+           
+        }
+        public void Clear()
+        {
+            txtname.Text = "";
+            txtage.Text = "";       
+            
+            btnsave.Text = "SAVE";
+        }
+    }
+}
+
+
+--------------------------------------------------------------D:\pr05102022\LoginForm1.aspx----------------------------------------------------------------
+
+
+<%@ Page Title="" Language="C#" MasterPageFile="~/Default.Master" AutoEventWireup="true" CodeBehind="LoginForm1.aspx.cs" Inherits="pr05102022.LoginForm1" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server"> <%--jo page jis page par link hoga uspar vahi -MasterPageFile="~/Default.Master"/MasterPageFile="~/User.Master" - hoga--%>
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server"> <%--// hamesa kisi bhi application ya Project me do master bante hai ek login se pahle or ek login ke baad--%>
+    <table>  <%--jab change password page pr ya login page par copy ke baad error de to save karke band karke page dubara open karo--%>
+        <tr>
+                    <td>Email:</td>
+                    <td><asp:TextBox ID="txtemail" runat="server"></asp:TextBox></td>
+                </tr>
+                <tr>
+                    <td>Password:</td>
+                    <td><asp:TextBox ID="txtpassword" runat="server"></asp:TextBox></td>
+                </tr>
+        <tr>                                                             <%-- // run first login page before change password page--%>
+                    <td></td>
+                    <td>
+                        <asp:Button ID="btnlogin" runat="server" Text="Login" OnClick="btnlogin_Click" />
+                        <a href="AddNewForm.aspx">Sign Up</a> <%--isko anchor tag bolte hai--%>
+
+                    </td>
+                </tr>
+        <tr>
+            <td></td>
+            <td><asp:Label ID="lblmsg" runat="server" ForeColor="Red" Font-Bold="true"></asp:Label></td>
+        </tr>
+    </table>
+</asp:Content>
+
+
+-----------------------------------------------------------------D:\pr05102022\LoginForm1.aspx.cs---------------------------------------------------------------------
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+using System.Data.SqlClient;
+using System.Configuration;
+using System.IO;
+
+namespace pr05102022                                                      // run first login page before change password page
+{
+    public partial class LoginForm1 : System.Web.UI.Page
+    {
+        // SqlConnection con = new SqlConnection(@"data source=DESKTOP-UTVKD93;initial catalog=db54_05102022;integrated security=true");
+        SqlConnection con = new SqlConnection(ConfigurationManager.ConnectionStrings["abc"].ConnectionString);
+        protected void Page_Load(object sender, EventArgs e) // agar koi error aati hai or run nhi ho rha to page ke load ka code comment kar do isse code nhi chalega or form run ho jaayega
+        {
+
+        }
+
+        protected void btnlogin_Click(object sender, EventArgs e)
+        {
+            con.Open(); // match karenge and ke through email id or password dono ek hi aadmi ki hai tabhi dt me record aayega ni to nhi aayega, dt me record aaya to successful otherwise login failed
+                        // ("select * from tbladdnewform where nemail='" + txtemail.Text + "' and npassword='" + txtpassword.Text + "' ", con); with query
+            SqlCommand cmd = new SqlCommand("sp_tbladdnewform", con); // with Stored Procedure
+            cmd.CommandType = CommandType.StoredProcedure; // procedure ka rool hai jitne parameter hote hai utne parameter pass krne hote hai 
+            cmd.Parameters.AddWithValue("@action", "Login"); //iske liye dusra tarka hota hai ki procedure ke har variable ko initialize kar do int ko 0 se or varchar ko null se
+            cmd.Parameters.AddWithValue("@nemail",txtemail.Text);
+            cmd.Parameters.AddWithValue("@npassword", txtpassword.Text);
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+            con.Close();
+            if(dt.Rows.Count>0)
+            {
+                Session["idd"]= dt.Rows[0]["nid"];
+                Response.Redirect("Home.aspx");
+                //lblmsg.Text = "Login Successful !!";
+            }
+            else
+            {
+                lblmsg.Text = "Login Failed !!";
+            }
+        }
+    }
+}
+
+
+---------------------------------------------------------------D:\pr05102022\Logout.aspx--------------------------------------------------
+
+
+<%@ Page Title="" Language="C#" MasterPageFile="~/User.Master" AutoEventWireup="true" CodeBehind="Logout.aspx.cs" Inherits="pr05102022.Logout" %>
+<%--jo page jis page par link hoga uspar vahi -MasterPageFile="~/Default.Master"/MasterPageFile="~/User.Master" - hoga--%>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <%--iske design part me kuchh bhi nhi krna--%>
+</asp:Content> 
+
+
+----------------------------------------------------------D:\pr05102022\Logout.aspx.cs--------------------------------------------------------
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+namespace pr05102022
+{
+    public partial class Logout : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            Response.Redirect("LoginForm1.aspx");
+        }
+    }
+}
+
+
+----------------------------------------------------------D:\pr05102022\Home.aspx------------------------------------------------------------
+
+
+
+<%@ Page Title="" Language="C#" MasterPageFile="~/User.Master" AutoEventWireup="true" CodeBehind="Home.aspx.cs" Inherits="pr05102022.Home" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <h1>Welcome Home <asp:Label ID="lblname" runat="server"></asp:Label></h1>
+    <table>
+        <tr>
+            <td>
+                
+                    
+                    <asp:GridView ID="gvaddnew" runat="server" AutoGenerateColumns="False" BackColor="White" BorderColor="#336666" BorderStyle="Double" BorderWidth="3px" CellPadding="4" GridLines="Horizontal"> <%--onrowcommand generate karenge gridview par na ki button par--%>
+                        <Columns>
+                            <asp:TemplateField HeaderText=" New Form ID">
+                                <ItemTemplate>
+                                    <%#Eval("nid") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" New Form Name">
+                                <ItemTemplate>
+                                    <%#Eval("nname") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" New Form Email">
+                                <ItemTemplate>
+                                    <%#Eval("nemail") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" New Form Password">
+                                <ItemTemplate>
+                                    <%#Eval("npassword") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" New Form Age">
+                                <ItemTemplate>
+                                    <%#Eval("nge") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" New Form Salary">
+                                <ItemTemplate>
+                                    <%#Eval("nsalary") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" New Form Mobile">
+                                <ItemTemplate>
+                                    <%#Eval("nmobile") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" New Form Gender">
+                                <ItemTemplate>
+                                    <%--<%#Eval("gname") %>--%>
+                                    <%#Eval("ngender").ToString()=="1" ? "Male" :Eval("ngender").ToString()=="2" ? "Female" : "Other" %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" New Form Blood Group">
+                                <ItemTemplate>
+                                    <%#Eval("bgname") %>
+                                    <%--<%#Eval("nbloodgroup").ToString()=="1" ? "O+" :Eval("nbloodgroup").ToString()=="2" ? "O-" : Eval("nbloodgroup").ToString()=="3" ? "A+" :Eval("nbloodgroup").ToString()=="4" ? "A-" : Eval("nbloodgroup").ToString()=="5" ? "B+" : Eval("nbloodgroup").ToString()=="6" ? "B-" : Eval("nbloodgroup").ToString()=="7" ? "AB+" : "AB-" %>--%>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" New Form Department">
+                                <ItemTemplate>
+                                    <%--<%#Eval("dname") %>--%>
+                                    <%#Eval("ndepartment").ToString()=="1" ? "Hr" :Eval("ndepartment").ToString()=="2" ? "Information Technology" : "Sales" %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" New Form Country">
+                                <ItemTemplate>
+                                    <%#Eval("cname") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" New Form State">
+                                <ItemTemplate>
+                                    <%#Eval("sname") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                                <asp:TemplateField HeaderText=" New Form city">
+                                <ItemTemplate>
+                                    <%#Eval("cityname") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                             <asp:TemplateField HeaderText=" New Form Hobbies">
+                                <ItemTemplate>
+                                   <%-- <%#Eval("hname") %>--%>
+                                    <%#Eval("nhobbies") %>
+                                    
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" New Form Image">
+                                <ItemTemplate>
+                                   <asp:Image ID="img1" runat="server" Width="50px" Height="40px" ImageUrl='<%#Eval("nimage","~/pics/{0}") %>' />
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                           
+                        </Columns>
+                        <FooterStyle BackColor="White" ForeColor="#333333" />
+                        <HeaderStyle BackColor="#336666" Font-Bold="True" ForeColor="White" />
+                        <PagerStyle BackColor="#336666" ForeColor="White" HorizontalAlign="Center" />
+                        <RowStyle BackColor="White" ForeColor="#333333" />
+                        <SelectedRowStyle BackColor="#339966" Font-Bold="True" ForeColor="White" />
+                        <SortedAscendingCellStyle BackColor="#F7F7F7" />
+                        <SortedAscendingHeaderStyle BackColor="#487575" />
+                        <SortedDescendingCellStyle BackColor="#E5E5E5" />
+                        <SortedDescendingHeaderStyle BackColor="#275353" />
+                        </asp:GridView>
+
+            </td> <%--jo button gridview ke ander hoga uska code onrowcommand ke ander karenge--%>
+                
+            
+        </tr>
+    </table>
+</asp:Content>
+
+
+--------------------------------------------------------------D:\pr05102022\Home.aspx.cs-----------------------------------------------------------------
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data; // its use for datatable me data store krne ke liye
+using System.Data.SqlClient; // connectivity ke liye
+using System.Configuration; // web.config ke liye
+using System.IO; // image ke ya file upload ke liye
+
+namespace pr05102022
+{
+    public partial class Home : System.Web.UI.Page
+    {
+        // SqlConnection con = new SqlConnection("data source=DESKTOP-UTVKD93;initial catalog=db54_05102022;integrated security=true");
+        SqlConnection con = new SqlConnection(ConfigurationManager.ConnectionStrings["abc"].ConnectionString);
+        protected void Page_Load(object sender, EventArgs e) // agar koi error aati hai or run nhi ho rha to page ke load ka code comment kar do isse code nhi chalega or form run ho jaayega
+        {
+            if(!IsPostBack)
+            {
+                BindGrid();
+            }
+        }
+        public void BindGrid() //same page par data show karane ke liye bindgrid ya show function
+        {
+            con.Open();
+            SqlCommand cmd = new SqlCommand("sp_tbladdnewform", con);
+            cmd.CommandType = CommandType.StoredProcedure; // procedure ka rool hai jitne parameter hote hai utne parameter pass krne hote hai 
+            cmd.Parameters.AddWithValue("@action", "JoinOne"); //iske liye dusra tarka hota hai ki procedure ke har variable ko initialize kar do int ko 0 se or varchar ko null se
+            cmd.Parameters.AddWithValue("@nid", Session["idd"]);
+            SqlDataAdapter da = new SqlDataAdapter(cmd); //agar nhi karenge to saare parameter pass krne honge
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+            con.Close();
+            gvaddnew.DataSource = dt;
+            gvaddnew.DataBind();
+            lblname.Text= dt.Rows[0]["nname"].ToString();
+
+        }
+    }
+}
+
+
+----------------------------------------------------------D:\pr05102022\ChangePassword.aspx----------------------------------------------------------------
+
+
+
+<%@ Page Title="" Language="C#" MasterPageFile="~/User.Master" AutoEventWireup="true" CodeBehind="ChangePassword.aspx.cs" Inherits="pr05102022.ChangePassword" %>
+                 <%--jo page login ke baad open hoga us par MasterPageFile="~/User.Master" lagega jese ki change password ka page--%>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server"> <%--jab change password page pr ya login page par copy ke baad error de to save karke band karke page dubara open karo--%>
+     <table>
+        <tr>
+                    <td>Current Password:</td>
+                    <td><asp:TextBox ID="txtcurrentpasswd" runat="server"></asp:TextBox></td>
+                </tr>
+                <tr>
+                    <td>New Password:</td>
+                    <td><asp:TextBox ID="txtnewpasswd" runat="server"></asp:TextBox></td>
+                </tr>
+         <tr>
+                    <td>Confirm Password:</td>
+                    <td><asp:TextBox ID="txtconfirmpasswd" runat="server"></asp:TextBox></td>
+                </tr>
+        <tr>
+                    <td></td>
+                    <td>
+                        <asp:Button ID="btncp" runat="server" Text="Change Password" OnClick="btncp_Click"/>
+                        <a href="AddNewForm.aspx">Sign Up</a> <%--isko anchor tag bolte hai--%>
+
+                    </td>
+                </tr>
+        <tr>
+            <td></td>
+            <td><asp:Label ID="lblmsg" runat="server" ForeColor="Red" Font-Bold="true"></asp:Label></td>
+        </tr>
+    </table>
+</asp:Content>
+
+
+
+-------------------------------------------------------------D:\pr05102022\ChangePassword.aspx.cs----------------------------------------------------------------------
+
+
+using System;
+using System.Collections.Generic; 
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data; // its use for datatable me data store krne ke liye
+using System.Data.SqlClient; // connectivity ke liye
+using System.Configuration; // web.config ke liye
+using System.IO; // image ke ya file upload ke liye
+
+namespace pr05102022                                                      // run first login page before change password page
+{
+    public partial class ChangePassword : System.Web.UI.Page
+    {
+        // SqlConnection con = new SqlConnection("data source=DESKTOP-UTVKD93;initial catalog=db54_05102022;integrated security=true");
+        SqlConnection con = new SqlConnection(ConfigurationManager.ConnectionStrings["abc"].ConnectionString);
+        protected void Page_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        protected void btncp_Click(object sender, EventArgs e)
+        {
+            if(txtnewpasswd.Text==txtconfirmpasswd.Text)
+            {
+                con.Open();
+                SqlCommand cmd = new SqlCommand("update tbladdnewform set npassword='" + txtnewpasswd.Text + "' where nid='" + Session["idd"] + "' and npassword='" + txtcurrentpasswd.Text + "'  ", con);
+                int i=cmd.ExecuteNonQuery();
+                con.Close();
+                if(i>0)
+                {
+                    lblmsg.Text = "Your Password has been changed successfully !!";
+                }
+                else
+                {
+                    lblmsg.Text = "Your Password has not been changed successfully !!"; 
+                }
+                
+            }
+            else
+            {
+                lblmsg.Text = "Password do not Matched !!";
+            }
+            
+        }
+    }
+}
+
+
+--------------------------------------------------------------------D:\pr05102022\EmployeeForm.aspx------------------------------------------------------------------
+
+
+
+<%@ Page Language="C#" AutoEventWireup="true"  CodeBehind="EmployeeForm.aspx.cs" Inherits="pr05102022.EmployeeForm" %>
+<%--jo page jis page par link hoga uspar vahi -MasterPageFile="~/Default.Master"/MasterPageFile="~/User.Master" - hoga--%>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title></title>
+</head>
+<body>
+    <form id="form1" runat="server">
+        <div>
+             <table>
+                <tr>
+                    <td>Name:</td>
+                    <td><asp:TextBox ID="txtname" runat="server"></asp:TextBox></td>
+                </tr>
+               
+                <tr>
+                    <td>Gender:</td>
+                    <td><asp:RadioButtonList ID="rblgender" runat="server" RepeatColumns="3"> <%--Gender static binding --%>
+                        <asp:ListItem Text="male" Value="1"></asp:ListItem> 
+                       <asp:ListItem Text="female" Value="2"></asp:ListItem>
+                       <asp:ListItem Text="other" Value="3"></asp:ListItem>
+                        </asp:RadioButtonList></td>
+                </tr>
+               
+                
+                  <tr>
+                    <td>Hobbies:</td>
+                    <td><asp:CheckBoxList ID="cblhobbies" runat="server" RepeatColumns="5">
+                        <asp:ListItem Text="Cricket" Value="0"></asp:ListItem> 
+                       <asp:ListItem Text="Hockey" Value="1"></asp:ListItem>
+                       <asp:ListItem Text="Cooking" Value="2"></asp:ListItem>
+                       <asp:ListItem Text="Playing" Value="3"></asp:ListItem>
+                       <asp:ListItem Text="Dancing" Value="4"></asp:ListItem>
+                        </asp:CheckBoxList>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td></td>
+                    <td><asp:Button ID="btnsave" runat="server" Text="SAVE" OnClick="btnsave_Click"  /> <asp:Button ID="btnshow" runat="server" Text="Show List" OnClick="btnshow_Click" />
+                        <asp:Button ID="btnreset" runat="server" Text="Reset" OnClick="btnreset_Click" />
+                    </td>
+                </tr>
+                 <tr>
+                    <td></td>
+                     <td><asp:Label ID="lblmsg" runat="server" ForeColor="Red" Font-Bold="true"></asp:Label></td>
+                     </tr>
+                
+            </table>
+        </div>
+    </form>
+</body>
+</html>
+
+
+
+--------------------------------------------------------------------D:\pr05102022\EmployeeForm.aspx.cs-----------------------------------------------------------
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+using System.Data.SqlClient;
+using System.Configuration;
+
+namespace pr05102022
+{
+    public partial class EmployeeForm : System.Web.UI.Page
+    {
+        // SqlConnection con = new SqlConnection("data source=DESKTOP-UTVKD93;initial catalog=db54_05102022;integrated security=true");
+        SqlConnection con = new SqlConnection(ConfigurationManager.ConnectionStrings["abc"].ConnectionString);
+        protected void Page_Load(object sender, EventArgs e) // agar koi error aati hai or run nhi ho rha to page ke load ka code comment kar do isse code nhi chalega or form run ho jaayega
+        {
+            if(Request.QueryString["kk"] !=null && Request.QueryString["kk"].ToString()!="") // jab bhi blank check krte hai tostring me convert krke krte hai,
+                                                                                             // condition nhi lagayenge to textbox me value show hogi edit ka code run ho jayega 
+            {
+                lblmsg.Text = "Record has been Edited !!";
+                if (!IsPostBack) // function dubara page load par call ni honge ya ek hi bar call honge bar bar ni honge
+                {
+                    Edit();
+                }
+            }
+            
+        }
+       public void Edit()
+        {
+            con.Open();
+            SqlCommand cmd = new SqlCommand("select * from tblemployees where eid='" + Request.QueryString["kk"] + "' ", con); // its  a global variable use on diff pages to hold data
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+            con.Close();
+
+            txtname.Text = dt.Rows[0]["ename"].ToString(); // tostring me convert krke textbox me show karenge agar isko use ni karenge to value ni jayegi text box me
+            rblgender.SelectedValue = dt.Rows[0]["egender"].ToString();
+            string[] arr = dt.Rows[0]["ehobbies"].ToString().Split(',');
+            cblhobbies.ClearSelection();
+            for (int i = 0; i < cblhobbies.Items.Count; i++)
+            {
+                for (int j = 0; j < arr.Length; j++)
+                {
+                    if (cblhobbies.Items[i].Text == arr[j])
+                    {
+                        cblhobbies.Items[i].Selected = true;
+                    }
+                }
+            }
+            btnsave.Text = "Update";
+            
+        }
+        public void Clear()
+        {
+            txtname.Text = "";
+            rblgender.ClearSelection();
+            cblhobbies.ClearSelection();
+            btnsave.Text = "SAVE";
+        }
+        protected void btnsave_Click(object sender, EventArgs e)
+        {
+            string kk = "";
+            for (int i = 0; i < cblhobbies.Items.Count; i++) // loop se bhi kr skte hai code chhota ho jayega
+            {
+                if (cblhobbies.Items[i].Selected == true)
+                {
+                    kk += cblhobbies.Items[i].Text + ","; // value ko overrite na kare isliye plus use krte hai
+                }
+            }
+            kk = kk.TrimEnd(',');
+            //if(cblhobbies.Items[0].Selected==true)
+            //{
+            //    kk += cblhobbies.Items[0].Text; // value ko overrite na kare isliye plus use krte hai
+            //}
+            //if (cblhobbies.Items[1].Selected == true)
+            //{
+            //    kk += cblhobbies.Items[1].Text; // value ko overrite na kare isliye plus use krte hai
+            //}
+            //if (cblhobbies.Items[2].Selected == true)
+            //{
+            //    kk += cblhobbies.Items[2].Text; // value ko overrite na kare isliye plus use krte hai
+            //}
+            //if (cblhobbies.Items[3].Selected == true)
+            //{
+            //    kk += cblhobbies.Items[3].Text; // value ko overrite na kare isliye plus use krte hai
+            //}
+            //if (cblhobbies.Items[4].Selected == true)
+            //{
+            //    kk += cblhobbies.Items[4].Text; // value ko overrite na kare isliye plus use krte hai
+            //}
+            if (btnsave.Text== "SAVE")
+            {
+                
+                con.Open();
+                SqlCommand cmd = new SqlCommand("insert into tblemployees(ename,egender,ehobbies)values('" + txtname.Text + "','" + rblgender.SelectedValue + "','" + kk + "')", con);
+                cmd.ExecuteNonQuery();
+                con.Close();
+                
+                lblmsg.Text = "Record has been saved !!";
+
+            }
+            else
+            {
+               
+                con.Open();
+                SqlCommand cmd = new SqlCommand("update tblemployees set ename='"+txtname.Text+ "',egender='" + rblgender.SelectedValue + "', ehobbies='" + kk + "' where eid='"+ Request.QueryString["kk"] + "'  ", con);
+                cmd.ExecuteNonQuery();
+                con.Close();
+                lblmsg.Text = "Record has been Updated !!";
+            }
+            Response.Redirect("EmployeeShow.aspx");
+            
+
+        }
+
+
+        protected void btnshow_Click(object sender, EventArgs e)
+        {
+            Response.Redirect("EmployeeShow.aspx");
+        }
+
+        protected void btnreset_Click(object sender, EventArgs e)
+        {
+            Clear();
+        }
+    }
+}
+
+
+
+------------------------------------------------------------D:\pr05102022\EmployeeShow.aspx--------------------------------------------------------------------------
+
+
+
+<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="EmployeeShow.aspx.cs" Inherits="pr05102022.EmployeeShow" %>
+<%--jo page jis page par link hoga uspar vahi -MasterPageFile="~/Default.Master"/MasterPageFile="~/User.Master" - hoga--%>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title></title>
+</head>
+<body>
+    <form id="form1" runat="server">
+        <div>
+            <table>
+                 <tr>
+                    
+                     <td><asp:Label ID="lblmsg" runat="server" ForeColor="Red" Font-Bold="true"></asp:Label></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td><asp:GridView ID="gvemp" runat="server" OnRowCommand="gvemp_RowCommand" AutoGenerateColumns="false"> <%--onrowcommand generate karenge gridview par na ki button par--%>
+                        <Columns>
+                            <asp:TemplateField HeaderText=" Employee ID">
+                                <ItemTemplate>
+                                    <%#Eval("eid") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" Employee Name">
+                                <ItemTemplate>
+                                    <%#Eval("ename") %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            
+                            <asp:TemplateField HeaderText=" Employee Gender">
+                                <ItemTemplate>
+                                    <%--<%#Eval("gname") %>--%>
+                                    <%#Eval("egender").ToString()=="1" ? "Male" :Eval("egender").ToString()=="2" ? "Female" : "Other" %>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" Employee Hobbies">
+                                <ItemTemplate>
+                                    <%--<%#Eval("hname") %>--%>
+                                    <%#Eval("ehobbies") %>
+                                    
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField >
+                                <ItemTemplate>                                     <%--command name me edit delete update cancel ni le skte kyuki ye predefine keyword hai isliye A B C etc ka use krenge--%>
+                                    <asp:Button ID="btndelete" runat="server" Text="Delete" OnClientClick="return confirm('are confirm to delete')" CommandName="A" CommandArgument='<%#Eval("eid") %>' />
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                            <asp:TemplateField HeaderText=" User city"> 
+                                <ItemTemplate>
+                                    <asp:Button ID="btnedit" runat="server" Text="EDIT" CommandName="B" CommandArgument='<%#Eval("eid") %>' />
+                                </ItemTemplate>
+                            </asp:TemplateField>
+                        </Columns>
+                        </asp:GridView>
+
+                    </td> <%--jo button gridview ke ander hoga uska code onrowcommand ke ander karenge--%>
+                </tr>
+            </table>
+        </div>
+    </form>
+</body>
+</html>
+
+
+
+
+------------------------------------------------------------D:\pr05102022\EmployeeShow.aspx.cs------------------------------------------------------------------------
+
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+using System.Data.SqlClient;
+using System.Configuration;
+
+namespace pr05102022
+{
+    public partial class EmployeeShow : System.Web.UI.Page
+    {
+        // SqlConnection con = new SqlConnection("data source=DESKTOP-UTVKD93;initial catalog=db54_05102022;integrated security=true");
+        SqlConnection con = new SqlConnection(ConfigurationManager.ConnectionStrings["abc"].ConnectionString);
+        protected void Page_Load(object sender, EventArgs e) // agar koi error aati hai or run nhi ho rha to page ke load ka code comment kar do isse code nhi chalega or form run ho jaayega
+        {
+            if (!IsPostBack) // save ke button pr click krne par !ispostback ke ander ke function dubara page load par call ni honge ya ek hi bar call honge bar bar ni honge
+            {
+
+                BindGrid(); // page load par data show karane ke liye by Gridview agar is function ko !ispostback ke bahar rakhenge to link button use hoga ni to button use kr skte hai 
+                lblmsg.Text = "Record has been Updated !!";
+            }
+        }
+        public void BindGrid() //same page par data show karane ke liye bindgrid ya show function
+        {
+            con.Open();
+            SqlCommand cmd = new SqlCommand("select * from tblemployees", con);
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+            con.Close();
+            gvemp.DataSource = dt;
+            gvemp.DataBind();
+
+
+        }
+        protected void gvemp_RowCommand(object sender, GridViewCommandEventArgs e)
+        {
+            if (e.CommandName == "A")
+            {
+
+                con.Open();
+                SqlCommand cmd = new SqlCommand("delete from tblemployees where eid='" + e.CommandArgument + "' ", con);
+                cmd.ExecuteNonQuery();
+                con.Close();
+
+
+                Response.Redirect("EmployeeForm.aspx");
+            }
+            else if (e.CommandName == "B")
+            {
+                Response.Redirect("EmployeeForm.aspx?kk="+e.CommandArgument); // by ? using querystring its  a global variable use on diff pages to hold data
+            }
+        }
+    }
+}
+
+
+
+---------------------------------------------------------------d:\pr05102022\Default.Master-------------------------------------------------------------------------
+
+
+
+<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="Default.master.cs" Inherits="pr05102022.Default" %>
+<%--jo page jis page par link hoga uspar vahi -MasterPageFile="~/Default.Master"/MasterPageFile="~/User.Master" - hoga--%>
+<%@ Register Src="~/Header.ascx" TagName="myhead" TagPrefix="aa" %> <%--add this line--%>
+<%@ Register Src="~/Footer.ascx" TagName="myfoot" TagPrefix="aa" %>  <%--add this line--%>
+<!DOCTYPE html>
+
+<html>
+<head runat="server">
+    <script src="jquery.js"></script> <%--add this three files--%>
+    <link href="menu.css" rel="stylesheet" /> <%--add this three files--%>
+    <script src="menu.js"></script> <%--add this three files--%>
+   
+    <title></title>
+    <asp:ContentPlaceHolder ID="head" runat="server"> <%--Master page Header page Footer page ko debug nhi kr skte--%>
+    </asp:ContentPlaceHolder>
+</head>
+<body>
+    <form id="form1" runat="server">
+        <link href="menu.css" rel="stylesheet" />
+        <div>
+            <table>
+                <tr>
+                    <td><aa:myhead id="h1" runat="server"></aa:myhead></td>
+                </tr>
+                <tr>
+                    <td>
+                        <div id="menu">
+		<ul class="menu">
+			<li><a href="RegistrationForm.aspx"><span>Registration</span></a></li>
+			<li class="last"><a href="StudentForm.aspx"><span>StudentFrom</span></a></li>
+                          <%--Default master page me home page ka link nhi hoga--%>
+            <li class="last"><a href="LoginForm1.aspx"><span>LoginForm1</span></a></li> <%--login se pahle ke liye default master page--%>
+            <li class="last"><a href="AddNewForm.aspx"><span>AddNewForm</span></a></li>
+            <li class="last"><a href="EmployeeForm.aspx"><span>EmployeeForm</span></a></li>
+            <li class="last"><a href="UserForm.aspx"><span>UserForm</span></a></li>
+		</ul>
+	</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <center>
+                        <asp:ContentPlaceHolder ID="ContentPlaceHolder1" runat="server">
+            </asp:ContentPlaceHolder>
+                        </center> 
+                    </td>
+                </tr>
+                <tr>
+                    <td><aa:myfoot id="f1" runat="server"></aa:myfoot></td>
+                </tr>
+
+            </table>
+           
+        </div>
+    </form>
+</body>
+</html>
+
+
+
+----------------------------------------------------d:\pr05102022\Header.ascx---------------------------------------------------------------
+
+
+
+<%@ Control Language="C#" AutoEventWireup="true" CodeBehind="Header.ascx.cs" Inherits="pr05102022.Header" %>
+<table>
+    <tr>
+        <td>
+            <asp:Image ID="img1" runat="server" Width="1350px" Height="160px" ImageUrl="~/CorporateImage.jfif" />
+        </td>
+    </tr>
+</table>
+<%--add footer page with master page--%>
+<%--Master page Header page Footer page ko debug nhi kr skte--%>
+
+
+-------------------------------------------------------d:\pr05102022\Footer.ascx-----------------------------------------------------------
+
+
+<%@ Control Language="C#" AutoEventWireup="true" CodeBehind="Footer.ascx.cs" Inherits="pr05102022.Footer" %>
+<table style="width:100%">
+    <tr>
+        <td style=" background:url(images/main-bg.png) repeat-x;text-align:center;color:white;height=40px">
+            COPY RIGHT @ DASHRATH SINGH. ALL RIGHTS RESERVED.
+        </td>
+    </tr>
+</table>
+
+<%--add footer page with master page--%>
+<%--Master page Header page Footer page ko debug nhi kr skte--%>
+
+
+
+-----------------------------------------------------d:\pr05102022\User.Master---------------------------------------------------------------------
+
+
+
+<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="User.master.cs" Inherits="pr05102022.User" %>
+<%--jo page jis page par link hoga uspar vahi -MasterPageFile="~/Default.Master"/MasterPageFile="~/User.Master" - hoga--%>
+<%@ Register Src="~/Header.ascx" TagName="myhead" TagPrefix="aa" %> <%--add this line--%>
+<%@ Register Src="~/Footer.ascx" TagName="myfoot" TagPrefix="aa" %>  <%--add this line--%>
+
+<!DOCTYPE html>
+
+<html>
+<head runat="server">
+    <script src="jquery.js"></script>                 <%--add this three files--%>
+    <link href="menu.css" rel="stylesheet" /><%--add this three files--%>
+    <script src="menu.js"></script><%--add this three files--%>
+
+    <title></title>
+    <asp:ContentPlaceHolder ID="head" runat="server">
+    </asp:ContentPlaceHolder>
+</head>
+<body>
+    <form id="form1" runat="server"> <%--// hamesa kisi bhi application ya Project me do master bante hai ek login se pahle or ek login ke baad--%>
+        
+           <div>
+            <table>
+                <tr>
+                    <td><aa:myhead id="h1" runat="server"></aa:myhead></td>
+                </tr>
+                <tr>
+                    <td>
+                        <div id="menu">
+		<ul class="menu">
+			
+            <li class="last"><a href="Home.aspx"><span>Home</span></a></li> <%--user master page me home page ka link hoga--%>
+            <li class="last"><a href="ChangePassword.aspx"><span>Change Password</span></a></li> <%--login ke baad ke liye user.master page--%>
+             <li class="last"><a href="Logout.aspx"><span>Logout</span></a></li> <%--login ke baad ke liye user.master page--%>
+		</ul>
+	</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <center>
+                        <asp:ContentPlaceHolder ID="ContentPlaceHolder1" runat="server">
+            </asp:ContentPlaceHolder>
+                        </center> 
+                    </td>
+                </tr>
+                <tr>
+                    <td><aa:myfoot id="f1" runat="server"></aa:myfoot></td>
+                </tr>
+
+            </table>
+           
+        </div>
+        
+    </form>
+</body>
+</html>
+
+
+
+-----------------------------------------------------------D:\pr05102022\Web.config-----------------------------------------------------------------------------
+
+
+
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  For more information on how to configure your ASP.NET application, please visit
+  https://go.microsoft.com/fwlink/?LinkId=169433
+  -->
+<configuration>
+	<connectionStrings>
+		<add name="abc" connectionString="data source=DESKTOP-UTVKD93;initial catalog=db54_05102022;integrated security=true" />
+	</connectionStrings>
+  <system.web>
+    <compilation debug="true" targetFramework="4.7.2" />
+    <httpRuntime targetFramework="4.7.2" />
+  <pages>
+      <controls>
+        <add tagPrefix="ajaxToolkit" assembly="AjaxControlToolkit" namespace="AjaxControlToolkit" />
+      </controls>
+    </pages></system.web>
+  <system.codedom>
+    <compilers>
+      <compiler language="c#;cs;csharp" extension=".cs" type="Microsoft.CodeDom.Providers.DotNetCompilerPlatform.CSharpCodeProvider, Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=2.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" warningLevel="4" compilerOptions="/langversion:default /nowarn:1659;1699;1701" />
+      <compiler language="vb;vbs;visualbasic;vbscript" extension=".vb" type="Microsoft.CodeDom.Providers.DotNetCompilerPlatform.VBCodeProvider, Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=2.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" warningLevel="4" compilerOptions="/langversion:default /nowarn:41008 /define:_MYTYPE=\&quot;Web\&quot; /optionInfer+" />
+    </compilers>
+  </system.codedom>
+</configuration>
+
+
+-----------------------------------------------------
