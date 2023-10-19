@@ -80,7 +80,7 @@ alter proc Employee_Edit
 @empid int
 as  
 begin  
-select *from tblemp
+select *from tblemp where empid=@empid
 end
 
 create proc Employee_Delete
