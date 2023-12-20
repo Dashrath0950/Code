@@ -1,0 +1,100 @@
+SELECT [t_job_work_sale_invoice].JOB_WORK_SALE_INVOICE_FROMAT
+	,[t_job_work_sale_invoice].PARTY_SRNO
+	,[t_job_work_sale_invoice].BALANCE_QTY
+	 
+    ,Convert(Date, t_job_work_sale_invoice.RECORD_CREATED_ON) as RECORD_CREATED_ON
+	,convert(Date, [t_job_work_sale_invoice].DUE_DATE) as DUE_DATE
+	,[t_job_work_sale_invoice].FOUR_FIVE_A_NO
+	--,convert(Date, t_job_work_sale_invoice.FROM_DATE) AS FROM_DATE
+	,case when  t_job_work_sale_invoice.FROM_DATE  is null then Convert(Date, t_job_work_sale_invoice.RECORD_CREATED_ON) else  convert(Date, t_job_work_sale_invoice.FROM_DATE) end AS FROM_DATE
+	,isnull(t_job_work_sale_invoice.GROSS_AMOUNT,0) as GROSS_AMOUNT
+	,[t_job_work_sale_invoice].HEAT_CODE
+	,[t_job_work_sale_invoice].HEAT_NO
+	,[t_job_work_sale_invoice].JOB_WORK_SALE_INVOICE_SRNO
+	,[t_job_work_sale_invoice].PAYMENT_DAYS
+	,Convert(Date, [t_job_work_sale_invoice].PO_Date)  as PO_Date
+	--,[t_job_work_sale_invoice].PO_No
+	,case when  t_job_work_sale_invoice.PO_No is null then (select dbo.FN_GET_PO_NUMBER_FOR_JWI(t_job_work_sale_invoice.REF_SALE_INVOICE_SRNO,1)) else case  when  t_job_work_sale_invoice.PO_No='' then (select dbo.FN_GET_PO_NUMBER_FOR_JWI(t_job_work_sale_invoice.REF_SALE_INVOICE_SRNO,1)) else t_job_work_sale_invoice.PO_No end end as  PO_No
+	
+	--,[t_job_work_sale_invoice].RECORD_CREATED_BY	
+	 ,dbo.Fn_GET_UserName(t_job_work_sale_invoice.RECORD_CREATED_BY, UserCB.USER_LOGIN_TYPE) as RECORD_CREATED_BY
+	,[t_job_work_sale_invoice].REMARKS
+	,Convert(Date, [t_job_work_sale_invoice].SALE_INVOICE_DATE) AS SALE_INVOICE_DATE
+	,isnull([t_job_work_sale_invoice].REF_NO ,'') as REF_NO
+	,[t_job_work_sale_invoice].REMARKS
+	,[t_job_work_sale_invoice].TOTAL_AMOUNT
+	--,[t_job_work_sale_invoice].TOTAL_TAX_AMOUNT
+	,isnull(t_job_work_sale_invoice.TOTAL_TAX_AMOUNT,0) as TOTAL_TAX_AMOUNT
+	--,[t_job_work_sale_invoice].Transport
+	,case when  t_job_work_sale_invoice.Transport is null then (select dbo.FN_GET_TRANSPORTERNAME_FOR_JWI(t_job_work_sale_invoice.REF_SALE_INVOICE_SRNO,1)) else case  when  t_job_work_sale_invoice.Transport='' then (select dbo.FN_GET_TRANSPORTERNAME_FOR_JWI(t_job_work_sale_invoice.REF_SALE_INVOICE_SRNO,1)) else t_job_work_sale_invoice.Transport end end as  Transport
+	
+	,[t_job_work_sale_invoice].Vehical_No
+	,[t_job_work_sale_invoice_item].BALANCE_QTY_INKG
+	,[t_job_work_sale_invoice_item].BATCH_CODE
+	,[t_job_work_sale_invoice_item].ITEM_QTY
+	,[t_job_work_sale_invoice_item].ITEM_QTY
+	,[t_job_work_sale_invoice_item].ITEM_RATE
+	,Convert(Date, [t_job_work_sale_invoice_item].JW_CHALLAN_DATE) AS JW_CHALLAN_DATE
+	,[t_job_work_sale_invoice_item].JW_CHALLAN_NO
+	,[t_job_work_sale_invoice_item].NET_AMOUNT
+	,[t_job_work_sale_invoice_item].SEND_QTY_INKG
+	,[t_job_work_sale_invoice_item].ITEM_MASTER_SRNO 
+	,[m_item_master].Item_Dispaly_Name AS FINISH_GOODS_NAME
+	,[m_item_master].SKU_0 as FINISH_GOODS_NAME_SKU
+	, GST_HSN_SAC_Master.HSN_SAC_CODE
+
+	, [t_job_work_sale_invoice_item].RAW_MATERIAL_SRNO
+	,m_item_raw_materail.Item_Dispaly_Name AS RAW_MATERIAL_NAME
+	,m_item_raw_materail.SKU_0 as RAW_MATERIAL_NAME_SKU
+	,[t_job_work_sale_invoice_item].RAW_MATERIAL_BATCH_CODE
+	,[m_unit_master].UNIT_NAME
+	,m_unit_master.DECIMAL_PLACES
+	,[m_item_master].SKU_0 AS SKU
+	,AltUnitMaster.UNIT_NAME as ALT_UNIT_NAME
+	,ISNULL( AltUnitMaster.DECIMAL_PLACES,0) as ALT_DECIMAL_PLACE
+	,m_customer_master.COMPANY_NAME
+	--ITEM WISE TAX AND AMOUNT DETAILS
+	,ISNULL(t_job_work_sale_invoice_item.CGST_TAX_PER,0) as CGST_TAX_PER, ISNULL(t_job_work_sale_invoice_item.CGST_TAX_AMOUNT,0) as CGST_TAX_AMOUNT ,
+			 ISNULL( t_job_work_sale_invoice_item.SGST_TAX_PER,0) as SGST_TAX_PER , 
+			 ISNULL(t_job_work_sale_invoice_item.SGST_TAX_AMOUNT,0) as SGST_TAX_AMOUNT,
+			  ISNULL( t_job_work_sale_invoice_item.IGST_TAX_PERCENT,0) as IGST_TAX_PERCENT,
+			   ISNULL(t_job_work_sale_invoice_item.IGST_TAX_AMOUNT,0) as IGST_TAX_AMOUNT
+			  ,isnull(t_job_work_sale_invoice_item.NET_AMOUNT,0) as TAXABLE_VALUE,
+			  isnull(t_job_work_sale_invoice_item.ITEM_NET_AMOUNT,0) AS ITEM_NET_AMOUNT_AFTER_TAX
+			 
+			  --,t_job_work_sale_invoice_item.ITEM_QTY *m_item_master.GrossWeight as AlternateWeightQty
+			  --,cast (t_job_work_sale_invoice_item.ITEM_QTY * m_item_master.AlternateWeightQty as decimal(18,3))  as  WeightQty
+			  ,t_job_work_sale_invoice_item.ITEM_QTY *ISNULL(t_job_work_sale_invoice_item.GROSS_WEIGHT,0) as AlternateWeightQty
+			  ,cast (t_job_work_sale_invoice_item.ITEM_QTY * ISNULL(t_job_work_sale_invoice_item.WEIGHT_QTY,0) as decimal(18,3))  as  WeightQty
+			  ,t_delivery_note_item.NO_OF_BOX as Packing,
+                 m_item_master.PackingType,
+				 t_job_work_sale_invoice.PROCESS_MASTER,
+				-- BILLING_ADDRESS_LINE_1+''+BILLING_ADDRESS_LINE_2+''+BILLING_CITY+''+BILLING_STATE+''+BILLING_COUNTRY+''+ CAST( BILLING_PINCODE as varchar(10)) as   BILLING_ADDRESS  
+				-- ,SHIPPING_ADDRESS_LINE_1+''+ SHIPPING_ADDRESS_LINE_2+''+ SHIPPING_CITY+''+ SHIPPING_STATE+''+SHIPPING_COUNTRY+''+ CAST(SHIPPING_PINCODE as varchar(10)) as SHIPPING_ADDRESS,
+
+				 dbo.Fn_GET_PARTY_ADDRESS_DETAIL(10,t_job_work_sale_invoice.BILLING_ADDRESS_SRNO,t_job_work_sale_invoice.PARTY_SRNO,t_job_work_sale_invoice.JOB_WORK_SALE_INVOICE_SRNO) as BILLING_ADDRESS
+				 ,dbo.Fn_GET_PARTY_ADDRESS_DETAIL(10,t_job_work_sale_invoice.SHIPPING_ADDRESS_SRNO,t_job_work_sale_invoice.PARTY_SRNO,t_job_work_sale_invoice.JOB_WORK_SALE_INVOICE_SRNO) as SHIPPING_ADDRESS
+				
+				, isnull(billingcustaddress.GST_NO,'') as BILLING_GSTINNO,
+				isnull( shippingcustaddress.GST_NO,'') as SHIPPING_GSTINNO,ISNULL(WAY_BILL_NO,'') as WAY_BILL_NO
+				,case when  t_E_Invoice.AckNo is null then einv.AckNo else t_E_Invoice.AckNo end AckNo ,
+				case when  t_E_Invoice.AckNo is null then einv.AckDt else t_E_Invoice.AckDt end AckDt ,
+				case when  t_E_Invoice.AckNo is null then einv.Irn else t_E_Invoice.Irn end Irn 
+
+FROM [t_job_work_sale_invoice]
+INNER JOIN [t_job_work_sale_invoice_item] ON [t_job_work_sale_invoice].JOB_WORK_SALE_INVOICE_FROMAT = [t_job_work_sale_invoice_item].JOB_WORK_SALE_INVOICE_FROMAT
+INNER JOIN [dbo].[m_item_master] ON [dbo].[m_item_master].ITEM_MASTER_SRNO = [t_job_work_sale_invoice_item].ITEM_MASTER_SRNO
+INNER JOIN [dbo].[m_item_master] AS m_item_raw_materail ON m_item_raw_materail.ITEM_MASTER_SRNO = [t_job_work_sale_invoice_item].RAW_MATERIAL_SRNO
+INNER JOIN [dbo].[m_unit_master] ON [m_unit_master].UNIT_MASTER_SRNO = [m_item_master].UNIT_MASTER_SRNO
+inner join [dbo].[m_unit_master] as AltUnitMaster on AltUnitMaster.UNIT_MASTER_SRNO=[m_item_master].ALTERNATE_UNIT
+INNER JOIN m_customer_master ON m_customer_master.CUSTOMER_MASTER_SRNO = [t_job_work_sale_invoice].PARTY_SRNO
+left join GST_HSN_SAC_Master on GST_HSN_SAC_Master.HSN_SAC_ID=m_item_master.HSN_SAC_ID
+inner join t_delivery_note_item on t_delivery_note_item.DELIVERY_NOTE_ITEM_FORMAT=t_job_work_sale_invoice_item.DELIVERY_NOTE_ITEM_ID
+left join m_user_login_master as UserCB ON Cast(UserCB.USERID as varchar(100)) = t_job_work_sale_invoice.RECORD_CREATED_BY
+left join m_customer_master_address_detail as billingcustaddress on t_job_work_sale_invoice.BILLING_ADDRESS_SRNO = billingcustaddress.CUSTOMER_MASTER_ADDRESS_SRNO
+left join m_customer_master_address_detail as shippingcustaddress on t_job_work_sale_invoice.SHIPPING_ADDRESS_SRNO = shippingcustaddress.CUSTOMER_MASTER_ADDRESS_SRNO
+left join t_E_Invoice on t_E_Invoice.SALE_INVOICE_SRNO=t_job_work_sale_invoice.JOB_WORK_SALE_INVOICE_SRNO and t_E_Invoice.INVOICE_TYPE='JWI'
+left join t_E_Invoice as einv on einv.SALE_INVOICE_SRNO=t_job_work_sale_invoice.REF_SALE_INVOICE_SRNO and einv.INVOICE_TYPE='SI'
+inner JOIN m_vouchers  vc on vc.VOUCHER_ID=t_job_work_sale_invoice.JWI_SALE_INVOICE_VOUCHER_TYPE and vc.VOUCHER_ID=109
+ -- where(1=1)' 
+ where 
