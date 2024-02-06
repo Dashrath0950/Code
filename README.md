@@ -1,9 +1,10 @@
 # Code
 Only for code
 
-
-   m t w th f st s
-1
+      
+               m               t                  w               th               f               st               s
+1           4-5-6-f,y
+            6-7-
 2
 3
 4
