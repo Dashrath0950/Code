@@ -98,3 +98,8 @@ left join t_E_Invoice as einv on einv.SALE_INVOICE_SRNO=t_job_work_sale_invoice.
 inner JOIN m_vouchers  vc on vc.VOUCHER_ID=t_job_work_sale_invoice.JWI_SALE_INVOICE_VOUCHER_TYPE and vc.VOUCHER_ID=109
  -- where(1=1)' 
  where 
+
+
+
+
+sp_depends BMS_DDOBudgetHeadMapp_Mst
