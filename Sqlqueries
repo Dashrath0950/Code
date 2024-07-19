@@ -369,8 +369,18 @@ begin
 	insert into tblreg(name,country)select name,@p from inserted
 end
 
-
+--------------------------------------------------19/july/2024-------------------------------------------------------------------------------------------
+search sp's depends on this table
 sp_depends BMS_DDOBudgetHeadMapp_Mst
+
+insert query using select
+(Insert into BMS_DDOBudgetHeadMapp_Mst(fk_finyearid, fk_ddoid, fk_budgetcatid, fk_budgetnatureid, 
+fk_sectorid, Fk_InsUserId, Fk_UpdUserId, Fk_InsDateId, Fk_UpdDateId, fk_anc)
+Select 'A-14', 'AH-1', 2, 2, 63, 'AH-1', 'AH-1', '0', '0', 5398 )
+
+
+search query similar sp's using like command
+SELECT * FROM sys.procedures WHERE NAME LIKE '%_BudgetHeadMap_%'
 
 
 
