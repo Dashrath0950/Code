@@ -382,6 +382,9 @@ Select 'A-14', 'AH-1', 2, 2, 63, 'AH-1', 'AH-1', '0', '0', 5398 )
 search query similar sp's using like command
 SELECT * FROM sys.procedures WHERE NAME LIKE '%_BudgetHeadMap_%'
 
+Log Table & System Version Table
+
+
 
 
 
