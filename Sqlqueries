@@ -383,6 +383,25 @@ search query similar sp's using like command
 SELECT * FROM sys.procedures WHERE NAME LIKE '%_BudgetHeadMap_%'
 
 Log Table & System Version Table
+Log Table:-
+CREATE TABLE RSM_Research_Objectives_Log
+(
+	Pk_activity_LogId INT PRIMARY KEY identity(1,1),
+    Fk_activity_Id INT NULL,
+    Fk_research_Id INT NULL,
+    Objective VARCHAR(255) NULL,
+    ExpectedOutput VARCHAR(255) NULL,
+    ExpectedGrowth VARCHAR(255) NULL,
+    Remarks VARCHAR(255) NULL,
+    Fk_sessionid VARCHAR(10) NULL,
+    Proposal VARCHAR(250) NULL,
+    Season_Id INT NULL,
+    Ip_Address VARCHAR(250) NULL,
+    CreatedBy VARCHAR(100) NULL, 
+    CreatedDate DATETIME NULL, 
+    UpdatedBy VARCHAR(100) NULL, 
+    UpdatedDate DATETIME NULL,
+);
 
 
 
