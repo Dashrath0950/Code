@@ -404,6 +404,15 @@ CREATE TABLE RSM_Research_Objectives_Log
 );
 
 
+sp_who2  
+RUNNABLE         
+
+select getdate()
+
+
+sp_who2
+
+
 
 
 
