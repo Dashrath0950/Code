@@ -1,0 +1,1419 @@
+--/*    
+CREATE PROCEDURE [dbo].[RSM_MPR_Rpt]-- 7,1995,2    
+(    
+  @fk_research_id int,    
+  @fk_yearid int,    
+  @fk_monthid int    
+)    
+AS    
+--*/    
+BEGIN    
+/*    
+  Declare @fk_research_id int=14,    
+  @fk_yearid int=2019,    
+  @fk_monthid int=7    
+--*/    
+    
+ Declare @mpid int    
+ Select @mpid = pk_mpid from RSM_MonthlyProgress where     
+ fk_research_id=@fk_research_id    
+ and isnull(year,0)=Case when isnull(@fk_yearid,0)<>0 then @fk_yearid Else isnull(year,0) End    
+ and isnull(month,0)=Case when isnull(@fk_monthid,0)<>0 then @fk_monthid Else isnull(month,0) End    
+     
+ --Select @mpid    
+     
+ Declare @small int,@marginal int,@sc int,@st int,@women int,@other int,@Tot int,@mn varchar(25)    
+ Set @small=( Select COUNT (*) from RSM_Beneficiary_Dtl where type='S' and fk_mpid=@mpid)    
+ Set @marginal=( Select COUNT (*) from RSM_Beneficiary_Dtl where type='M' and fk_mpid=@mpid)    
+ Set @sc=( Select COUNT (*) from RSM_Beneficiary_Dtl where cat=1 and fk_mpid=@mpid)    
+ Set @st=( Select COUNT (*) from RSM_Beneficiary_Dtl where cat=2 and fk_mpid=@mpid)    
+ Set @women=( Select COUNT (*) from RSM_Beneficiary_Dtl where gender='F' and fk_mpid=@mpid)    
+ Set @other=( Select COUNT (*) from RSM_Beneficiary_Dtl where cat=3 and fk_mpid=@mpid)    
+ Set @Tot=( Select COUNT (*) from RSM_Beneficiary_Dtl where fk_mpid=@mpid)    
+ Set @mn=( Select descriptiion from Month_Mst where pk_MonthId=@fk_monthid)    
+     
+ Select Target,    
+ TargetF,    
+ Achieved,    
+ AchievedF,     
+ SD.Research_title,    
+ SD.District,    
+ name,    
+ address,    
+ Case when gender='M' then 'Male' Else 'Female' End gender,    
+ Case when type='S' then 'Small' Else 'Marginal' End type,    
+ isnull(phone,'')phone,    
+ isnull(survey,'')survey ,    
+-- isnull(DM.Description,'') Dst,    
+ department_mst.description RDname,    
+ isnull(CT.Description,'') Cat,    
+ @small as small,    
+ @marginal as marginal,    
+ @sc as sc,    
+ @st as st,    
+ @women as women,    
+ @other as other,    
+ @Tot as Tot ,@mn as month from  RSM_MonthlyProgress MP    
+ inner join RSM_ResearchSubmission_Dtl SD On SD.pk_research_ID=MP.fk_research_id    
+ left join RSM_Beneficiary_Dtl BD On BD.fk_mpid=MP.pk_mpid    
+ --left join distric_mst DM On DM.pk_districid=BD.district    
+ left join department_mst on pk_deptid=Implementation_Dept    
+ --left join RSM_ResearchDepartment_Mst RD on RD.pk_rdid=Implementation_Dept    
+ left join RSM_Category_Mst CT On CT.pk_CategoryID=BD.cat    
+ where pk_mpid=@mpid    
+     
+     
+END    
+
+
+----------------------------------------------------------------------------------------------------------------------
+
+
+CREATE Proc [dbo].[RSM_GetCompletedProject]             
+(          
+@Pk_Asst_FinYrId int,     
+@pk_rdid varchar(15)            
+)            
+as            
+begin            
+select description RDname,dbo.RSM_GetMember (pk_research_ID) as PIAssociates,Convert(varchar(15),Actual_startD,103) as StartDate,            
+Convert(varchar(15),Actula_enD,103) as CompletionDate,Total_Expenditure            
+,Research_no,Research_title,Fname from  RSM_FinalResearch_Submission            
+inner join RSM_ResearchSubmission_Dtl on fk_research_id=pk_research_ID            
+inner join department_mst on pk_deptid=fk_depto            
+inner join dbo.RSM_Financer_Mst on pk_fid=Cost_fk_fid            
+where fk_depto=@pk_rdid           
+and Actula_enD between( Select FromDate from ASST_FinancialYear_Mst where Pk_Asst_FinYrId=@Pk_Asst_FinYrId)             
+and (Select ToDate+1 from ASST_FinancialYear_Mst where Pk_Asst_FinYrId=@Pk_Asst_FinYrId)            
+End 
+
+CREATE Proc [dbo].[RSM_GetSenctionProject]             
+(          
+@Pk_Asst_FinYrId int,   
+@pk_rdid varchar(15)            
+)            
+as            
+begin            
+select description RDname,pk_research_ID,Convert(varchar(15),Edate,103) as SenctionDate,Total_budget,dbo.RSM_GetMember (pk_research_ID) as PIAssociates            
+,S.Research_no,Research_title,case when  App_FundingAgency='Y' then Fname  else 'NA' end as FundingAgency            
+from  RSM_ResearchApproval            
+inner join RSM_ResearchSubmission_Dtl S on fk_research_id=pk_research_ID            
+inner join department_mst on pk_deptid=fk_depto             
+ inner join dbo.RSM_Financer_Mst on pk_fid=Cost_fk_fid            
+where fk_depto=@pk_rdid             
+and Edate between(Select  FromDate from ASST_FinancialYear_Mst where Pk_Asst_FinYrId=@Pk_Asst_FinYrId)             
+and (Select ToDate+1 from ASST_FinancialYear_Mst where Pk_Asst_FinYrId=@Pk_Asst_FinYrId)            
+End 
+
+CREATE Proc [dbo].[RSM_GetSubmittedProject]           
+(        
+@Pk_Asst_FinYrId int, @pk_rdid varchar(15)          
+)          
+as          
+begin          
+select Research_title,pk_research_ID,          
+Convert(varchar(15),RSD.fk_insDateID,103) as SubmittedDate,FName,dbo.RSM_GetMember (pk_research_ID) as PIAssociates,          
+case when pk_research_ID not in (select fk_research_id from RSM_ResearchApproval) then 'Under consideration'          
+else 'Approved' end as PStatus          
+from RSM_ResearchSubmission_Dtl RSD        
+inner join department_mst on pk_deptid=fk_depto            
+left join dbo.RSM_Financer_Mst on pk_fid=Cost_fk_fid          
+where fk_depto=@pk_rdid           
+and RSD.fk_insDateID between(Select  FromDate from ASST_FinancialYear_Mst where Pk_Asst_FinYrId=@Pk_Asst_FinYrId)           
+and (Select ToDate+1 from ASST_FinancialYear_Mst where Pk_Asst_FinYrId=@Pk_Asst_FinYrId)          
+End 
+
+-----------------------------------------------------------------------------------------------------------------------
+
+
+
+--DataSet2
+CREATE PROCEDURE [dbo].[RSM_AnnualPerforma_Rpt]    
+(    
+@fk_yearid int    
+)    
+AS    
+--DECLARE @fk_yearid int = 2024  
+BEGIN    
+  
+  DECLARE @fromdate datetime = GETDATE()-24, @todate datetime = GETDATE()    
+  DECLARE @finyear varchar(10)        
+  SET @finyear = (        
+  SELECT '20'+SUBSTRING (CONVERT(varchar, DATEPART(YY, FromDate ), 103), 3, 2)+'-'+  '20'+SUBSTRING (CONVERT(varchar, DATEPART(YY, todate ), 103), 3, 2) AS finYear        
+  FROM ASST_FinancialYear_Mst WHERE IsEnabled = 'TRUE'           
+  )    
+  SELECT COUNT(Cost_fk_fcid) AS Number,    
+  RSM_FinanceCategory_Mst.FCname, Fname, @finyear as FY,    
+  (SELECT Convert(varchar(15), FromDate, 106) FROM ASST_FinancialYear_Mst WHERE IsEnabled = 'TRUE') FromDate,    
+  (SELECT Convert(varchar(15), todate, 106) FROM ASST_FinancialYear_Mst WHERE IsEnabled = 'TRUE') todate    
+  FROM RSM_ResearchSubmission_Dtl D    
+  INNER JOIN dbo.RSM_FinanceCategory_Mst ON pk_fcid = Cost_fk_fcid    
+  INNER JOIN dbo.RSM_Financer_Mst ON pk_fid = Cost_fk_fid    
+  INNER JOIN RSM_YearlyProgress ON pk_research_ID = fk_research_id      
+  WHERE fk_insDateID > (SELECT FromDate FROM ASST_FinancialYear_Mst WHERE IsEnabled = 'TRUE')   
+    AND fk_insDateID < (SELECT todate FROM ASST_FinancialYear_Mst WHERE IsEnabled = 'TRUE')    
+    AND year = CASE WHEN ISNULL(@fk_yearid, 0) = 0 THEN year ELSE @fk_yearid END        
+  GROUP BY pk_fcid, FCname, Fname    
+    
+END    
+
+--DataSet2
+SELECT FCname, Remarks FROM RSM_FinanceCategory_Mst 
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+
+CREATE PROCEDURE [dbo].[RSM_DistrictTarget_Rpt] --7 ,2015,0      
+(      
+ @fk_research_id int,      
+ @fk_yearid int       
+)      
+AS     
+--4 7 10 13  
+--DECLARE @fk_research_id int = 4,  
+--@fk_yearid int = 2024,   
+  
+BEGIN     
+    
+ DECLARE @finyear varchar(10)      
+ SET @finyear = (      
+ SELECT '20'+SUBSTRING (CONVERT(varchar, DATEPART(YY, FromDate), 103), 3, 2)+'-'+  '20'+SUBSTRING (CONVERT(varchar, DATEPART(YY, todate), 103), 3, 2) AS finYear      
+ FROM ASST_FinancialYear_Mst WHERE IsEnabled = 'TRUE'         
+ )      
+       
+ SELECT year, phyT, phyA, FinT, FinA, Research_no, Research_title, @finyear fy--, --distric_mst.Description     
+ FROM RSM_YearlyProgress      
+ INNER JOIN RSM_YearlyProgress_DistrictDtl ON fk_ypid = pk_ypid      
+ INNER JOIN RSM_ResearchSubmission_Dtl ON pk_research_ID = fk_research_id      
+ --INNER JOIN distric_mst ON pk_districid = fk_districtid      
+ WHERE fk_research_id = @fk_research_id      
+ AND year = CASE WHEN ISNULL(@fk_yearid,0) = 0 THEN year ELSE @fk_yearid END      
+ --AND fk_districtid = CASE WHEN ISNULL(@fk_districtid, 0) = 0 THEN fk_districtid ELSE @fk_districtid END      
+       
+END 
+
+--------------------------------------------------------------------------------------------------------------------------------------
+
+
+CREATE PROCEDURE [dbo].[RSM_AnnualProgress_Rpt]        
+(        
+ @fk_yearid int,        
+-- @fk_districtid int,        
+ @fk_research_id int        
+)        
+AS     
+   
+--DECLARE @fk_yearid int = 2024,        
+--  @fk_research_id int = 4     
+   
+BEGIN        
+ Declare @finyear varchar(10)        
+ Set @finyear=(        
+ Select '20'+SUBSTRING (CONVERT(varchar, DATEPART(YY, FromDate ),103),3,2)+'-'+  '20'+SUBSTRING (CONVERT(varchar, DATEPART(YY, todate ),103),3,2) AS finYear        
+ from ASST_FinancialYear_Mst WHERE IsEnabled='TRUE'           
+ )        
+ Declare @bn int      
+       
+  
+ Select @bn= COUNT(*) from RSM_Beneficiary_Dtl      
+ where fk_mpid in (select pk_mpid from  RSM_MonthlyProgress where fk_research_id=@fk_research_id      
+ and year = case when isnull(@fk_yearid,0)=0 then year else @fk_yearid End)       
+       
+ Select pk_ypid,fk_userid,fk_research_id,        
+ CONVERT(varchar(10),ReportDate,103) ReportDate,practical,Adescription,year,Target,Achieved,ReasonNA,        
+ Prog_res,Expincurred,Pstatus,Expcommitted,Aoutput,Aoutcome,Gimpact,status,        
+ Research_no,Research_title,@finyear fy, @bn ActBen from RSM_YearlyProgress        
+ Left outer join RSM_AnnualResearch_Status On Pstatus=pk_id        
+ inner join RSM_ResearchSubmission_Dtl On pk_research_ID=fk_research_id        
+ where fk_research_id=@fk_research_id        
+ and year=  case when isnull(@fk_yearid,0)=0 then year else @fk_yearid End        
+ --and fk_yearid =  case when isnull(@fk_districtid,0)=0 then fk_yearid else @fk_yearid End        
+END 
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+
+--/*  
+CREATE PROCEDURE [dbo].[RSM_FinalResearch_Rpt]      
+(      
+ @fdate datetime,      
+ @tdate datetime,      
+ @fk_research_id int,  
+ @rname varchar(100)      
+)      
+AS    
+--*/    
+BEGIN      
+ --Declare @fdate datetime='2015-01-01'      
+ --Declare @tdate datetime='2015-10-13'      
+ --Declare @fk_research_id int    
+ --Declare  @rname varchar(100)=''      
+ --select GETDATE()  
+ Declare @finyear varchar(10)      
+ Set @finyear=(      
+ Select '20'+SUBSTRING (CONVERT(varchar, DATEPART(YY, FromDate ),103),3,2)+'-'+  '20'+SUBSTRING (CONVERT(varchar, DATEPART(YY, todate ),103),3,2) AS finYear      
+ from ASST_FinancialYear_Mst WHERE IsEnabled='TRUE'         
+ )      
+       
+       
+ --Select @mpid      
+      
+       
+       
+ Select pk_research_ID, @finyear fy,Research_title ,      
+ ActualOutput,ActualOutcome,ActualAchievement,      
+ Case when Assessment ='Y' then 'YES' Else 'NO' End Assessment,      
+ Case when CaseStudy='Y' then 'YES' Else 'NO' End CaseStudy,      
+ Growthimpact,      
+ Case when utilize='Y' then 'YES' Else 'NO' End utilize,  
+ CONVERT(varchar(10),utilizedate,103) utilizedate from RSM_FinalResearch_Submission      
+ inner join RSM_ResearchSubmission_Dtl On pk_research_ID=fk_research_id      
+ where fk_research_id=Case when isnull(@fk_research_id,0)=0 then fk_research_id else @fk_research_id End  
+ and Researcher_name like case when isnull(@rname,'')='' then Researcher_name else '%'+@rname+'%' End  
+  and Actula_enD between  @fdate and @tdate      
+       
+END  
+  
+---------------------------------------------------------------------------------------------------------------------------------------
+
+
+      
+CREATE PROCEDURE [dbo].[RSM_Getpublication_detail]      
+(    
+ @pk_deptid varchar(10)      
+)      
+AS      
+  ----DECLARE @pk_deptid varchar(10) = 'AO-219'    
+BEGIN                                        
+                                    
+BEGIN TRAN                                        
+BEGIN TRY        
+    
+  SELECT cast (Row_number() OVER(ORDER BY pk_pubid ASC) AS varchar(5)) AS S_No, pk_pubid,     
+  Publisher_name+' ['+Cast(datepart(yyyy, pub_date) AS varchar(4))+']' +' ' +Publication_title AS publication, description       
+  FROM RSM_Publication_Dtl      
+  INNER JOIN Department_Mst ON Pk_deptid = fk_deptid      
+  WHERE fk_deptid = @pk_deptid      
+  GROUP BY pk_pubid, Publisher_name, Publication_title, pub_date, description      
+    
+COMMIT TRAN      
+END TRY                                        
+BEGIN CATCH                                        
+IF @@TRANCOUNT > 0                                         
+ROLLBACK                                        
+-- Raise an error with the details of the exception                                        
+DECLARE @ErrMsg nvarchar(4000), @ErrSeverity int                                        
+SELECT @ErrMsg = ERROR_MESSAGE(),                                        
+       @ErrSeverity = ERROR_SEVERITY()                                        
+RAISERROR(@ErrMsg, @ErrSeverity, 1)                                        
+END CATCH                           
+                                   
+END      
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+
+ CREATE PROCEDURE [dbo].[RSM_Getpublication_detail_RptData]          
+(    
+@Author varchar(20)=null,    
+@Publication_title varchar(50)null,    
+@fk_medid int=0    
+)          
+AS          
+      
+  --Declare @Author varchar(20) = 'DTS',    
+  --@Publication_title varchar(50)='',    
+  --@fk_medid int=0   
+BEGIN                                            
+                                        
+BEGIN TRAN                                            
+BEGIN TRY            
+    Select  ROW_NUMBER() Over (Order by pk_pubid) As S_No,  Proposal, Author,PM.Pubname AS Publication_title, Book_pub,MT.Media_tpe as fk_medid, Mag_pub, Jour_pub, Web_pub, Publisher_name, URL,             
+ Talk, pub_date, Talk_venue, Talk_date, Seminar, Seminarvalue, Abstract, fk_deptid, rating, year, h_ind, z_ind, P_id,             
+ IsSendToCommittee              
+ From RSM_Publication_Dtl a  
+  INNER JOIN RSM_Publication_Mst PM ON PM.pk_pbid = Publication_title   
+  INNER JOIN RSM_Mediatype MT ON MT.pk_medid = fk_medid   
+ where (( @Author='')     Or     ( @Author<>''   And   Author=@Author))  
+ and (( @Publication_title='')  Or (@Publication_title<>''    And   Publication_title=@Publication_title))  
+  and (( @fk_medid=0)     Or     ( @fk_medid<>0    And   fk_medid=@fk_medid))  
+ --WHERE Author = CASE WHEN @Author IS NULL THEN Author WHEN @Author IS NOT NULL THEN @Author END  
+-- AND  Publication_title = CASE WHEN @Publication_title IS NULL THEN Publication_title WHEN @Publication_title IS NOT NULL THEN @Publication_title END AND    
+ --and fk_medid = CASE WHEN @fk_medid IS NULL THEN fk_medid WHEN @fk_medid IS NOT NULL THEN @fk_medid END    
+        
+        
+COMMIT TRAN          
+END TRY                                            
+BEGIN CATCH                                            
+IF @@TRANCOUNT > 0                                             
+ROLLBACK                                            
+-- Raise an error with the details of the exception                                            
+DECLARE @ErrMsg nvarchar(4000), @ErrSeverity int                                            
+SELECT @ErrMsg = ERROR_MESSAGE(),                                            
+       @ErrSeverity = ERROR_SEVERITY()                                            
+RAISERROR(@ErrMsg, @ErrSeverity, 1)                                            
+END CATCH                               
+                                       
+END   
+  
+  
+Select * FROM RSM_Publication_Dtl
+
+
+
+-----------------------------------------------------------------------------------------------------------------------------------
+CREATE PROCEDURE [dbo].[RSM_BindPubName]         
+  
+AS        
+                                                                                                      
+BEGIN                                                                                                      
+                                                                                                  
+BEGIN TRAN                                                                                                      
+BEGIN TRY                            
+        
+ Select '' pk_pbid, '-- Select Pub name  --' Pubname                          
+ Union                                                            
+ Select pk_pbid,Pubname from RSM_Publication_mst        
+       
+    
+  --select pk_pubid,Proposal, Author, b.Pubname as Publicationtitle, Book_pub,Media_tpe as Media , Mag_pub, Jour_pub, Web_pub, Publisher_name, URL, Talk,       
+  -- pub_date, Talk_venue, Talk_date, Seminar, Seminarvalue, Abstract, fk_deptid, rating, year, h_ind, z_ind, P_id,       
+  -- IsSendToCommittee from RSM_Publication_Dtl a     
+  -- inner join RSM_Publication_mst b on b.pk_pbid =a.Publication_title    
+  -- inner join RSM_MediaType c on c.pk_medid = a.fk_medid    
+      
+     
+  
+   
+   
+        
+        
+COMMIT TRAN                                                                    
+END TRY                                                                                                      
+BEGIN CATCH                                                                          
+IF @@TRANCOUNT > 0                                                                                    
+ROLLBACK                                                                                    
+-- Raise an error with the details of the exception                                                                                                      
+DECLARE @ErrMsg nvarchar(4000), @ErrSeverity int                                                                          
+SELECT @ErrMsg = ERROR_MESSAGE(),                                                                                                
+@ErrSeverity = ERROR_SEVERITY()                                                                                       
+RAISERROR(@ErrMsg, @ErrSeverity, 1)                                                                                                      
+END CATCH                                                     
+                                                
+                                          
+                                                                 
+END
+
+
+--------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+CREATE PROCEDURE [dbo].[RSM_GetResearchProjectDtl]        
+@doc varchar(max)        
+as         
+Declare @Idoc Int                                            
+BEGIN                                            
+                                        
+BEGIN TRAN                                            
+BEGIN TRY          
+        
+ EXEC sp_xml_preparedocument @Idoc OUTPUT, @Doc                                            
+ SET TRANSACTION ISOLATION LEVEL SERIALIZABLE          
+        
+ Declare @pk_deptid varchar(10),@fk_Schemeid int,@Fk_Locid varchar(10)        
+        
+ select @pk_deptid = deptid ,@fk_Schemeid  =  Schemeid, @Fk_Locid = Fk_Locid         
+  From OPENXML(@Idoc,'/NewDataSet/RSM_Status',2)                       
+ WITH (Schemeid int,deptid varchar(10), Fk_Locid varchar(10))          
+        
+--  Declare @pk_deptid varchar(10),@fk_Schemeid int,@Fk_Locid varchar(10)        
+select distinct pk_research_ID,description,Research_title,committeename,pk_comid, HeadDescription SchemeDesciption,           
+case when isnull(Research_Start_Date,'')='' then '' else datepart(year,Research_Start_Date) end Research_Start_Date ,Funding_agency,Total_Budget,        
+ ''    as status , ISNULL(Designation,'') Designation     
+from RSM_ResearchSubmission_Dtl             
+inner join RSM_ResearchScheme_Dtl D on D.fk_research_id=pk_research_ID            
+inner join RSM_Committee_Mst on pk_committeeid=pk_comid            
+inner join department_mst on pk_deptid=fk_depto--Implementation_Dept          
+inner join Acct_HeadCode on pk_anc = fk_Schemeid     
+left join RSM_Research_Members_dtl M on  pk_research_ID = M.fk_research_ID      
+          
+--where fk_roleid = 3 and  fk_depto=case when @pk_deptid='' then fk_depto else @pk_deptid end              
+--and fk_Schemeid=case when @fk_Schemeid=0 then fk_Schemeid else @fk_Schemeid end              
+--and pk_catid='t' and Fk_Locid=@Fk_Locid            
+--order by Research_Start_Date asc           
+        
+COMMIT TRAN          
+END TRY                                            
+BEGIN CATCH                                            
+IF @@TRANCOUNT > 0                                            
+ROLLBACK                                            
+-- Raise an error with the details of the exception                                            
+DECLARE @ErrMsg nvarchar(4000), @ErrSeverity int                                            
+SELECT @ErrMsg = ERROR_MESSAGE(),                                            
+@ErrSeverity = ERROR_SEVERITY()                                            
+RAISERROR(@ErrMsg, @ErrSeverity, 1)                                            
+END CATCH                               
+                               
+EXEC sp_xml_removedocument @Idoc                                            
+END     
+    
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+CREATE Procedure [dbo].[RSM_SP_SchemeByDepartmentId]                      
+ @mode varchar(10) ,                  
+@pk_anc int= null,            
+@deptId varchar(10),            
+@empid varchar(20),        
+@fk_locid varchar(10)            
+                 
+as       
+--declare  @mode varchar(10) ='GetByDEPT'                 
+--declare  @pk_anc int=0            
+--declare  @deptId varchar(10)='ao-8'            
+--declare  @empid varchar(20)='ao-100'    
+--declare  @fk_locid varchar(10)  ='ah-1'          
+                  
+begin          
+          
+ if(@mode = 'GetByDEPT')            
+ begin     
+  select distinct pk_anc,Headcode,HeadDescription,pk_finid  
+   from Acct_HeadCode H            
+  inner join BMS_DDOBudgetHeadMapp_Mst M on M.fk_anc=H.pk_anc            
+  inner join SAL_Financial_Year on pk_finid=fk_finyearid            
+  inner join  (SELECT distinct Split.A.value('.', 'VARCHAR(100)') AS SchemeCode            
+  FROM  (SELECT pk_research_ID, CAST ('<M>' + REPLACE(Scheme_code, ',', '</M><M>') + '</M>' AS XML) AS SchemeCode            
+  FROM  RSM_ResearchSubmission_Dtl where fk_depto=@deptId) AS A  CROSS APPLY SchemeCode.nodes ('/M') AS Split(a)) X          
+  on H.Headcode = X.SchemeCode          
+ -- where pk_finid in (select  pk_finid from  SAL_Financial_Year where getdate() between date1 and  date2)           
+          
+ end             
+         
+ if(@mode = 'BindDept')        
+ begin        
+ --Select '' pk_rdid,'-- Select Implementation Department --' RDname                                           
+ --Union                                              
+ --Select pk_deptid pk_rdid,description RDname from  Department_Mst         
+          
+          
+  if(@empid = 'LU-1')           
+  begin        
+ -- Select  '' pk_rdid,'-- Select Department --' RDname                                           
+ --Union           
+ SELECT distinct pk_deptid pk_rdid,description RDname FROM Department_Mst D         
+ inner join Sal_DDO_Dept_Map_Dtl DDO on DDO.fk_deptid =  D.pk_deptid         
+ inner join Sal_DDO_Dept_Map_Mst DDM on DDM.pk_ddmid = DDO.fk_ddmid        
+ inner join DDO_Loc_Mapping LM on LM.fk_ddoid = DDM.fk_ddoid        
+ order by RDname        
+  end        
+  else        
+  begin        
+ --Select  '' pk_rdid,'-- Select Department --' RDname                                           
+ --Union           
+ SELECT distinct  pk_deptid pk_rdid,description RDname FROM Department_Mst D         
+ inner join Sal_DDO_Dept_Map_Dtl DDO on DDO.fk_deptid =  D.pk_deptid         
+ inner join Sal_DDO_Dept_Map_Mst DDM on DDM.pk_ddmid = DDO.fk_ddmid        
+ inner join DDO_Loc_Mapping LM on LM.fk_ddoid = DDM.fk_ddoid        
+ where fk_locid = @fk_locid        
+ order by RDname        
+    end        
+ end                
+             
+end 
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+--/*                                   
+CREATE PROCEDURE [dbo].[RSM_PostDetail_Rpt] --'0','500','CB-16','','','','',''                       
+(        
+ @fk_Controlling varchar(15)='',                      
+ @fk_ddoid varchar(15)='',                      
+ @fk_deptid varchar(15) ='',         
+ @fk_Section varchar(15)='',                 
+ @fk_desigid varchar(15) ='',                  
+ @fk_gradeid varchar(15) ='' ,                  
+ @fk_fundtypeid varchar(15) ='',                  
+ @fk_anc varchar(15) ='',                  
+ @EmpType  varchar(15)=''                
+)                        
+AS                      
+--*/                
+                      
+/*                   
+      
+Declare          
+@fk_Controlling varchar(15)=null,                  
+@fk_ddoid varchar(15)=null,                      
+@fk_deptid varchar(15) =null,          
+@fk_Section varchar(15)=null,              
+@fk_desigid varchar(15),                
+@fk_gradeid varchar(15),                
+@fk_fundtypeid varchar(15),                
+@fk_anc varchar(15),              
+@EmpType  varchar(15)='A'                 
+                     
+        
+set @fk_Controlling =''        
+set @fk_ddoid=''                    
+set @fk_deptid=''        
+set @fk_Section=''                
+set @fk_desigid=''                
+set @fk_gradeid=''                
+set @fk_fundtypeid=''                
+set @fk_anc='330'                        
+--*/                  
+                
+                
+Set @fk_ddoid = ltrim(rtrim(@fk_ddoid))                  
+Set @fk_deptid = ltrim(rtrim(@fk_deptid))                  
+Set @fk_desigid = ltrim(rtrim(@fk_desigid))                  
+Set @fk_gradeid = ltrim(rtrim(@fk_gradeid))                  
+Set @fk_fundtypeid = ltrim(rtrim(@fk_fundtypeid))                  
+Set @fk_anc = ltrim(rtrim(@fk_anc))              
+--Set @fk_subanc = ltrim(rtrim(@fk_subanc))                  
+                 
+                       
+BEGIN                          
+BEGIN TRY                          
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED                           
+SET NOCOUNT OFF;                          
+                        
+                  
+                            
+                            
+--// Alter The Temporary Table on Which user will Insert The Records temporarly                            
+Create Table #TmpPostDetail                              
+(                                  
+CID bigint Identity(1,1) Primary Key,                                                       
+ddo varchar(100),                             
+location varchar(100),         
+section varchar(100),                            
+designation varchar(100),            
+specialization varchar(200),           
+Remarks varchar(500),                         
+grade varchar(100),                              
+fundtype varchar(100),                             
+Headcode varchar(100),                  
+posts varchar(15),                   
+filledposts varchar(15),              
+Vacentpost varchar(15),              
+pk_mapid varchar(15) ,              
+TempPost varchar(15),              
+empname varchar(5000),              
+HeadDescription varchar(200),              
+Discipline varchar(100),                    
+fk_locid varchar(15),              
+fk_anc varchar(15),      
+isteaching  int                   
+)                              
+                 
+Declare @strSQL nVarchar(max)                                  
+Set @strSQL  = ''                    
+                
+Set @strSQL = '                          
+Insert into #TmpPostDetail( ddo, location ,section,  designation,specialization,Remarks, grade, fundtype, Headcode,posts,filledposts,        
+Vacentpost,pk_mapid,HeadDescription,Discipline,fk_locid,fk_anc,isteaching)                 
+                       
+Select D.description ,DP.description,SM.description section, designation,BM.Branchname,M.Remarks, rtrim(ltrim(g.gradedetails))+''(''+cast(g.gradepay as varchar)+'')'',        
+fundtype,H.Headcode,posts,count(em.empname),abs(M.posts-count(em.empname)) as vacent,pk_mapid,H.Headcode +''/''+H.HeadDescription,              
+DM.Discipline,M.fk_deptid,M.fk_anc,SAL_Designation_Mst.isteaching                     
+From SAL_DesignationFundType_Map M                  
+LEFT OUTER JOIN DDO_Mst D ON pk_ddoid = fk_ddoid                             
+LEFT OUTER JOIN Department_mst DP ON pk_deptid = M.fk_deptid         
+LEFT OUTER JOIN sal_section_mst SM on SM.pk_sectionid=M.fk_sectionid                           
+LEFT OUTER JOIN SAL_Designation_Mst ON pk_desgid = fk_desigid                              
+LEFT OUTER JOIN SAL_Grade_Mst G ON pk_gradeid = M.fk_gradeid                              
+LEFT OUTER JOIN fundtype_master ON pk_fundid = fk_fundtypeid                     
+LEFT OUTER JOIN Acct_HeadCode H ON H.pk_anc = M.fk_anc               
+LEFT OUTER JOIN SAL_Discipline_Mst DM on DM.pk_disid=M.fk_disid          
+LEFT OUTER JOIN sms_branchmst  BM on BM.Pk_BranchId = M.fk_BranchId                             
+LEFT OUTER JOIN sal_employee_mst em on em.fk_ddoid=m.fk_ddoid                     
+and em.fk_deptid=m.fk_deptid          
+and em.fk_sectionid=m.fk_sectionid                         
+and em.fk_desgid=m.fk_desigid                   
+and em.fk_gradeid=m.fk_gradeid                                       
+and em.fk_fundid= m.fk_fundtypeid                    
+and em.fk_anc=m.fk_anc         
+and isnull(em.fK_DesignspecId,'''')= isnull(M.fk_BranchId,'''')                                 
+and em.employeeleftstatus=''N''                  
+and em.fk_natureid<>''KG-3''                       
+Where Case '''+@fk_ddoid+''' When '''' then M.fk_ddoid Else '''+@fk_ddoid+''' End = M.fk_ddoid                 
+And Case '''+@fk_deptid+''' When '''' then M.fk_deptid Else '''+@fk_deptid+''' End = M.fk_deptid          
+And Case '''+@fk_Section+''' When '''' then M.fk_sectionid Else '''+@fk_Section+''' End = M.fk_sectionid                     
+And Case '''+@fk_desigid+''' When '''' then M.fk_desigid Else '''+@fk_desigid+''' End = M.fk_desigid                 
+And Case '''+@fk_gradeid+''' When '''' then M.fk_gradeid Else '''+@fk_gradeid+''' End = M.fk_gradeid                   
+And Case '''+@fk_fundtypeid+''' When '''' then M.fk_fundtypeid Else '''+@fk_fundtypeid+''' End = M.fk_fundtypeid                    
+And Case '''+@fk_anc+''' When '''' then M.fk_anc Else '''+@fk_anc+''' End = M.fk_anc                 
+and  isnull(M.NotMapped,0)=0'          
+            
+--if(@EmpType = 'U') Set @strSQL = @strSQL + ' And SAL_Designation_Mst.isteaching = 1'              
+--if(@EmpType = 'N') Set @strSQL = @strSQL + ' And SAL_Designation_Mst.isteaching = 0'         
+                
+Set @strSQL = @strSQL + 'group by m.pk_mapid,m.posts,m.Transferdpost,D.description , designation,DP.description,SM.description,        
+BM.Branchname,M.Remarks,g.gradedetails,g.gradepay,fundtype , H.Headcode ,pk_mapid,H.HeadDescription,DM.Discipline ,  M.fk_deptid,M.fk_anc ,SAL_Designation_Mst.isteaching                        
+Order By  H.Headcode,D.description,DP.description,SM.description Asc,isteaching Desc'                
+                      
+--// Execute the Query       
+    
+print @strSQL                              
+Exec Sp_executeSQL @strSQL               
+    
+--Select * from   #TmpPostDetail        
+                    
+Create Table #TmpPost                              
+(                                  
+CID bigint Identity(1,1) Primary Key,               
+pk_mapid varchar(15) ,              
+Temp varchar(15)                            
+)                  
+              
+Set @strSQL = '                          
+Insert into #TmpPost(pk_mapid,Temp)                                
+Select pk_mapid, count(EM.empname)                  
+From SAL_DesignationFundType_Map M                                   
+Left outer join sal_employee_mst em on em.fk_ddoid=m.fk_ddoid                     
+and em.fk_deptid=m.fk_deptid          
+and em.fk_sectionid=m.fk_sectionid                         
+and em.fk_desgid=m.fk_desigid          
+                                      
+and em.employeeleftstatus=''N''               
+and em.fk_natureid=''KG-3''             
+Where                
+Case '''+@fk_ddoid+''' When '''' then M.fk_ddoid Else '''+@fk_ddoid+''' End = M.fk_ddoid                 
+And Case '''+@fk_deptid+''' When '''' then M.fk_deptid Else '''+@fk_deptid+''' End = M.fk_deptid         
+And Case '''+@fk_Section+''' When '''' then M.fk_sectionid Else '''+@fk_Section+''' End = M.fk_sectionid                 
+And Case '''+@fk_desigid+''' When '''' then M.fk_desigid Else '''+@fk_desigid+''' End = M.fk_desigid                 
+And Case '''+@fk_gradeid+''' When '''' then M.fk_gradeid Else '''+@fk_gradeid+''' End = M.fk_gradeid                   
+And Case '''+@fk_fundtypeid+''' When '''' then M.fk_fundtypeid Else '''+@fk_fundtypeid+''' End = M.fk_fundtypeid                    
+And Case '''+@fk_anc+''' When '''' then M.fk_anc Else '''+@fk_anc+''' End = M.fk_anc                   
+group by pk_mapid'         
+                  
+--And Case '''+@fk_subanc+''' When '''' then isnull(M.fk_subanc,'''') Else '''+@fk_subanc+''' End = isnull(M.fk_subanc ,'''')              
+print @strSQL                              
+Exec Sp_executeSQL @strSQL                
+                    
+Create Table #EmpPost                              
+(                                  
+CID bigint Identity(1,1) Primary Key,               
+pk_mapid varchar(15) ,              
+empname nvarchar(1000)                           
+)                  
+                          
+Create Table #EmpDtl                             
+(                                  
+CID bigint Identity(1,1) Primary Key,               
+empname nvarchar(2000) ,              
+pk_mapid varchar(15)                                 
+)                        
+                         
+Insert into #EmpPost(pk_mapid,empname)                                
+Select pk_mapid,empname               
+From SAL_DesignationFundType_Map M                                   
+left outer join sal_employee_mst em                   
+on em.fk_ddoid=m.fk_ddoid                     
+and em.fk_deptid=m.fk_deptid         
+and em.fk_sectionid=m.fk_sectionid                          
+and em.fk_desgid=m.fk_desigid                                           
+and em.employeeleftstatus='N'              
+                
+Where                
+Case @fk_ddoid When '' then M.fk_ddoid Else @fk_ddoid End = M.fk_ddoid                 
+And Case @fk_deptid When '' then M.fk_deptid Else @fk_deptid End = M.fk_deptid            
+And Case @fk_Section When '' then M.fk_sectionid Else @fk_Section End = M.fk_sectionid              
+And Case @fk_desigid When '' then M.fk_desigid Else @fk_desigid End = M.fk_desigid                 
+And Case @fk_gradeid When '' then M.fk_gradeid Else @fk_gradeid End = M.fk_gradeid                   
+And Case @fk_fundtypeid  When '' then M.fk_fundtypeid Else @fk_fundtypeid End = M.fk_fundtypeid                    
+And Case @fk_anc When '' then M.fk_anc Else @fk_anc End = M.fk_anc                 
+                  
+              
+--select * from   #EmpPost                             
+ Insert into #EmpDtl               
+select Stuff( (SELECT ', ' + PD.empname from #EmpPost PD where PD.pk_mapid=D.pk_mapid   FOR XML PATH('')                                              
+ ), 1, 2, '') empname,pk_mapid from #EmpPost D   group by D.pk_mapid                
+              
+              
+ --update  #EmpPost set empname=(select Stuff( (SELECT ', ' + PD.empname from #EmpPost PD where PD.pk_mapid=D.pk_mapid   FOR XML PATH('')                                              
+ --), 1, 2, '') empname, pk_mapid from #EmpPost D )              
+-- group by D.pk_mapid                 
+               
+ --select * from #EmpPost                          
+ --select * from #EmpDtl                    
+                           
+if @@Error > 0                            
+Begin                            
+Drop table #TmpPostDetail               
+Drop table #TmpPost               
+drop table  #EmpPost                
+drop table #EmpDtl                       
+Return                            
+End                   
+              
+update  #TmpPostDetail set TempPost=Temp from #TmpPostDetail PD inner join  #TmpPost T              
+on PD.pk_mapid=T.pk_mapid                 
+              
+update  #TmpPostDetail set empname=isnull(PD.empname,'') from #EmpDtl PD inner join  #TmpPostDetail T              
+on PD.pk_mapid=T.pk_mapid                  
+                        
+                          
+--Select Count(*) From #TmpPostDetail                      
+                        
+Select * From #TmpPostDetail        
+           
+                         
+Drop table #TmpPostDetail                        
+Drop table #TmpPost         
+Drop table #EmpPost          
+Drop table #EmpDtl            
+                     
+END TRY                                  
+BEGIN CATCH             
+IF @@TRANCOUNT > 0                          
+ROLLBACK                        
+Drop table #TmpPostDetail               
+Drop table #TmpPost              
+drop table  #EmpPost                
+drop table #EmpDtl                   
+                   
+DECLARE @ErrMsg nvarchar(4000), @ErrSeverity int                          
+SELECT @ErrMsg = ERROR_MESSAGE(),                          
+@ErrSeverity = ERROR_SEVERITY()                          
+RAISERROR(@ErrMsg, @ErrSeverity, 1)                          
+END CATCH                          
+END 
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+--/*          
+CREATE PROCEDURE [dbo].[RSM_ObservationActiontaken_dataReport]          
+(          
+@doc varchar(max)      
+)          
+AS          
+--*/          
+/*          
+declare @doc varchar(max)          
+set @doc='<NewDataSet>    
+  <RSM_Status>    
+    <pk_roid >98</pk_roid >    
+    <fk_Cid>2</fk_Cid>    
+    <year>20</year>    
+    <deptId>VC-67</deptId>    
+  </RSM_Status>    
+</NewDataSet>'      
+       
+--*/          
+DECLARE @idoc int          
+DECLARE @ERR Int          
+SET @ERR = 0           
+BEGIN          
+EXEC sp_xml_preparedocument @idoc OUTPUT, @doc          
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE          
+BEGIN TRAN          
+BEGIN TRY          
+          
+declare @pk_roid int,@fk_Cid int,@year int      
+select-- pk_roid,fk_Cid,year    
+@pk_roid = pk_roid, @fk_Cid = fk_Cid,@year = year      
+FROM OPENXML (@idoc, '/NewDataSet/RSM_Status',2)          
+with (pk_roid int,fk_Cid int ,year int)        
+     
+--select Research_title,fk_Cid,committeename+'('+committeecode+')'  as committee,sessionname,Action_tAKEN,Observation,RSM_ObservationAction_forReserch.fk_Rid,Implementation_Dept,description    
+--from RSM_ObservationAction_forReserch_Mst          
+--inner join sms_Academicsession_mst on pk_sessionid=year          
+--inner join RSM_Committee_Mst on pk_committeeid=fk_Cid          
+--inner join RSM_ResearchSubmission_Dtl on pk_research_ID=fk_Rid-- where pk_roid=@pk_roids           
+--inner join RSM_ObservationAction_forReserch on pk_roid = RSM_ObservationAction_forReserch.fk_Rid      
+--inner join Department_Mst on pk_deptid = Implementation_Dept      
+--where pk_research_ID = case when @pk_roid = 0 or @pk_roid is null  then pk_research_ID else @pk_roid end       
+--and fk_Cid = case when @fk_Cid =0 or fk_Cid is null  then fk_Cid else @fk_Cid end       
+--and year = case when @year = 0 or @year is null then year else @year end      
+           
+-- select * from RSM_ObservationAction_forReserch where fk_Rid=@pk_roids          
+           
+   select Research_title,fk_Cid,committeename+'('+committeecode+')'  as committee,  
+   ACD_AcademicSession_Mst.description sessionname,   
+     
+    Action_tAKEN,Observation,RSM_ObservationAction_forReserch.fk_Rid,Implementation_Dept,Department_Mst.description    
+ , year ,pk_roid    
+from RSM_ObservationAction_forReserch_Mst          
+inner join ACD_AcademicSession_Mst on pk_sessionid=year   
+  
+LEFT join RSM_Committee_Mst on pk_committeeid=fk_Cid          
+inner join RSM_ResearchSubmission_Dtl on pk_research_ID=fk_Rid-- where pk_roid=@pk_roids           
+inner join RSM_ObservationAction_forReserch on pk_roid = RSM_ObservationAction_forReserch.fk_Rid      
+inner join Department_Mst on pk_deptid = fk_depto      
+where     
+ pk_research_ID = case when @pk_roid = 0 or @pk_roid is null  then pk_research_ID else @pk_roid end       
+--and fk_Cid = case when @fk_Cid =0 or fk_Cid is null  then fk_Cid else @fk_Cid end       
+and year = case when @year = 0 or @year is null then year else @year end       
+      
+          
+          
+COMMIT TRAN          
+END TRY          
+BEGIN CATCH          
+IF @@TRANCOUNT > 0          
+ROLLBACK          
+          
+-- Raise an error with the details of the exception          
+DECLARE @ErrMsg nvarchar(4000), @ErrSeverity int          
+SELECT @ErrMsg = ERROR_MESSAGE(),          
+  @ErrSeverity = ERROR_SEVERITY()          
+RAISERROR(@ErrMsg, @ErrSeverity, 1)          
+END CATCH          
+--SELECT @ERR          
+END 
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+CREATE Procedure [dbo].[SMS_SP_AcaSession_Mst_SelAll]  
+AS  
+BEGIN  
+  
+ Select pk_sessionid,convert(varchar,fromdate,103) sessionstart_dt,  
+ convert(varchar,fromdate,103) sessionend_dt,description,orderno,SA.remarks,description sessionname  
+ From ACD_AcademicSession_Mst SA With(Nolock)  
+ Where ISNULL(active,0) = 1  
+ order by orderno  desc  
+END  
+  
+  
+  
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+        
+CREATE PROCEDURE [dbo].[Get_Hod_Sectiondepartment_report]                      
+(                      
+ @userid varchar(20),            
+ @deptid varchar(20)                     
+)                      
+AS                      
+   ----- declare @userid varchar(20) = 'LU-1'             
+   ----- declare @deptid varchar(20) = 'VC-23'              
+BEGIN      
+      
+  DECLARE @empid VARCHAR(20)                    
+  SELECT @empid = fk_empid FROM UM_Users_Mst WHERE pk_userId = @userid                    
+                
+  --SELECT pk_sectionid, [description] FROM SAL_Section_Mst --WHERE fk_deptid = @deptid            
+  select pk_rsid,rsname from RSM_ResearchSector_Mst  
+                           
+END  
+  
+  
+select * from RSM_ResearchSector_Mst  
+  
+  
+Select fk_Scid,Research_fk_rsid,pk_catid, * from RSM_ResearchSubmission_Dtl                 
+left join RSM_ResearchScheme_Dtl on fk_research_id=pk_research_ID                
+left join RSM_Committee_Mst on pk_committeeid=pk_comid                
+left join department_mst on pk_deptid=fk_depto                
+where  fk_depto= 'AO-280'                
+--and fk_Scid=  
+--and Research_fk_rsid   
+and pk_catid = 't'  
+  
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+/*            
+ Alterd By: Jaipal Sajwan            
+ On Date   : 26 Aug 2015  
+*/            
+--/*            
+CREATE PROCEDURE [dbo].[RSM_ResearchSector_ALL]            
+(            
+ @Doc nvarchar(max),            
+ @pk_rsid int,         
+ @mode int,  
+ @department varchar(10)       
+ --@fk_clientid int,            
+ --@fk_locid int,                    
+)            
+AS            
+--*/            
+/*            
+Declare @Doc nvarchar(max)='            
+          
+',            
+@pk_rscid int=3,            
+ @fk_clientid int=1,            
+ @fk_locid int=2,            
+ @mode int=1            
+             
+*/            
+Declare @Idoc Int                                    
+BEGIN                                    
+                                
+BEGIN TRAN                                    
+BEGIN TRY             
+--INS            
+if @mode=0            
+BEGIN            
+ EXEC sp_xml_preparedocument @Idoc OUTPUT, @Doc                                    
+ SET TRANSACTION ISOLATION LEVEL SERIALIZABLE             
+   
+             
+ Insert Into RSM_ResearchSector_Mst  
+ (RSname,Remarks,Fk_Deptid)            
+ Select RSname,Remarks,Fk_Deptid           
+ From OPENXML(@Idoc,'/NewDataSet/RSM_ResearchSector_Mst',2)               
+ WITH (RSname varchar(100),Remarks  varchar(500),Fk_Deptid varchar(15))            
+END            
+--UPD            
+if @mode=1            
+BEGIN            
+ EXEC sp_xml_preparedocument @Idoc OUTPUT, @Doc                                    
+ SET TRANSACTION ISOLATION LEVEL SERIALIZABLE                
+             
+ Update RSM_ResearchSector_Mst            
+ Set RSname=x.RSname,Remarks=x.Remarks,Fk_Deptid=x.Fk_Deptid        
+ From OPENXML(@Idoc,'/NewDataSet/RSM_ResearchSector_Mst',2)               
+ WITH (RSname varchar(100),Remarks  varchar(500),Fk_Deptid varchar(15))x            
+ where RSM_ResearchSector_Mst.pk_rsid=@pk_rsid  
+END            
+--FillGrid            
+if @mode=2            
+BEGIN            
+ Select pk_rsid,RSname,Remarks,description,Pk_deptid from RSM_ResearchSector_Mst    
+ left join department_mst on pk_deptid=fk_deptid          
+END            
+--DELETE            
+if @mode=3            
+BEGIN            
+ Delete from RSM_ResearchSector_Mst            
+ where pk_rsid=@pk_rsid  
+END            
+--EDIT            
+if @mode=4            
+BEGIN            
+ Select RSM_ResearchSector_Mst.*,description,Pk_deptid from RSM_ResearchSector_Mst   
+ left join department_mst on pk_deptid=fk_deptid            
+ where pk_rsid=@pk_rsid  
+END    
+if @mode=5           
+BEGIN            
+ Select RSM_ResearchSector_Mst.*,description,Pk_deptid from RSM_ResearchSector_Mst   
+ left join department_mst on pk_deptid=fk_deptid            
+ where Fk_Deptid in(@department)  
+  
+END            
+  
+COMMIT TRAN  
+END TRY                                    
+BEGIN CATCH                                    
+IF @@TRANCOUNT > 0                                    
+ROLLBACK                                    
+-- Raise an error with the details of the exception                                    
+DECLARE @ErrMsg nvarchar(4000), @ErrSeverity int                                    
+SELECT @ErrMsg = ERROR_MESSAGE(),                                    
+@ErrSeverity = ERROR_SEVERITY()                                    
+RAISERROR(@ErrMsg, @ErrSeverity, 1)                                    
+END CATCH                       
+if @mode=0 OR @mode=1                         
+EXEC sp_xml_removedocument @Idoc                                    
+END  
+  
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+--/*        
+CREATE Procedure [dbo].[RSM_Technical_Program_Reportupdated] --'P','',0,'VC-39', 25  ,                                                          
+@status varchar(10) ,                                                                
+@pk_deptid varchar(10)= null ,                                                    
+@fk_Schemeid varchar(50) = null ,                                  
+@pk_research_ID int=null,                                   
+@Fk_Locid varchar(10)= null,                                  
+@Doc nvarchar(max)= null,                               
+@columnNames nvarchar(max),                  
+@HOD_Year nvarchar(150) = ''                               
+ as                                        
+--*/                                                           
+                                  
+--Declare @doc varchar(max) ,@status varchar(10) ='P',                                                                
+--@pk_deptid varchar(10)= 'CA-334' ,                                                    
+--@fk_Schemeid varchar(50) = 5398,                                  
+--@pk_research_ID int=17,                                   
+--@Fk_Locid varchar(10)= 'AH-1' ,                   
+--@HOD_Year nvarchar(150) = 'CO-11',                             
+--@columnNames nvarchar(max)  ='Title'--, objective, POW, r1, r2, r3, r4, r5, r6, col,PInvest,Research_Start_Date,T_Details,objective'                               
+                                       
+--Set @doc =                                         
+--'<NewDataSet>        
+--  <Table>        
+--    <fk_reserchid>17</fk_reserchid>        
+--  </Table>        
+--  <Table>        
+--    <fk_reserchid>18</fk_reserchid>        
+--  </Table>        
+--</NewDataSet>'                                                                   
+                  
+begin                                   
+DECLARE @idoc int                                                                       
+EXEC sp_xml_preparedocument @idoc OUTPUT, @doc                                        
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE                               
+                              
+IF OBJECT_ID('tempdb..#Results') IS NOT NULL DROP TABLE #Results                              
+select  fk_reserchid into #Results FROM OPENXML (@idoc ,'/NewDataSet/Table',2) with (fk_reserchid int)                                 
+                              
+ if(@status = 'P')                                                                   
+ begin                               
+ declare @Query nvarchar(max)                              
+                               
+ if(@columnNames = 'Title')                               
+ begin                              
+                              
+ set @Query = '                                                              
+select distinct pk_research_ID,Research_title,[description],Scheme_name,isnull(P_Sr_No,'''')P_Sr_No,committeename,pk_comid,'''' observations,'''' ExpectedOutput, '''' Research_Start_Date, '''' as T_Details, '''' as col,'''' as PInvest,                    
+  
+    
+      
+        
+        
+          
+case when isnull((Select members From RSM_FN_Getmembers(pk_research_ID,7,''M'')),'''')='''' then '''' else (Select members From RSM_FN_Getmembers(pk_research_ID,7,''M''))  end as co_pi ,                                    
+case when isnull((Select members From RSM_FN_Getmembers(pk_research_ID,3,''o'')),'''')='''' then '''' else(Select members From RSM_FN_Getmembers(pk_research_ID,3,''o'')) end as  objective,                                  
+case when isnull((Select members From RSM_FN_Getmembers(pk_research_ID,3,''R'')),'''')='''' then '''' else(Select members From RSM_FN_Getmembers(pk_research_ID,3,''R'')) end as POW               
+from RSM_ResearchSubmission_Dtl                                   
+left join RSM_ResearchScheme_Dtl on RSM_ResearchScheme_Dtl.fk_research_id=pk_research_ID                                  
+left join RSM_Committee_Mst on pk_committeeid=pk_comid            
+left join department_mst on pk_deptid=Implementation_Dept                 
+where  pk_research_ID in (select  fk_reserchid from  #Results )'                              
+                              
+print @Query                
+EXEC sp_executesql @Query                               
+ end                                
+                               
+ else if(@columnNames = 'Title, objective')                               
+ begin                              
+                              
+ set @Query = '                                       
+select distinct pk_research_ID,Research_title,[description],Scheme_name,isnull(P_Sr_No,'''')P_Sr_No,committeename,pk_comid,''''                   
+observations,'''' ExpectedOutput, '''' Research_Start_Date,'''' as T_Details ,'''' as col, '''' as POW, '''' as PInvest,          case when isnull((Select members From RSM_FN_Getmembers(pk_research_ID,7,''M'')),'''')='''' then '''' else (Select members F
+   
+   
+      
+         
+         
+r          
+            
+om                   
+RSM_FN_Getmembers(pk_research_ID,7,''M''))  end as co_pi ,                                    
+case when isnull((Select members From RSM_FN_Getmembers(pk_research_ID,3,''o'')),'''')='''' then '''' else(Select members From                   
+RSM_FN_Getmembers(pk_research_ID,3,''o'')) end as  objective               
+from RSM_ResearchSubmission_Dtl                       
+left join RSM_ResearchScheme_Dtl on RSM_ResearchScheme_Dtl.fk_research_id=pk_research_ID                                  
+inner join RSM_Committee_Mst on pk_committeeid=pk_comid                                  
+inner join department_mst on pk_deptid=Implementation_Dept                   
+              
+where  pk_research_ID in (select  fk_reserchid from  #Results )'                              
+                              
+print @Query                              
+EXEC sp_executesql @Query                               
+ end                                
+                          
+                          
+  else if(@columnNames = 'Title, POW')                               
+ begin                              
+                              
+ set @Query = '                                                              
+select distinct pk_research_ID,Research_title,[description],Scheme_name,isnull(P_Sr_No,'''')P_Sr_No,committeename,pk_comid,'''' observations,'''' ExpectedOutput, '''' Research_Start_Date,'''' as T_Details ,'''' as col,                          
+ case when isnull((Select members From RSM_FN_Getmembers(pk_research_ID,3,''R'')),'''')='''' then '''' else(Select members From RSM_FN_Getmembers(pk_research_ID,3,''R'')) end as POW                               
+ , '''' as PInvest,                               
+case when isnull((Select members From RSM_FN_Getmembers(pk_research_ID,7,''M'')),'''')='''' then '''' else (Select members From RSM_FN_Getmembers(pk_research_ID,7,''M''))  end as co_pi                           
+--case when isnull((Select members From RSM_FN_Getmembers(pk_research_ID,3,''o'')),'''')='''' then '''' else(Select members From RSM_FN_Getmembers(pk_research_ID,3,''o'')) end                           
+,'''' as  objective                               
+from RSM_ResearchSubmission_Dtl                                   
+left join RSM_ResearchScheme_Dtl on RSM_ResearchScheme_Dtl.fk_research_id=pk_research_ID                                  
+inner join RSM_Committee_Mst on pk_committeeid=pk_comid                                  
+inner join department_mst on pk_deptid=Implementation_Dept                    
+                
+where  pk_research_ID in (select  fk_reserchid from  #Results )'                              
+                              
+print @Query                              
+EXEC sp_executesql @Query                               
+ end                             
+                          
+   else if(@columnNames = 'Title, objective, POW')                               
+ begin                              
+                              
+ set @Query = '                                                              
+select distinct pk_research_ID,Research_title,[description],Scheme_name,isnull(P_Sr_No,'''')P_Sr_No,committeename,pk_comid,'''' observations,'''' ExpectedOutput, '''' Research_Start_Date,'''' as T_Details ,'''' as col,                          
+ case when isnull((Select members From RSM_FN_Getmembers(pk_research_ID,3,''R'')),'''')='''' then '''' else(Select members From RSM_FN_Getmembers(pk_research_ID,3,''R'')) end as POW                               
+ , '''' as PInvest,                               
+case when isnull((Select members From RSM_FN_Getmembers(pk_research_ID,7,''M'')),'''')='''' then '''' else (Select members From RSM_FN_Getmembers(pk_research_ID,7,''M''))  end as co_pi,                           
+case when isnull((Select members From RSM_FN_Getmembers(pk_research_ID,3,''o'')),'''')='''' then '''' else(Select members From RSM_FN_Getmembers(pk_research_ID,3,''o'')) end as  objective                              
+from RSM_ResearchSubmission_Dtl                                   
+left join RSM_ResearchScheme_Dtl on RSM_ResearchScheme_Dtl.fk_research_id=pk_research_ID                                  
+inner join RSM_Committee_Mst on pk_committeeid=pk_comid                                  
+inner join department_mst on pk_deptid=Implementation_Dept                     
+               
+where  pk_research_ID in (select  fk_reserchid from  #Results )'                              
+                              
+print @Query                        
+EXEC sp_executesql @Query                               
+ end                             
+                          
+                           
+                            
+  else if(@columnNames = 'Title')                               
+ begin                              
+                              
+ set @Query = '                                                              
+select distinct pk_research_ID,Research_title,[description],Scheme_name,isnull(P_Sr_No,'''')P_Sr_No,committeename,pk_comid,                  
+'''' observations,'''' ExpectedOutput, '''' Research_Start_Date,'''' as T_Details ,'''' as col, '''' as POW, '''' as PInvest,                   
+                        
+case when isnull((Select members From RSM_FN_Getmembers(pk_research_ID,7,''M'')),'''')='''' then '''' else (Select members                   
+From RSM_FN_Getmembers(pk_research_ID,7,''M''))  end as co_pi,                          
+                  
+'''' as  objective                                
+--case when isnull((Select members From RSM_FN_Getmembers(pk_research_ID,3,''o'')),'''')='''' then '''' else(Select members From RSM_FN_Getmembers(pk_research_ID,3,''o'')) end as  objective                                
+from RSM_ResearchSubmission_Dtl                                   
+left join RSM_ResearchScheme_Dtl on RSM_ResearchScheme_Dtl.fk_research_id=pk_research_ID                                  
+inner join RSM_Committee_Mst on pk_committeeid=pk_comid                                  
+inner join department_mst on pk_deptid=Implementation_Dept                     
+              
+where  pk_research_ID in (select  fk_reserchid from  #Results )'                              
+                              
+print @Query                              
+EXEC sp_executesql @Query                               
+ end                                
+                               
+                               
+                               
+ else                              
+ begin                              
+                      
+ set @Query = '                                                              
+select distinct pk_research_ID,Research_title,[description],Scheme_name,isnull(P_Sr_No,'''')P_Sr_No,committeename,pk_comid,''''                 
+observations,'''' ExpectedOutput,isnull(T_Details,'''')T_Details,                          
+case when isnull(Research_Start_Date,'''')='''' then '''' else cast(datepart(year,Research_Start_Date) as varchar) end                 
+Research_Start_Date  ,                               
+case when isnull((Select members From RSM_FN_Getmembers(pk_research_ID,7,''M'')),'''')='''' then '''' else                 
+(Select members From RSM_FN_Getmembers(pk_research_ID,7,''M''))  end as co_pi ,                                    
+case when isnull((Select members From RSM_FN_Getmembers(pk_research_ID,3,''o'')),'''')='''' then '''' else                 
+(Select members From RSM_FN_Getmembers(pk_research_ID,3,''o'')) end as  objective,                                
+case when isnull((Select members From RSM_FN_Getmembers(pk_research_ID,3,''I'')),'''')='''' then '''' else                 
+(Select members From RSM_FN_Getmembers(pk_research_ID,3,''I''))  end as PInvest,                                  
+case when isnull((Select members From RSM_FN_Getmembers(pk_research_ID,8,''M'')),'''')='''' then '''' else                 
+(Select members From RSM_FN_Getmembers(pk_research_ID,8,''M'')) end as col,                                  
+case when isnull((Select members From RSM_FN_Getmembers(pk_research_ID,3,''R'')),'''')='''' then '''' else                 
+(Select members From RSM_FN_Getmembers(pk_research_ID,3,''R'')) end as POW                                 
+from RSM_ResearchSubmission_Dtl                                   
+left join RSM_ResearchScheme_Dtl on RSM_ResearchScheme_Dtl.fk_research_id=pk_research_ID               
+inner join RSM_Committee_Mst on pk_committeeid=pk_comid                                  
+inner join department_mst on pk_deptid=Implementation_Dept                    
+               
+where  pk_research_ID in (select  fk_reserchid from  #Results )'                              
+                     
+print @Query                                  
+EXEC sp_executesql @Query              
+              
+              
+              
+                
+ end                                
+               
+  select d.[description], research.* from RSM_Research_HODReport as research inner join department_mst as d on d.pk_deptid=research.fk_deptid                 
+ where research.fk_deptid = @pk_deptid  and  research.fk_rsid =  @fk_Schemeid                  
+and research.HOD_Year = @HOD_Year                 
+                             
+select d.[description], research.*,  HeadDescription + ' ('+Headcode +')' as schemename            
+from RSM_ResearchSchemeHoD as research inner join department_mst as d on             
+d.pk_deptid=research.fk_deptid                 
+left join Acct_HeadCode H  on H.pk_anc = research.fk_schemeid              
+where research.fk_deptid = @pk_deptid  and  research.fk_rsid = case when @fk_Schemeid<>0 then @fk_Schemeid else research.fk_rsid end        
+and research.HOD_Year = @HOD_Year                                                       
+end                                
+ end 
+
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+CREATE PROCEDURE [dbo].[RSM_Technical_Program_Report]       
+    @status VARCHAR(10),  -- Status of the report ('S' for submitted, 'P' for pending)      
+    @pk_deptid VARCHAR(10) = NULL,  -- Department ID filter (optional)      
+    @fk_Schemeid INT = NULL,  -- Scheme ID filter (optional)      
+    @pk_research_ID INT = NULL,  -- Research ID filter (optional)      
+    @Fk_Locid VARCHAR(10) = NULL,  -- Location ID filter (optional)      
+    @doc NVARCHAR(MAX)  -- XML document for extracting data      
+AS      
+BEGIN      
+    -- Declare a variable for the XML document      
+    DECLARE @Idoc INT;      
+      
+    -- Prepare the XML document for processing      
+    EXEC sp_xml_preparedocument @Idoc OUTPUT, @doc;      
+      
+    -- Set the transaction isolation level      
+    SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;      
+      
+    -- Extract the data from the XML document      
+    DECLARE @fk_insUserID VARCHAR(10), @Sectionid INT;      
+    SELECT @fk_insUserID = fk_insUserID, @Sectionid = Sectionid      
+    FROM OPENXML(@Idoc, '/NewDataSet/Table1', 2)      
+    WITH (fk_insUserID VARCHAR(10), Sectionid INT);      
+      
+    -- Perform actions based on the @status parameter      
+    IF (@status = 'S')      
+    BEGIN      
+ --declare @pk_deptid varchar(10)='CA-334',    
+ --@fk_Schemeid int=717,@Sectionid int=8,    
+ --  @Fk_Locid VARCHAR(10)='AH-1',@fk_insUserID VARCHAR(10)='AH-1'    
+       
+      
+        SELECT DISTINCT       
+            pk_research_ID,      
+            description,      
+            Research_title,      
+            Scheme_name,      
+            ISNULL(T_Details, '') AS T_Details,      
+            ISNULL(P_Sr_No, '') AS P_Sr_No,      
+            committeename,      
+            pk_comid,      
+            CASE       
+                WHEN ISNULL(Research_Start_Date, '') = '' THEN ''       
+                ELSE DATEPART(YEAR, Research_Start_Date)       
+            END AS Research_Start_Date,      
+            RSM_ResearchSubmission_Dtl.fk_insUserID      
+        FROM RSM_ResearchSubmission_Dtl      
+        INNER JOIN RSM_ResearchScheme_Dtl ON fk_research_id = pk_research_ID      
+        INNER JOIN RSM_Committee_Mst ON pk_committeeid = pk_comid      
+        INNER JOIN department_mst ON pk_deptid = fk_depto  -- Fixed comment for clarity      
+        WHERE       
+            (@pk_deptid IS NULL OR fk_depto = @pk_deptid) AND      
+            (@fk_Schemeid IS NULL OR fk_Schemeid = @fk_Schemeid) AND      
+            (@Sectionid IS NULL OR Research_fk_rsid = @Sectionid) AND      
+         --   pk_catid = 't' AND      
+            Fk_Locid = @Fk_Locid AND      
+            (RSM_ResearchSubmission_Dtl.fk_insUserID = @fk_insUserID OR @fk_insUserID = 'AH-1')      
+        ORDER BY Research_Start_Date ASC;      
+    END      
+      
+    IF (@status = 'P')      
+    BEGIN      
+        SELECT DISTINCT       
+            pk_research_ID,      
+            department_mst.description,      
+            Research_title,      
+            Scheme_name,      
+            ISNULL(T_Details, '') AS T_Details,      
+            ISNULL(P_Sr_No, '') AS P_Sr_No,      
+            committeename,      
+            pk_comid,      
+            CASE       
+                WHEN ISNULL(Research_Start_Date, '') = '' THEN ''       
+                ELSE DATEPART(YEAR, Research_Start_Date)       
+            END AS Research_Start_Date,      
+            RSM_ResearchSubmission_Dtl.fk_insUserID      
+        FROM RSM_ResearchSubmission_Dtl      
+        INNER JOIN RSM_ResearchScheme_Dtl ON fk_research_id = pk_research_ID      
+        INNER JOIN RSM_Committee_Mst ON pk_committeeid = pk_comid      
+        INNER JOIN department_mst ON pk_deptid = fk_depto  -- Fixed comment for clarity      
+        WHERE       
+            (@pk_deptid IS NULL OR fk_depto = @pk_deptid) AND      
+            (@fk_Schemeid IS NULL OR fk_Schemeid = @fk_Schemeid) AND      
+            (@Sectionid IS NULL OR Research_fk_rsid = @Sectionid) AND      
+           -- pk_catid = 't' AND      
+            Fk_Locid = @Fk_Locid AND      
+           (RSM_ResearchSubmission_Dtl.fk_insUserID = @fk_insUserID OR @fk_insUserID = 'AH-1');      
+    END      
+      
+    -- Clean up the XML document        EXEC sp_xml_removedocument @Idoc;      
+END; 
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+CREATE procedure RSM_BindDropDown_SchemeFromDept            
+(            
+@dept_name nvarchar(max)            
+)            
+AS     
+--DECLARE @dept_name nvarchar(max) = 'CF-190'    
+BEGIN            
+ --declare  @dept_name nvarchar(max)               
+select --distinct           
+pk_anc,Headcode, ' ('+Headcode +')' + HeadDescription   HeadDescription, pk_finid, research.fk_depto             
+--d.description           
+from Acct_HeadCode H                  
+inner join BMS_DDOBudgetHeadMapp_Mst M on M.fk_anc=H.pk_anc                  
+inner join SAL_Financial_Year on pk_finid=fk_finyearid                  
+left join RSM_ResearchScheme_Dtl as scheme on scheme.headchode=H.Headcode          
+left join RSM_ResearchSubmission_Dtl as research on research.pk_research_ID=scheme.fk_research_id          
+and research.fk_depto= @dept_name            
+left join Department_Mst as d on d.pk_deptid = research.fk_depto            
+--where              
+--pk_finid in (select pk_finid from  SAL_Financial_Year where getdate()             
+--between date1 and  date2)            
+group by pk_anc, Headcode, HeadDescription, pk_finid, research.fk_depto           
+            
+END           
+          
+          
+/*          
+          
+Select distinct headchode          
+from RSM_ResearchScheme_Dtl inner join RSM_ResearchSubmission_Dtl          
+on fk_research_id=pk_research_ID            
+where fk_depto= 'VC-1'  */ 
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+CREATE PROCEDURE [dbo].[SP_RSM_Research_HODReportByDeptAndYear]       
+@HOD_Year nvarchar(100)       
+AS            
+            
+BEGIN            
+             
+ BEGIN TRY            
+              
+select r.*,           
+case when (r.Season = '1') then 'Rabi' when (r.Season = '2') then 'Summer'  when (r.Season = '3') then 'Winter'           
+when (r.Season = '4') then 'Spring'  when (r.Season = '5') then 'Kharif'  when (r.Season = '6')    
+ then 'Kharif + Rabi'           
+when (r.Season = '7') then 'Other'  end as SeasonName , D.description as departmentName,          
+Cast(year(y.date1) as varchar)+ ' - ' + cast(year(y.date2)as varchar) years , s.RSname as SectionName          
+ from RSM_Research_HODReport as r          
+ left join  Department_Mst D on D.pk_deptid = r.fk_deptid           
+left join SAL_Financial_Year y on r.HOD_Year = y.pk_finid           
+left join RSM_ResearchSector_Mst s on s.Fk_Deptid =D.pk_deptid and  r.fk_rsid =s.pk_rsid       
+where r.HOD_Year = @HOD_Year      
+            
+ END TRY            
+ BEGIN CATCH            
+  IF @@TRANCOUNT > 0            
+   ROLLBACK            
+   DECLARE @ErrMsg nvarchar(4000), @ErrSeverity int            
+   SELECT @ErrMsg = ERROR_MESSAGE(),            
+    @ErrSeverity = ERROR_SEVERITY()            
+   RAISERROR(@ErrMsg, @ErrSeverity, 1)            
+            
+ END CATCH              
+END 
+
+
+
+
