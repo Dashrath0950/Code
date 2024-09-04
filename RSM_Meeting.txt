@@ -1,0 +1,1308 @@
+--/*    
+CREATE PROCEDURE [dbo].[RSM_Meetingnew_ALL]          
+(                    
+ @Doc nvarchar(max),                    
+ @pk_id int,                 
+ @mode int               
+ --@fk_clientid int,                    
+ --@fk_locid int,                            
+)                    
+AS                    
+--*/                    
+--/*   
+  
+--Declare @Doc nvarchar(max)='',  
+--@pk_id int=3,   
+--@mode int=5      
+                   
+             
+--*/                    
+Declare @Idoc Int                                            
+BEGIN                                            
+                                        
+BEGIN TRAN                                            
+BEGIN TRY       
+                      
+--INS                    
+if @mode=0                    
+BEGIN                    
+ EXEC sp_xml_preparedocument @Idoc OUTPUT, @Doc                                            
+                                          
+ SET TRANSACTION ISOLATION LEVEL SERIALIZABLE                     
+ --if not exists(select Fk_commitid from RSM_Meeting_dtl where Fk_commitid=(select Fk_commitid From OPENXML(@Idoc,'/NewDataSet/RSM_Meeting_dtl',2) with (Fk_commitid int)))       
+ --begin      
+    
+  Insert Into RSM_Meeting_dtl          
+ (fk_research_id,Researcher_name,fk_rdid,Meeting_title,Meeting_no,Meeting_date,Meeting_convenor,Venue,Meeting_Description,          
+ Remarks,Meeting_Status,Status_comment,submit,Fk_commitid)                    
+          
+ Select fk_research_id,Researcher_name,fk_rdid,Meeting_title,Meeting_no,Meeting_date,Meeting_convenor,Venue,Meeting_Description,          
+ Remarks,Meeting_Status,Status_comment,submit ,Fk_commitid         
+           
+ From OPENXML(@Idoc,'/NewDataSet/RSM_Meeting_dtl',2)                       
+ WITH (fk_research_id int,Researcher_name varchar(100),fk_rdid varchar(10),Meeting_title varchar(100),Meeting_no varchar(100),          
+ Meeting_date varchar(10),Meeting_convenor varchar(100),Venue varchar(100),Meeting_Description varchar(500),          
+ Remarks varchar(500),Meeting_Status varchar(1),Status_comment varchar(500),submit int,Fk_commitid int)      
+ Declare @pkid int          
+ set @pkid=@@IDENTITY               
+ -- end       
+--  else       
+--  begin    
+--   --select 'A'       
+--  Update RSM_Meeting_dtl          
+-- set           
+--  fk_research_id =x.fk_research_id ,          
+-- Researcher_name=x.Researcher_name,          
+-- fk_rdid=x.fk_rdid,          
+-- Meeting_title=x.Meeting_title,          
+-- Meeting_date=x.Meeting_date,          
+-- Meeting_convenor=x.Meeting_convenor,          
+-- Venue=x.Venue,          
+-- Meeting_Description=x.Meeting_Description,          
+-- Status_comment=x.Status_comment,        
+-- Remarks=x.Remarks,          
+-- Meeting_Status=x.Meeting_Status,          
+-- submit=x.submit,       
+-- Fk_commitid=x.Fk_commitid         
+           
+-- From OPENXML(@Idoc,'/NewDataSet/RSM_Meeting_dtl',2)                       
+-- WITH ( fk_research_id int,Researcher_name varchar(100),fk_rdid int,Meeting_title varchar(100),Meeting_no varchar(100),          
+-- Meeting_date varchar(10),Meeting_convenor varchar(100),Venue varchar(100),Meeting_Description varchar(500),          
+-- Remarks varchar(500),Meeting_Status varchar(1),Status_comment varchar(500),submit int,Fk_commitid int) x          
+---- where  RSM_Meeting_dtl.pk_macid=@pk_id        
+--where  RSM_Meeting_dtl.Fk_commitid=x.Fk_commitid      
+--  end         
+    
+         
+ Insert into RSM_Meeting_research_dtl          
+ (fk_macid, fk_resid,Remarks,submit)          
+ Select  @pkid,X.fk_resid,X.Remarks,1        
+ From  OPENXML(@Idoc,'/NewDataSet/RSM_Meeting_research_dtl',2)               
+ With(fk_resid int ,Remarks varchar(255))X    
+ --x where       
+ --fk_resid not in(select fk_resid from RSM_Meeting_research_dtl where fk_macid =(select pk_macid from RSM_Meeting_dtl       
+ --where Fk_commitid=(select Fk_commitid From OPENXML(@Idoc,'/NewDataSet/RSM_Meeting_dtl',2) with (Fk_commitid int)) ))       
+           
+         
+ Insert into RSM_Meeting_Document          
+ (fk_macid,Filefor,typeofresource,uploadfile,uploadfileName,typeoffile,FilePath)          
+ Select  @pkid,Filefor,typeofresource,uploadfile,uploadfileName,typeoffile,FilePath          
+ From  OPENXML(@Idoc,'/NewDataSet/RSM_Meeting_Document',2)               
+ With(Filefor varchar(50),typeofresource varchar(5),uploadfile varchar(250),uploadfileName varchar(250),typeoffile varchar(10),FilePath varchar(500))          
+              
+END                    
+--UPD                    
+if @mode=1                    
+BEGIN                    
+ EXEC sp_xml_preparedocument @Idoc OUTPUT, @Doc                                            
+ SET TRANSACTION ISOLATION LEVEL SERIALIZABLE                        
+                     
+ Update RSM_Meeting_dtl          
+ set           
+  fk_research_id =x.fk_research_id ,          
+ Researcher_name=x.Researcher_name,          
+ fk_rdid=x.fk_rdid,          
+ Meeting_title=x.Meeting_title,          
+ Meeting_date=x.Meeting_date,          
+ Meeting_convenor=x.Meeting_convenor,          
+ Venue=x.Venue,          
+ Meeting_Description=x.Meeting_Description,          
+ Status_comment=x.Status_comment,        
+ Remarks=x.Remarks,          
+ Meeting_Status=x.Meeting_Status,          
+ submit=x.submit,       
+ Fk_commitid=x.Fk_commitid         
+           
+ From OPENXML(@Idoc,'/NewDataSet/RSM_Meeting_dtl',2)                       
+ WITH ( fk_research_id int,Researcher_name varchar(100),fk_rdid varchar(10),Meeting_title varchar(100),Meeting_no varchar(100),          
+ Meeting_date varchar(10),Meeting_convenor varchar(100),Venue varchar(100),Meeting_Description varchar(500),          
+ Remarks varchar(500),Meeting_Status varchar(1),Status_comment varchar(500),submit int,Fk_commitid int) x          
+ where  RSM_Meeting_dtl.pk_macid=@pk_id            
+           
+          
+ --Delete from RSM_Meeting_Document          
+ --where fk_macid=@pk_id          
+           
+ --Delete from RSM_Meeting_research_dtl          
+ --where fk_macid=@pk_id          
+           
+      
+      
+      
+      
+      
+ Insert into RSM_Meeting_research_dtl          
+ (fk_macid, fk_resid,Remarks,submit)          
+ Select @pk_id,fk_resid,Remarks,0        
+ From  OPENXML(@Idoc,'/NewDataSet/RSM_Meeting_research_dtl',2)               
+ With(fk_resid int ,Remarks varchar(255))         
+           
+           
+ Insert into RSM_Meeting_Document          
+ (fk_macid,Filefor,typeofresource,uploadfile,uploadfileName,typeoffile,FilePath)          
+ Select  @pk_id,Filefor,typeofresource,uploadfile,uploadfileName,typeoffile,FilePath          
+ From  OPENXML(@Idoc,'/NewDataSet/RSM_Meeting_Document',2)               
+ With(Filefor varchar(50),typeofresource varchar(5),uploadfile varchar(250),uploadfileName varchar(250),typeoffile varchar(10),FilePath varchar(500))          
+           
+           
+END                    
+          
+--FillGrid                    
+if @mode=2                    
+BEGIN                    
+ select pk_macid,CAST(RSM_Meeting_dtl.submit as bit) submit,committeename,Meeting_title,Meeting_no, CONVERT(varchar(10),Meeting_date,103) Meeting_date           
+ ,Case when Meeting_Status ='A' then 'Approve' When Meeting_Status ='R' then 'Reject'          
+ When Meeting_Status ='C' then 'Approve with Comment' End Meeting_Status from RSM_Meeting_dtl      
+  --inner join RSM_DACMeeting_research_dtl on fk_dacid=pk_macid      
+ --inner join RSM_ResearchSubmission_Dtl On pk_comid=Fk_commitid --and pk_research_ID=fk_resid      
+ inner join RSM_Committee_Mst on  pk_committeeid=Fk_commitid      
+      
+          
+END                    
+          
+--DELETE                    
+if @mode=3          
+BEGIN                    
+ Delete from RSM_Meeting_research_dtl          
+ where fk_macid=@pk_id          
+           
+ --Delete from RSM_DACMeeting_Members_dtl          
+ --where fk_dacid=@pk_id          
+           
+ Delete from RSM_Meeting_dtl          
+ where pk_macid=@pk_id          
+END          
+                    
+--EDIT                    
+if @mode=4                    
+BEGIN                    
+          
+ select RM.*,Researcher_name from RSM_Meeting_research_dtl RM     
+ inner join RSM_ResearchSubmission_Dtl S on  pk_research_ID=fk_resid      
+         
+ where fk_macid=  @pk_id          
+           
+ select RSM_Meeting_Document.*,CAST(submit as bit) submit from RSM_Meeting_Document          
+ inner join RSM_Meeting_dtl On pk_macid=fk_macid          
+ where fk_macid=@pk_id          
+          
+ select *,CONVERT(varchar(10),Meeting_date,103) MD from RSM_Meeting_dtl          
+ where pk_macid=@pk_id          
+          
+END            
+--Update Submit Bit            
+if @mode=5          
+BEGIN       
+ EXEC sp_xml_preparedocument @Idoc OUTPUT, @Doc                                            
+                                          
+ SET TRANSACTION ISOLATION LEVEL SERIALIZABLE             
+ Update RSM_Meeting_dtl          
+ set  submit = 0 --=0 change by puja on 13th aug 2019        
+ where  RSM_Meeting_dtl.pk_macid=@pk_id        
+ Update RSM_Meeting_research_dtl          
+ set  submit = 0  --=0 change by puja on 13th aug 2019         
+ where  RSM_Meeting_research_dtl.fk_macid=@pk_id   
+ and fk_resid in (select fk_resid From  OPENXML(@Idoc,'/NewDataSet/RSM_Meeting_research_dtl',2)               
+ With(fk_resid int))         
+               
+       
+End              
+--Deleting Uploaded Files          
+if @mode=6          
+BEGIN             
+  Delete from RSM_Meeting_Document          
+  where pk_mid=@pk_id          
+End      
+             
+if @mode=7      
+BEGIN         
+ EXEC sp_xml_preparedocument @Idoc OUTPUT, @Doc                                            
+ SET TRANSACTION ISOLATION LEVEL SERIALIZABLE           
+   Select '' pk_memberid,'-- Select Member Name --' membername                    
+  Union                      
+  Select pk_memberid,membername from RSM_Member_Mst                    
+  where membertype =                  
+  (Select membertype                       
+  From OPENXML(@Idoc,'/NewDataSet/Member_Type',2)                               
+  WITH (membertype varchar(1)))          
+  and pk_memberid in (      
+   Select distinct fk_memberid from RSM_Committee_Mst      
+ inner join RSM_Committee_Member_Details On pk_committeeid=fk_committeeid      
+ where fk_ctid=1 and RSM_Committee_Member_Details.isactive=1 and RSM_Committee_Mst.isactive=1      
+ -- 1 is for DAC      
+  )      
+End          
+          
+COMMIT TRAN          
+END TRY                                            
+BEGIN CATCH                                            
+IF @@TRANCOUNT > 0                                            
+ROLLBACK                                            
+-- Raise an error with the details of the exception                                            
+DECLARE @ErrMsg nvarchar(4000), @ErrSeverity int                                            
+SELECT @ErrMsg = ERROR_MESSAGE(),                                            
+@ErrSeverity = ERROR_SEVERITY()                                            
+RAISERROR(@ErrMsg, @ErrSeverity, 1)                                            
+END CATCH                               
+if @mode=0 OR @mode=1                                 
+EXEC sp_xml_removedocument @Idoc                                            
+END 
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+/*                                                                        
+ Alterd By: Jaipal Sajwan                                                                        
+ On Date  : 01 Sept 2015                                                              
+*/                                                                   
+--/*                                                                        
+CREATE PROCEDURE [dbo].[RSM_ResearchproposalSubmission_GetData_By_RID]                                                              
+(                                                                       
+ @pk_Rid int                                                                               
+)                                                                        
+AS                                                                        
+--*/                                                                        
+/*                                                                        
+Declare @pk_Rid int = 37                                                                   
+--*/                                                                        
+Declare @Idoc Int                                                                                                
+BEGIN                                                                                                
+                                                                                            
+BEGIN TRAN                                                                                                
+BEGIN TRY                                                                         
+                                                                      
+--SELECT        
+        
+BEGIN        
+                               
+ select *, CONVERT(varchar(10), RD.Research_Start_Date, 103) Research_Start_Date,                                     
+ CONVERT(varchar(10), RD.Research_Completion_Date, 103) Research_Completion_Date,                                     
+ ISNULL(submit, 0) sub, CAST(Total_Budget as float) TB,cm.committeename,cm.committeecode,rcm.Rname,do.Description,dp.description,rs.RSname                                         
+ from RSM_ResearchSubmission_Dtl RD       
+ inner join RSM_ResearchCategory_Mst RC on RC.pk_rcid= RD.Research_fk_rcid      
+ inner join RSM_Committee_Mst CM on CM.pk_committeeid=RD.pk_comid      
+ inner JOin RSM_ResarchCenter_Mst RCM on RCM.pk_rscid=RD.Research_fk_rscid      
+ inner join DDO_Mst DO on  DO.pk_ddoid=RD.fk_ddoId      
+ inner join Department_Mst DP on DP.pk_deptid=RD.fk_depto      
+ inner join RSM_ResearchSector_Mst RS on RS.pk_rsid=RD.Research_fk_rsid      
+       
+ where RD.pk_research_ID = @pk_Rid       
+       
+ select SM.Salutation_Name, EM.empname,    
+ Isnull((Select sum(amount) from SAL_EmployeeHead_Details where fk_empid = EM.pk_empid ), 0) as salary,                                      
+ isnull(SDM.designation, '') des, RM.Rolename,  CONVERT(varchar(10), dfrom, 103) df, --CONVERT(varchar(10), dto, 103) dt,                                    
+ --isnull(Payscale, '') pay,     
+ RMD.Remarks, RMD.fk_research_ID     
+ --isnull(salary, '') salary,                                             
+ from RSM_Research_Members_dtl RMD     
+ inner join RSM_ResearchSubmission_Dtl RSD ON RSD.pk_research_ID = RMD.fk_research_ID    
+ inner join sal_employee_mst EM on EM.pk_empid = fk_memberid      
+ INNER JOIN SAL_Salutation_Mst SM ON SM.PK_Salutation_ID = EM.fK_Salutation_ID     
+ inner join SAL_Designation_Mst SDM ON SDM.pk_desgid = EM.fk_desgid    
+ Inner Join Department_Mst DP On DP.pk_deptid = EM.fk_deptid              
+ Inner Join SAL_SalaryType_Mst ST ON ST.pk_saltypeid = EM.fk_saltypeid      
+ INNER JOIN RSM_Role_Mst RM ON RM.pk_roleid = RMD.fk_roleid    
+ where RMD.fk_research_ID =  @pk_Rid     
+     
+ select RCD.pk_costtypeid, RCD.fK_YearId, RCD.fk_finid, RCD.fk_quarterid, RCD.Costtype,                                     
+ Cast(RCD.Amount as float) Amount, RSD.Cost_Expected,FCM.FCname,RFM.Fname,RSD.Cost_Remarks,RCD.fk_research_ID                                    
+ from RSM_Research_Cost_dtl RCD    
+ INNER JOIN RSM_ResearchSubmission_Dtl RSD ON RSD.pk_research_ID = RCD.fk_research_ID    
+ INNER JOIN RSM_FinanceCategory_Mst FCM ON FCM.pk_fcid= RSD.Cost_fk_fcid    
+ INNER JOIN RSM_Financer_Mst RFM ON RFM.pk_fid=RSD.Cost_fk_fid    
+ where RCD.fk_research_ID =@pk_Rid      
+       
+ select * from RSM_Research_Objectives                                                              
+ where fk_research_ID=@pk_Rid      
+       
+ --select * from RSM_Research_FileDtl where fk_research_ID = @pk_Rid              
+                                                             
+ Select distinct fk_Schemeid, HeadDescription, RSM_ResearchScheme_Dtl.Headchode,fk_research_ID                                  
+ from RSM_ResearchScheme_Dtl                                                  
+ inner join Acct_HeadCode H on pk_anc = fk_Schemeid                                                       
+ inner join BMS_DDOBudgetHeadMapp_Mst M on M.fk_anc = H.pk_anc                                                
+ inner join SAL_Financial_Year on pk_finid = fk_finyearid                                                            
+ where fk_research_ID = @pk_Rid                                    
+                                    
+END                   
+                                                              
+COMMIT TRAN                                                              
+END TRY                                                                  
+BEGIN CATCH                                                                                                
+IF @@TRANCOUNT > 0                                                 
+ROLLBACK                                                                                                
+-- Raise an error with the details of the exception                                                                                                
+DECLARE @ErrMsg nvarchar(4000), @ErrSeverity int                                 
+SELECT @ErrMsg = ERROR_MESSAGE(), @ErrSeverity = ERROR_SEVERITY()                                                              
+RAISERROR(@ErrMsg, @ErrSeverity, 1)                                                                     
+END CATCH                                                    
+END 
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+
+
+/*                    
+ Alterd By: Jaipal Sajwan                    
+ On Date   : 08 Spet 2015          
+*/                    
+--/*                    
+CREATE PROCEDURE [dbo].[RSM_IntimationtoDR_ALL]          
+(                    
+ @Doc nvarchar(max),                    
+ @pk_id int,                 
+ @mode int               
+ --@fk_clientid int,                    
+ --@fk_locid int,                            
+)                    
+AS                    
+--*/                    
+/*                    
+Declare @Doc nvarchar(max)='                  
+',                    
+@pk_rscid int=3,                    
+@fk_clientid int=1,                    
+@fk_locid int=2,                    
+@mode int=1                    
+             
+*/                    
+Declare @Idoc Int                                            
+BEGIN                                            
+                                        
+BEGIN TRAN                                            
+BEGIN TRY                     
+--INS                    
+if @mode=0                    
+BEGIN                    
+ EXEC sp_xml_preparedocument @Idoc OUTPUT, @Doc                                            
+ SET TRANSACTION ISOLATION LEVEL SERIALIZABLE                     
+      
+ Insert Into RSM_IntimationtoDR_Dtl          
+ (fk_research_id,hod,submit,remarks)                    
+          
+ Select fk_research_id,hod,submit,remarks        
+           
+ From OPENXML(@Idoc,'/NewDataSet/RSM_IntimationtoDR_Dtl',2)                       
+ WITH (fk_research_id int,hod varchar(100),submit int,remarks varchar(255))              
+           
+ Declare @pkid int          
+ set @pkid=@@IDENTITY          
+        
+           
+      
+ Insert into RSM_IntimationtoDR_Document          
+ (fk_drid,Filefor,typeofresource,uploadfile,uploadfileName,typeoffile,FilePath)          
+ Select  @pkid,Filefor,typeofresource,uploadfile,uploadfileName,typeoffile,FilePath          
+ From  OPENXML(@Idoc,'/NewDataSet/RSM_IntimationtoDR_Document',2)               
+ With(Filefor varchar(50),typeofresource varchar(5),uploadfile varchar(250),uploadfileName varchar(250),typeoffile varchar(10),FilePath varchar(500))          
+                   
+END                    
+--UPD                    
+if @mode=1                    
+BEGIN                    
+ EXEC sp_xml_preparedocument @Idoc OUTPUT, @Doc                                            
+ SET TRANSACTION ISOLATION LEVEL SERIALIZABLE                        
+                     
+ Update RSM_IntimationtoDR_Dtl          
+ set           
+fk_research_id=x.fk_research_id,        
+hod=x.hod,        
+submit=x.submit,        
+remarks=x.remarks            
+        
+ From OPENXML(@Idoc,'/NewDataSet/RSM_IntimationtoDR_Dtl',2)                       
+ WITH ( fk_research_id int,hod varchar(100),submit int,remarks varchar(255)) x          
+ where  RSM_IntimationtoDR_Dtl.pk_drid=@pk_id            
+           
+          
+ --Delete from RSM_DACMeeting_Document          
+ --where fk_dacid=@pk_id          
+ Insert into RSM_IntimationtoDR_Document          
+ (fk_drid,Filefor,typeofresource,uploadfile,uploadfileName,typeoffile,FilePath)          
+ Select  @pk_id,Filefor,typeofresource,uploadfile,uploadfileName,typeoffile,FilePath          
+ From  OPENXML(@Idoc,'/NewDataSet/RSM_IntimationtoDR_Document',2)               
+ With(Filefor varchar(50),typeofresource varchar(5),uploadfile varchar(250),uploadfileName varchar(250),typeoffile varchar(10),FilePath varchar(500))          
+           
+           
+END                    
+          
+--FillGrid                    
+if @mode=2                    
+BEGIN                    
+ Select pk_drid,Research_title, RS.Researcher_name rname, Case when ISNULL(DM.submit,1)=1 then 'Yes'  Else 'No'   End dac,        
+ Case when ISNULL(DR.submit,1)=1 then 'Yes' when ISNULL(DR.submit,1)=2 then 'Rejected' Else 'No' End cprc ,    
+ CAST(case when DR.submit=0 then 1 else 0 end as bit) submit  from RSM_ResearchSubmission_Dtl RS        
+ inner join RSM_IntimationtoDR_Dtl DR On RS.pk_research_ID=DR.fk_research_ID        
+ left outer join RSM_DACMeeting_dtl DM On RS.pk_research_ID=DM.fk_research_id        
+ left outer join RSM_CPRCMeeting_dtl CM On RS.pk_research_ID=CM.fk_research_id             
+         
+END                    
+    
+--DELETE                    
+if @mode=3                    
+BEGIN                    
+           
+ Delete from RSM_IntimationtoDR_Document          
+ where fk_drid=@pk_id          
+           
+ Delete from RSM_IntimationtoDR_Dtl          
+ where pk_drid=@pk_id          
+END                          
+--EDIT                    
+if @mode=4                    
+BEGIN                    
+          
+ select * from RSM_IntimationtoDR_Dtl          
+ where pk_drid=@pk_id          
+           
+ select RSM_IntimationtoDR_Document.*,CAST(submit as bit) submit from RSM_IntimationtoDR_Document          
+ inner join RSM_IntimationtoDR_Dtl On pk_drid=fk_drid          
+ where pk_drid=@pk_id          
+          
+END            
+--Update Submit Bit            
+if @mode=5          
+BEGIN             
+ Update RSM_IntimationtoDR_Dtl          
+ set  submit=0        
+ where  RSM_IntimationtoDR_Dtl.pk_drid=@pk_id            
+           
+End              
+--Deleting Uploaded Files          
+if @mode=6          
+BEGIN             
+  Delete from RSM_IntimationtoDR_Document          
+  where pk_id=@pk_id          
+End         
+--Reject Submit Bit      
+if @mode=7         
+BEGIN             
+ Update RSM_IntimationtoDR_Dtl          
+ set  submit=2      
+ where  RSM_IntimationtoDR_Dtl.pk_drid=@pk_id            
+           
+End      
+          
+COMMIT TRAN          
+END TRY                                            
+BEGIN CATCH                                            
+IF @@TRANCOUNT > 0                                            
+ROLLBACK                                            
+-- Raise an error with the details of the exception                                            
+DECLARE @ErrMsg nvarchar(4000), @ErrSeverity int                                            
+SELECT @ErrMsg = ERROR_MESSAGE(),                                            
+@ErrSeverity = ERROR_SEVERITY()                                            
+RAISERROR(@ErrMsg, @ErrSeverity, 1)                                            
+END CATCH                               
+if @mode=0 OR @mode=1                                 
+EXEC sp_xml_removedocument @Idoc                                            
+END 
+-----------------------------------------------------------------------------------------------------------------------
+
+--/*              
+CREATE PROCEDURE [dbo].[RSM_GetMeetingDetailData]                    
+(                              
+-- @Doc nvarchar(max),                              
+ @pk_id int,                           
+ @mode int                         
+ --@fk_clientid int,                              
+ --@fk_locid int,                                      
+)                              
+AS                              
+--*/                              
+--/*             
+            
+--Declare @Doc nvarchar(max)='',            
+--@pk_id int=37,             
+--@mode int=2                
+              
+                       
+--*/                              
+Declare @Idoc Int                                                      
+BEGIN                                                      
+                                                  
+BEGIN TRAN                                                      
+BEGIN TRY                                    
+                            
+if @mode=2                              
+BEGIN                              
+ select pk_macid,CAST(mdl.submit as bit) submit,committeename,Meeting_title,dm.[description], RRS.pk_research_ID,         
+ Meeting_no,Meeting_convenor,Venue,Meeting_Description,mdl.Remarks, CONVERT(varchar(10),Meeting_date,103) Meeting_date,                     
+ Case when Meeting_Status ='A' then 'Approve' When Meeting_Status ='R' then 'Reject'                    
+ When Meeting_Status ='C' then 'Approve with Comment' End Meeting_Status,RRS.Research_no,RRS.Research_title,RRS.Researcher_name,       
+      
+ (SELECT uploadfile FROM RSM_Meeting_Document (NOLOCK) WHERE fk_macid = mdl.pk_macid AND Filefor = 'MOM') MOM,      
+ (SELECT uploadfile FROM RSM_Meeting_Document (NOLOCK) WHERE fk_macid = mdl.pk_macid AND Filefor = 'Research') Research        
+      
+ from RSM_Meeting_dtl mdl            
+ inner join RSM_Meeting_research_dtl RMR on RMR.fk_macid=mdl.pk_macid          
+ --left outer join RSM_Meeting_Document RMD on RMD.fk_macid=mdl.pk_macid          
+  --inner join RSM_DACMeeting_research_dtl on fk_dacid=pk_macid                
+ inner join RSM_ResearchSubmission_Dtl RRS On RRS.pk_research_ID=RMR.fk_resid --and pk_research_ID=fk_resid                
+ inner join RSM_Committee_Mst RC on  RC.pk_committeeid=mdl.Fk_commitid           
+ inner join Department_Mst dm on pk_deptid=fk_rdid          
+ where (mdl.submit=0) and mdl.Meeting_Status='A'        
+ and RRS.pk_research_ID=@pk_id-- 54                
+                   
+END                                   
+COMMIT TRAN                    
+END TRY                                                      
+BEGIN CATCH                                                      
+IF @@TRANCOUNT > 0                                                      
+ROLLBACK                                                      
+-- Raise an error with the details of the exception                                                      
+DECLARE @ErrMsg nvarchar(4000), @ErrSeverity int                                                      
+SELECT @ErrMsg = ERROR_MESSAGE(),                                                      
+@ErrSeverity = ERROR_SEVERITY()                                                      
+RAISERROR(@ErrMsg, @ErrSeverity, 1)                                                      
+END CATCH                                         
+if @mode=0 OR @mode=1                                           
+EXEC sp_xml_removedocument @Idoc                                                      
+END 
+
+
+---------------------------------------------------------------------------------------------------------------------
+
+
+
+/*                                        
+ Alterd By: Jaipal Sajwan                                        
+ On Date   : 09 Sep 2015                              
+*/                                        
+--/*                                        
+CREATE PROCEDURE [dbo].[RSM_ResearchApproval_All]                            
+(                                        
+ @Doc nvarchar(max),                                        
+ @pk_apid int,   
+ --@pk_id int,  
+ @mode int                                   
+ --@fk_clientid int,                                        
+ --@fk_locid int,                                                
+)                                        
+AS                                        
+--*/                                        
+/*                                        
+Declare @Doc nvarchar(max)='<NewDataSet>    
+  <RSM_ResearchApproval>    
+    <pk_apvid>0</pk_apvid>    
+    <fk_research_id>39</fk_research_id>    
+    <App_FundingAgency>Y</App_FundingAgency>    
+    <App_Initiation>Y</App_Initiation>    
+    <Edate>2024-08-16T00:00:00+05:30</Edate>    
+    <remarks>Remarks</remarks>    
+    <Funding_agency>10</Funding_agency>    
+    <Scheme_name>Salary  (DARE)</Scheme_name>    
+    <Scheme_code>DARE</Scheme_code>    
+    <Research_Start_Date>2024-01-01T00:00:00+05:30</Research_Start_Date>    
+    <Research_Completion_Date>2025-12-31T00:00:00+05:30</Research_Completion_Date>    
+    <fk_Scid>717</fk_Scid>    
+    <Budget_Head>717</Budget_Head>    
+    <Approval_Ord_Ref_No>Reference N</Approval_Ord_Ref_No>    
+  </RSM_ResearchApproval>    
+  <RSM_Research_Members_dtl>    
+    <pk_member_dtlid>179</pk_member_dtlid>    
+    <fk_research_ID>39</fk_research_ID>    
+    <fk_memberid>TC-1340</fk_memberid>    
+    <fk_roleid>9</fk_roleid>    
+    <dfrom>2024-08-12T00:00:00+05:30</dfrom>    
+    <Remarks>Remarks</Remarks>    
+  </RSM_Research_Members_dtl>    
+  <RSM_Research_Objectives>    
+    <pk_activityid>860</pk_activityid>    
+    <fk_research_ID>39</fk_research_ID>    
+    <objective>Objective</objective>    
+    <ExpectedOutput>Output</ExpectedOutput>    
+    <ExpectedGrowth>Outcome</ExpectedGrowth>    
+    <Remarks>Remarks</Remarks>    
+  </RSM_Research_Objectives>    
+  <RSM_Research_Objectives>    
+    <pk_activityid>864</pk_activityid>    
+    <fk_research_ID>39</fk_research_ID>    
+    <objective>o2</objective>    
+    <ExpectedOutput>o2</ExpectedOutput>    
+    <ExpectedGrowth>o2</ExpectedGrowth>    
+    <Remarks>o2</Remarks>    
+  </RSM_Research_Objectives>    
+  <RSM_Research_Objectives>    
+    <pk_activityid>865</pk_activityid>    
+    <fk_research_ID>39</fk_research_ID>    
+    <objective>3</objective>    
+    <ExpectedOutput>3</ExpectedOutput>    
+    <ExpectedGrowth>3</ExpectedGrowth>    
+    <Remarks>3</Remarks>    
+  </RSM_Research_Objectives>    
+  <RSM_Research_Objectives>    
+    <pk_activityid>0</pk_activityid>    
+    <fk_research_ID>39</fk_research_ID>    
+    <objective>4</objective>    
+    <ExpectedOutput>4</ExpectedOutput>    
+    <ExpectedGrowth>4</ExpectedGrowth>    
+    <Remarks>4</Remarks>    
+  </RSM_Research_Objectives>    
+  <RSM_Research_Objectives>    
+    <pk_activityid>1</pk_activityid>    
+    <fk_research_ID>39</fk_research_ID>    
+    <objective>5</objective>    
+    <ExpectedOutput>5</ExpectedOutput>    
+    <ExpectedGrowth>5</ExpectedGrowth>    
+    <Remarks>5</Remarks>    
+  </RSM_Research_Objectives>    
+</NewDataSet>',                                        
+ @pk_apid int = 0,                                        
+ @fk_clientid int=1,                                        
+ @fk_locid int = 2,                                        
+ @mode int = 0                                        
+                                         
+--*/                                        
+Declare @Idoc Int                                                                
+BEGIN                                                                
+                                                            
+BEGIN TRAN                 
+BEGIN TRY                                         
+                            
+Declare @status char(1),@fk_research_id int                                 
+Declare @Autono varchar(25)                            
+Declare @finyear varchar(8)                            
+Set @finyear=(                            
+Select SUBSTRING (CONVERT(varchar, DATEPART(YY, FromDate ),103),3,2)+'-'+  SUBSTRING (CONVERT(varchar, DATEPART(YY, todate ),103),3,2) AS finYear                            
+from ASST_FinancialYear_Mst WHERE IsEnabled='TRUE'                               
+)                  
+                  
+--INS                              
+IF @mode = 0            
+BEGIN            
+    -- Prepare the XML document            
+    EXEC sp_xml_preparedocument @Idoc OUTPUT, @Doc;            
+                
+    -- Set transaction isolation level            
+    SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;            
+                
+    -- Process RSM_Research_Members_dtl            
+    SELECT *             
+    INTO #tempPrev            
+    FROM RSM_Research_Members_dtl             
+    WHERE fk_research_ID = (            
+        SELECT DISTINCT fk_research_ID            
+        FROM OPENXML(@Idoc, '/NewDataSet/RSM_Research_Members_dtl', 2)            
+        WITH (fk_research_ID INT)            
+    );            
+            
+    -- Count current records            
+   SELECT COUNT(*) AS CntCurr            
+    FROM OPENXML(@Idoc, '/NewDataSet/RSM_Research_Members_dtl', 2)            
+    WITH (            
+        pk_member_dtlid INT,            
+        fk_research_ID INT,            
+        fk_memberid VARCHAR(255),            
+        fk_roleid VARCHAR(255),            
+        dfrom DATETIME,            
+        Remarks VARCHAR(255)            
+        --Ip_Address VARCHAR(250)            
+    );            
+            
+    -- Select detailed records            
+    SELECT             
+        pk_member_dtlid,            
+        fk_research_ID,            
+        fk_memberid,            
+        fk_roleid,            
+        dfrom,            
+        Remarks            
+        --Ip_Address            
+    FROM OPENXML(@Idoc, '/NewDataSet/RSM_Research_Members_dtl', 2)            
+    WITH (            
+        pk_member_dtlid INT,            
+        fk_research_ID INT,            
+        fk_memberid VARCHAR(255),            
+        fk_roleid VARCHAR(255),            
+        dfrom DATETIME,            
+        Remarks VARCHAR(255)           
+        --Ip_Address VARCHAR(250)            
+    );            
+            
+    -- Process RSM_ResearchApproval            
+    SELECT             
+        fk_research_id,            
+        App_FundingAgency,            
+        App_Initiation,            
+        Edate,            
+        remarks,            
+        typeofresource,            
+        uploadfile,            
+        uploadfileName,            
+        typeoffile,            
+        FilePath,            
+        Funding_agency,            
+        Scheme_name,            
+        Scheme_code,            
+        Research_Start_Date,            
+        Research_Completion_Date,            
+        fk_Scid,            
+        Approval_Ord_Ref_No            
+    FROM OPENXML(@Idoc, '/NewDataSet/RSM_ResearchApproval', 2)            
+    WITH (            
+        fk_research_id INT,            
+        App_FundingAgency VARCHAR(1),            
+        App_Initiation VARCHAR(1),            
+        Edate VARCHAR(10),            
+        remarks VARCHAR(255),            
+        typeofresource VARCHAR(5),            
+        uploadfile VARCHAR(250),            
+        uploadfileName VARCHAR(250),            
+        typeoffile VARCHAR(10),            
+        FilePath VARCHAR(300),            
+        Funding_agency VARCHAR(255),            
+        Scheme_name VARCHAR(25),            
+        Scheme_code VARCHAR(500),            
+        Research_Start_Date SMALLDATETIME,            
+        Research_Completion_Date SMALLDATETIME,            
+        fk_Scid VARCHAR(250),                    Approval_Ord_Ref_No VARCHAR(250)            
+    );            
+            
+--Member              
+DECLARE @Counter INT = 1;            
+DECLARE @Max INT;            
+            
+-- Calculate the maximum number of records            
+SET @Max = (            
+    SELECT COUNT(*)            
+    FROM OPENXML(@Idoc, '/NewDataSet/RSM_Research_Members_dtl', 2)            
+    WITH (       
+        pk_member_dtlid INT,            
+        fk_research_ID INT,            
+        fk_memberid VARCHAR(255),            
+        fk_roleid VARCHAR(255),            
+        dfrom DATETIME,            
+        Remarks VARCHAR(255)            
+       -- Ip_Address VARCHAR(250)            
+    )            
+);            
+          
+          
+            
+-- Populate the temporary table with the data           
+          
+           
+            
+          
+          
+          
+SELECT *            
+INTO #tempC            
+FROM (            
+    SELECT            
+        ROW_NUMBER() OVER (ORDER BY pk_member_dtlid) AS nr,            
+        *            
+    FROM OPENXML(@Idoc, '/NewDataSet/RSM_Research_Members_dtl', 2)            
+    WITH (            
+        pk_member_dtlid INT,            
+        fk_research_ID INT,            
+        fk_memberid VARCHAR(255),            
+        fk_roleid VARCHAR(255),            
+        dfrom DATETIME,            
+        Remarks VARCHAR(255)            
+        --Ip_Address VARCHAR(250)            
+    )            
+) x;           
+          
+  select * from #tempC          
+          
+          
+-- Loop through each record            
+WHILE @Counter <= @Max            
+BEGIN            
+    DECLARE @Rid INT,            
+            @memberdtlid INT,            
+            @employee VARCHAR(255),            
+            @roleid VARCHAR(255),            
+            @fromdate DATETIME,            
+            @remarks VARCHAR(255);            
+            
+    -- Retrieve values for the current counter          
+           
+            
+           
+    SELECT            
+        @Rid = fk_research_ID,            
+        @memberdtlid = pk_member_dtlid,            
+        @employee = fk_memberid,            
+        @roleid = fk_roleid,            
+        @fromdate = dfrom,            
+        @remarks = Remarks            
+    FROM #tempC            
+    WHERE nr = @Counter;            
+            
+    -- Check if the record exists in the target table            
+    IF NOT EXISTS (            
+        SELECT 1            
+        FROM RSM_Research_Members_dtl            
+        WHERE fk_research_ID = @Rid            
+          AND pk_member_dtlid = @memberdtlid            
+    )            
+    BEGIN             
+           
+        ---Insert new record            
+        INSERT INTO RSM_Research_Members_dtl (fk_research_ID, fk_memberid, fk_roleid, dfrom, Remarks)            
+        SELECT            
+            fk_research_ID,            
+            fk_memberid,            
+            fk_roleid,            
+            dfrom,            
+            Remarks            
+        FROM #tempC            
+        WHERE nr = @Counter;            
+    END            
+    ELSE            
+    BEGIN            
+        -- Check for discrepancies and log changes            
+        IF EXISTS (            
+            SELECT 1            
+            FROM #tempPrev            
+            WHERE fk_research_ID = @Rid            
+              AND pk_member_dtlid = @memberdtlid            
+              AND (fk_memberid <> @employee OR fk_roleid <> @roleid OR Remarks <> @remarks)            
+        )            
+        BEGIN            
+            
+            -- Log changes to the history table            
+            INSERT INTO RSM_Research_Members_dtl_Log (Fk_Member_dtl_Id, Fk_research_Id, Fk_Member_ID, fk_role_ID, dfrom, Remarks)            
+            SELECT            
+                pk_member_dtlid,            
+                fk_research_ID,            
+                fk_memberid,            
+                fk_roleid,            
+                dfrom,            
+                Remarks            
+            FROM #tempPrev            
+            WHERE fk_research_ID = @Rid            
+              AND pk_member_dtlid = @memberdtlid;            
+            
+            -- Delete the old record            
+            DELETE FROM RSM_Research_Members_dtl            
+            WHERE fk_research_ID = @Rid            
+              AND pk_member_dtlid = @memberdtlid;            
+            
+            -- Insert the updated record            
+            INSERT INTO RSM_Research_Members_dtl (fk_research_ID, fk_memberid, fk_roleid, dfrom, Remarks)            
+            SELECT            
+      fk_research_ID,            
+                fk_memberid,            
+                fk_roleid,            
+                dfrom,            
+                Remarks            
+            FROM #tempC            
+            WHERE nr = @Counter;            
+        END            
+    END            
+            
+    -- Increment the counter            
+    SET @Counter = @Counter + 1;            
+END            
+            
+            
+--Dashrath--Objective             
+            
+ -- Process RSM_Research_Objectives            
+    SELECT *             
+    INTO #tempPrevi            
+    FROM RSM_Research_Objectives             
+    WHERE fk_research_ID = (            
+        SELECT DISTINCT fk_research_ID            
+        FROM OPENXML(@Idoc, '/NewDataSet/RSM_Research_Objectives', 2)            
+        WITH (fk_research_ID INT)            
+    );         
+       
+      
+            
+    -- Count current objectives            
+    SELECT COUNT(*) AS CntCurr            
+    FROM OPENXML(@Idoc, '/NewDataSet/RSM_Research_Objectives', 2)            
+    WITH (            
+        pk_activityid INT,            
+        fk_research_ID INT,            
+        objective VARCHAR(255),            
+     ExpectedOutput VARCHAR(255),            
+        ExpectedGrowth VARCHAR(255),            
+        Remarks VARCHAR(255)           
+        --Ip_Address VARCHAR(250)            
+    );            
+       select 45       
+    -- Select detailed objectives            
+    SELECT             
+        pk_activityid,            
+        fk_research_ID,            
+        objective,            
+        ExpectedOutput,            
+        ExpectedGrowth,            
+        Remarks            
+       -- Ip_Address            
+    FROM OPENXML(@Idoc, '/NewDataSet/RSM_Research_Objectives', 2)            
+    WITH (            
+        pk_activityid INT,            
+        fk_research_ID INT,            
+        objective VARCHAR(255),            
+        ExpectedOutput VARCHAR(255),            
+        ExpectedGrowth VARCHAR(255),            
+        Remarks VARCHAR(255)            
+       -- Ip_Address VARCHAR(250)            
+    );            
+          
+-- Declare and initialize variables            
+DECLARE @Counter1 INT = 1;            
+DECLARE @Max1 INT;            
+            
+-- Calculate the maximum count from the XML            
+SET @Max1 = (            
+    SELECT COUNT(*)            
+    FROM OPENXML(@Idoc, '/NewDataSet/RSM_Research_Objectives', 2)            
+    WITH (            
+        pk_activityid INT,             
+        fk_research_ID INT,             
+        objective VARCHAR(255),             
+        ExpectedOutput VARCHAR(255),             
+        ExpectedGrowth VARCHAR(255),             
+        Remarks VARCHAR(255)             
+        --Ip_Address VARCHAR(250)            
+    )            
+);            
+           
+         
+      
+       
+select 47      
+-- Create a temporary table and populate it        
+      
+      
+SELECT *            
+INTO #tempC1            
+FROM (        
+      
+ SELECT             
+      ROW_NUMBER() OVER (ORDER BY fk_research_ID desc) AS nrr,             
+        pk_activityid,             
+        fk_research_ID,             
+        objective,             
+        ExpectedOutput,             
+        ExpectedGrowth,             
+        Remarks            
+    FROM OPENXML(@Idoc, '/NewDataSet/RSM_Research_Objectives', 2)            
+    WITH (            
+        pk_activityid INT,             
+        fk_research_ID INT,             
+        objective VARCHAR(255),             
+        ExpectedOutput VARCHAR(255),             
+        ExpectedGrowth VARCHAR(255),             
+        Remarks VARCHAR(255)      
+    --SELECT             
+    --    ROW_NUMBER() OVER (ORDER BY pk_activityid) AS nrr,             
+    --    pk_activityid,             
+    --    fk_research_ID,             
+    --    objective,             
+    --    ExpectedOutput,             
+    --    ExpectedGrowth,             
+    --    Remarks            
+    --FROM OPENXML(@Idoc, '/NewDataSet/RSM_Research_Objectives', 2)            
+    --WITH (            
+    --    pk_activityid INT,             
+    --    fk_research_ID INT,             
+    --    objective VARCHAR(255),             
+    --    ExpectedOutput VARCHAR(255),             
+    --    ExpectedGrowth VARCHAR(255),             
+    --    Remarks VARCHAR(255)             
+    --   -- Ip_Address VARCHAR(250)            
+    )            
+) AS y;            
+        
+      
+   select * from #tempC1          
+   select 1    
+        
+-- Start processing the rows            
+WHILE @Counter1 <= @Max1            
+BEGIN            
+    -- Declare variables for the current row            
+    DECLARE @Rid1 INT,             
+            @activityid INT,             
+            @objective1 VARCHAR(255),             
+            @ExpectedOutput1 VARCHAR(255),             
+            @ExpectedGrowth1 VARCHAR(255),             
+            @remarks1 VARCHAR(255);            
+            
+    -- Get the current row's values            
+    SELECT             
+        @Rid1 = fk_research_ID,             
+        @activityid = pk_activityid,             
+        @objective1 = objective,             
+        @ExpectedOutput1 = ExpectedOutput,             
+        @ExpectedGrowth1 = ExpectedGrowth,             
+        @remarks1 = Remarks            
+    FROM #tempC1            
+    WHERE nrr = @Counter1;            
+            
+    -- Output current processing info (for debugging purposes)            
+    SELECT @Counter1 AS Counter,             
+           @Max1 AS MaxCount,             
+           @Rid1 AS ResearchID,             
+           @activityid AS ActivityID;            
+            
+    -- Check if the record exists in RSM_Research_Objectives            
+      IF EXISTS (            
+            SELECT 1            
+            FROM #tempPrevi            
+            WHERE fk_research_ID = @Rid1            
+              AND pk_activityid = @activityid            
+              AND (objective <> @objective1             
+                   OR ExpectedOutput <> @ExpectedOutput1             
+                   OR Remarks <> @remarks1)            
+        )            
+        BEGIN          
+        
+            -- Log changes, delete the old record, and insert the new record            
+            INSERT INTO RSM_Research_Objectives_Log (Fk_activity_Id, Fk_research_Id, objective, ExpectedOutput, ExpectedGrowth, Remarks)            
+            SELECT pk_activityid, fk_research_ID, objective, ExpectedOutput, ExpectedGrowth, Remarks            
+            FROM #tempPrevi            
+            WHERE fk_research_ID = @Rid1            
+              AND pk_activityid = @activityid       
+          
+            
+            DELETE FROM RSM_Research_Objectives            
+            WHERE fk_research_ID = @Rid1            
+              AND pk_activityid = @activityid;            
+            
+           INSERT INTO RSM_Research_Objectives (fk_research_ID, objective, ExpectedOutput, ExpectedGrowth, Remarks)            
+            SELECT fk_research_ID, objective, ExpectedOutput, ExpectedGrowth, Remarks            
+            FROM #tempC1            
+            WHERE nrr = @Counter1;            
+        END         
+    ELSE            
+    BEGIN            
+        -- Compare with the existing record and update if necessary            
+           IF NOT EXISTS (            
+        SELECT 1            
+        FROM RSM_Research_Objectives            
+ WHERE fk_research_ID = @Rid1            
+          AND pk_activityid = @activityid            
+    )            
+    BEGIN          
+        
+       
+        -- Insert new record if it does not exist            
+      INSERT INTO RSM_Research_Objectives (fk_research_ID, objective, ExpectedOutput, ExpectedGrowth, Remarks)            
+        SELECT fk_research_ID, objective, ExpectedOutput, ExpectedGrowth, Remarks            
+        FROM #tempC1            
+        WHERE nrr = @Counter1;            
+    END          
+    END            
+            
+    -- Move to the next row            
+    SET @Counter1 = @Counter1 + 1;            
+END            
+            
+ --Singh            
+drop table #tempC            
+drop table #tempPrev              
+drop table #tempC1            
+drop table #tempPrevi              
+              
+-- Insert data into RSM_ResearchApproval table from XML data            
+INSERT INTO RSM_ResearchApproval (            
+    fk_research_id,            
+    App_FundingAgency,            
+    App_Initiation,            
+    Edate,            
+remarks,            
+    typeofresource,            
+    uploadfile,            
+    uploadfileName,            
+    typeoffile,            
+    FilePath,            
+    Funding_agency,            
+    Scheme_name,            
+    Scheme_code,            
+    Research_Start_Date,            
+    Research_Completion_Date,            
+    fk_Scid,            
+    Approval_Ord_Ref_No            
+)            
+SELECT            
+    fk_research_id,            
+    App_FundingAgency,            
+    App_Initiation,            
+    Edate,            
+    remarks,            
+    typeofresource,            
+    uploadfile,            
+    uploadfileName,            
+    typeoffile,            
+    FilePath,            
+    Funding_agency,            
+    Scheme_name,            
+    Scheme_code,            
+    Research_Start_Date,            
+    Research_Completion_Date,            
+    fk_Scid,            
+    Approval_Ord_Ref_No            
+FROM OPENXML(@Idoc, '/NewDataSet/RSM_ResearchApproval', 2)            
+WITH (            
+    fk_research_id INT,            
+    App_FundingAgency VARCHAR(1),            
+    App_Initiation VARCHAR(1),            
+    Edate VARCHAR(10),            
+    remarks VARCHAR(255),            
+    typeofresource VARCHAR(5),            
+    uploadfile VARCHAR(250),            
+    uploadfileName VARCHAR(250),            
+    typeoffile VARCHAR(10),            
+    FilePath VARCHAR(300),            
+    Funding_agency VARCHAR(255),            
+    Scheme_name VARCHAR(25),            
+    Scheme_code VARCHAR(500),            
+    Research_Start_Date SMALLDATETIME,            
+    Research_Completion_Date SMALLDATETIME,            
+    fk_Scid VARCHAR(250),            
+    Approval_Ord_Ref_No VARCHAR(250)            
+);            
+            
+-- Declare a variable to capture the last inserted identity value            
+DECLARE @id INT = @@IDENTITY;            
+            
+            
+-- Retrieve status and research ID for the newly inserted record            
+SELECT            
+    @status = App_Initiation,            
+    @fk_research_id = fk_research_id            
+FROM RSM_ResearchApproval            
+WHERE pk_apvid = @id;            
+            
+-- Check the value of status and update Research_no if necessary            
+IF @status = 'Y'            
+BEGIN            
+    -- Determine the next available Research_no            
+    SELECT @Autono = MAX(CAST(SUBSTRING(Research_no, CHARINDEX('/', Research_no, 0) + 11, LEN(Research_no)) AS INT)) + 1            
+    FROM RSM_ResearchApproval;            
+            
+    -- Set the Research_no based on whether @Autono is null            
+    IF @Autono IS NULL            
+        SET @Autono = 'RPCAU/RSM/' + LTRIM(RTRIM(@finyear)) + '/1';            
+    ELSE            
+        SET @Autono = 'RPCAU/RSM/' + LTRIM(RTRIM(@finyear)) + '/' + LTRIM(RTRIM(@Autono));            
+            
+    -- Update the Research_no in the RSM_ResearchApproval table            
+    UPDATE RSM_ResearchApproval         
+    SET Research_no = @Autono            
+    WHERE pk_apvid = @id;            
+            
+    -- Optional: Update RSM_ResearchSubmission_Dtl if needed            
+    -- UPDATE RSM_ResearchSubmission_Dtl            
+    -- SET Research_no = @Autono            
+    -- WHERE pk_research_ID = @fk_research_id;            
+END            
+End                                 
+--UPD                       
+if @mode=1                                        
+BEGIN                                        
+ EXEC sp_xml_preparedocument @Idoc OUTPUT, @Doc                                                                
+ SET TRANSACTION ISOLATION LEVEL SERIALIZABLE                                            
+                             
+ --Update RSM_ResearchSubmission_Dtl                            
+ --set Research_no=null                            
+ --where pk_research_ID=(select fk_research_id from RSM_ResearchApproval where pk_apvid=@pk_apid)                            
+                             
+ Update RSM_ResearchApproval                            
+ set Research_no=null                    
+ where pk_apvid=@pk_apid                            
+                                         
+ Update RSM_ResearchApproval                                        
+ Set fk_research_id=x.fk_research_id,                            
+ App_FundingAgency=x.App_FundingAgency,                            
+ App_Initiation=x.App_Initiation,                            
+ Edate=x.Edate,                            
+ remarks =x.remarks,                       
+ typeofresource =x.typeofresource,                       
+ uploadfile =x.uploadfile,                       
+ uploadfileName =x.uploadfileName,                  
+ typeoffile =x.typeoffile,                  
+ FilePath =x.FilePath,                  
+ Funding_agency=x.Funding_agency,                
+ Scheme_name=x.Scheme_name,                
+ Scheme_code=x.Scheme_code,                
+ Research_Start_Date=x.Research_Start_Date,                
+ Research_Completion_Date=x.Research_Completion_Date,                
+ fk_Scid=x.fk_Scid                  
+ From OPENXML(@Idoc,'/NewDataSet/RSM_ResearchApproval',2)                        
+ WITH (fk_research_id int,App_FundingAgency varchar(1),App_Initiation varchar(1),Edate varchar(10),remarks varchar(255),typeofresource varchar(5),                   
+ uploadfile varchar(250), uploadfileName varchar(250), typeoffile varchar(10), FilePath varchar(300),                
+ Funding_agency varchar(250),Scheme_name varchar(250),Scheme_code varchar(250),Research_Start_Date smalldatetime,Research_Completion_Date smalldatetime,fk_Scid varchar(250))x                                        
+ where RSM_ResearchApproval.pk_apvid=@pk_apid                            
+                             
+                            
+ select @status=App_Initiation,@fk_research_id=fk_research_id from RSM_ResearchApproval where pk_apvid=@pk_apid                            
+                             
+ if(@status='Y')                            
+ BEGIN                            
+  select @Autono=MAX(Cast(substring(Research_no,(charindex('/',Research_no,0)+11),len(Research_no))as Int))+1 from RSM_ResearchApproval                            
+                              
+  if(@Autono is null)                            
+  set @Autono='RPCAU/RSM/'+ltrim(rtrim(@finyear))+'/'+'1'                             
+  else                            
+  set @Autono='RPCAU/RSM/'+ltrim(rtrim(@finyear))+'/'+ltrim(rtrim(@Autono))                             
+                              
+  Update RSM_ResearchApproval                            
+  set Research_no=@Autono                            
+  where pk_apvid=@pk_apid                            
+                              
+  --Update RSM_ResearchSubmission_Dtl                            
+  -- set Research_no=@Autono                            
+  --where pk_research_ID=@fk_research_id                            
+  --LUVAS/RES/14-15/1                            
+ END                            
+               
+                             
+END                                        
+--FillGrid                                        
+if @mode=2                                        
+BEGIN                                        
+ Select Research_title,pk_apvid,Case when App_FundingAgency='Y' then 'YES' Else 'NO' End App_FundingAgency,                            
+ Case when  App_Initiation='Y' then 'YES' Else 'NO' End App_Initiation,                            
+ Convert(varchar(10),Edate,103) Edate,remarks,RA.Funding_agency,RA.Research_Start_Date,RA.Research_Completion_Date from RSM_ResearchApproval RA                                   
+ inner join RSM_ResearchSubmission_Dtl On pk_research_ID=fk_research_ID                            
+END                                        
+--DELETE                                        
+if @mode=3                                        
+BEGIN                                        
+ Update RSM_ResearchSubmission_Dtl                            
+ set Research_no=null                            
+ where pk_research_ID=(select fk_research_id from RSM_ResearchApproval where pk_apvid=@pk_apid)                            
+                             
+ Delete from RSM_ResearchApproval                                        
+ where pk_apvid=@pk_apid   
+   
+ Delete from RSM_Research_Members_dtl where pk_member_dtlid = @pk_apid                                                         
+                                                           
+ Delete from RSM_Research_Objectives where pk_activityid = @pk_apid   
+                             
+END     
+--EDIT                                        
+if @mode=4                                        
+BEGIN                                 
+ Select pk_apvid,Research_no,fk_research_id,App_FundingAgency,App_Initiation,CONVERT(varchar(10),Edate,103) Edate,remarks,                     
+ typeofresource, uploadfile, uploadfileName, typeoffile,FilePath,Funding_agency,Scheme_name,Scheme_code,Research_Start_Date,Research_Completion_Date,fk_Scid                
+ from RSM_ResearchApproval                                        
+ where pk_apvid=@pk_apid                              
+END                                        
+                               
+COMMIT TRAN                              
+END TRY                                                                
+BEGIN CATCH                                                                
+IF @@TRANCOUNT > 0                                                                
+ROLLBACK                                                                
+-- Raise an error with the details of the exception                                                                
+DECLARE @ErrMsg nvarchar(4000), @ErrSeverity int                                                                
+SELECT @ErrMsg = ERROR_MESSAGE(),                                                                
+@ErrSeverity = ERROR_SEVERITY()                                                                
+RAISERROR(@ErrMsg, @ErrSeverity, 1)                                                                
+END CATCH                                                   
+if @mode=0 OR @mode=1                            
+EXEC sp_xml_removedocument @Idoc                                                                
+END 

@@ -1,0 +1,1267 @@
+stored procedures
+
+/*                
+ MODIFIED BY - INDRA PRAKASH            
+ MODIFIED DATE – 18/10/2023          
+*/           
+CREATE PROCEDURE [dbo].[RSM_GetAuto_ProjectCode]                  
+--@doc varchar(max)                  
+AS       
+/*        
+ DECLARE @doc varchar(max) = '<NewDataSet>        
+  <AFM_Status>        
+    <fk_locid>AO-68</fk_locid>        
+  </AFM_Status>        
+</NewDataSet>'            
+--*/        
+BEGIN         
+--DECLARE @idoc int         
+--EXEC sp_xml_preparedocument @idoc OUTPUT, @doc         
+        
+ DECLARE @AutoNo int, @ProjectCode varchar(25), @num varchar(10)       
+                  
+ SELECT TOP 1 @AutoNo = ISNULL(MAX(SUBSTRING(Research_no, 7, 4)), 0)         
+ FROM RSM_ResearchSubmission_Dtl         
+ --WHERE fk_insDateID = (SELECT MAX(fk_insDateID)       
+ --FROM RSM_ResearchSubmission_Dtl WHERE YEAR(fk_insDateID) = YEAR(GETDATE()))         
+      
+ --ORDER BY pk_research_ID desc       
+ --SELECT @AutoNo       
+       
+ SELECT @num = RIGHT('0000' + CAST((@AutoNo+1) AS varchar(4)), 4)                   
+                  
+IF(@AutoNo = 0)                  
+BEGIN                  
+ SET @ProjectCode = 'RPCAU/0001'      
+END         
+ELSE         
+BEGIN         
+ SET @ProjectCode =  'RPCAU/' + @num       
+END         
+        
+ SELECT @ProjectCode AS ProjectCode        
+ /*       
+  SELECT TOP 1 @AutoNo = Scheme_name         
+  FROM RSM_ResearchSubmission_Dtl         
+  WHERE fk_insDateID = (SELECT MAX(fk_insDateID)       
+  FROM RSM_ResearchSubmission_Dtl WHERE YEAR(fk_insDateID) = YEAR(GETDATE()))         
+      
+  IF ISNULL(@AutoNo, '') = ''      
+ SET @ProjectCode = 'RPCAU/'+'00001'      
+  ELSE                        
+    BEGIN                                
+     SET @ProjectCode = SUBSTRING(@AutoNo, 5, 4)                    
+     SELECT @ProjectCode         
+     DECLARE @startval nvarchar(255)                    
+     DECLARE @incrVal nvarchar(255)                    
+     DECLARE @isInc bit                     
+     DECLARE @i int, @CodeLength int, @c char                    
+     SELECT @i = 1, @CodeLength = len(@ProjectCode)                    
+     SET @startval = ''                    
+     SET @incrVal = ''                    
+     SET @isInc = 0                    
+     WHILE @i <= @CodeLength                    
+     BEGIN                    
+        SET @c = SUBSTRING(@ProjectCode, @i, 1)        
+    IF @c = '0' and @isInc = 0                    
+   SET @startval = @startval + @c                    
+    ELSE                    
+   BEGIN                    
+    SET @incrVal = @incrVal + @c                    
+    SET @isInc = 1                    
+   END                    
+        SET @i = @i + 1                    
+     END                
+     IF((len(@startval) + len(@incrVal + 1)) <> @CodeLength)                    
+      SET @startval = substring(@startval, 0, (len(@startval)))       
+     SET @ProjectCode = 'RPCAU/'+(isnull(@startval, '') + convert(varchar(10), (@incrVal+1)))                    
+    END               
+    SELECT @ProjectCode as ProjectCode          
+*/      
+--EXEC sp_xml_removedocument @idoc        
+END 
+
+
+--------------------------------------------------------------------------------------------------------------------
+
+
+CREATE procedure [dbo].[HlpEng_sp_GethelpContent] --47,2675,'<p>hello</p>'  
+(    
+@mdid int,  
+@webpgname varchar(200)  
+)    
+AS    
+BEGIN    
+Select HelpContent from UM_WebPage_Mst where webpagename=@webpgname and fk_moduleId=@mdid  
+End  
+ select * from UM_WebPage_Mst  
+
+
+----------------------------------------------------------------------------------------------------------------------
+
+
+CREATE Procedure [dbo].[UM_SP_DepartmentUser_SelForGrid] --'T','', 'VC-39'                                
+ @status varchar(10),                                    
+ @pk_empid varchar(10) = null,                        
+ @fk_locid varchar(10) = null                                   
+as  
+/*  
+Declare @status varchar(10) = 'H' ,                                    
+        @pk_empid varchar(10)= '' ,                        
+        @fk_locid varchar(10) = ''  
+  
+*/  
+begin                                       
+                                       
+ if(@status = 'H')                                       
+ begin    
+ Select pk_deptid, D.description FROM [Department_Mst] D  
+-- Select pk_userId, pk_deptid, D.description,empcode+' ~ '+E.empname loginname,D.DeptAlias,fk_defaultlocation FROM [Department_Mst] D                                                  
+--Left Join SAL_Employee_Mst E on D.Hod_Id=E.pk_empid                                 
+--inner join UM_Users_Mst on fk_empId = pk_empid                                
+-- where  Hod_Id is not null  and employeeleftstatus ='N' order by  description,loginname                                       
+end                                      
+ if(@status = 'C')                                       
+ begin                                      
+ Select pk_committeeid,fk_ctid,committeename+'{'+committeecode +'}' as committee FROM [RSM_Committee_Mst] R                                                  
+                                    
+end          
+        
+ if(@status = 'N')                                       
+ begin                                      
+ select pk_userId,pk_empid,empcode,manualempcode,empname, empcode+' ~ '+A.empname loginname,designation,fk_locid  ,pk_deptid,D.description ,Branchname specialization                                   
+from SAL_Employee_Mst A                                 
+inner join UM_Users_Mst on fk_empId = pk_empid                                
+inner join SAL_Designation_Mst B on pk_desgid = fk_desgid                                       
+inner join sal_class_mst C on pk_classid = fk_classid                                      
+left outer join Department_Mst D on D.pk_deptid = A.fk_desgid            
+left join SMS_BranchMst on   Pk_BranchId = fK_DesignspecId                                  
+where C.isTeaching = 0  and employeeleftstatus ='N' and  --ISNULL(@pk_empid,0) = @pk_empid                                   
+--empcode =  case when @pk_empid is null or @pk_empid = '' then empcode else @pk_empid end   and                        
+fk_locid = case when @fk_locid is null or @fk_locid = '' then empcode else @fk_locid end                        
+            
+                                    
+end        
+                                         
+else                                      
+begin                                      
+                                  
+select pk_userId,pk_empid,empcode,manualempcode,empname, empcode+' ~ '+A.empname loginname,designation,fk_locid  ,pk_deptid,D.description ,Branchname specialization                                   
+from SAL_Employee_Mst A                                 
+inner join UM_Users_Mst on fk_empId = pk_empid                                
+inner join SAL_Designation_Mst B on pk_desgid = fk_desgid                                       
+inner join sal_class_mst C on pk_classid = fk_classid                                      
+left outer join Department_Mst D on D.pk_deptid = A.fk_Pdeptid --//A.fk_desgid            
+left join SMS_BranchMst on   Pk_BranchId = fK_DesignspecId                                  
+where C.isTeaching = 1  and employeeleftstatus ='N' and  --ISNULL(@pk_empid,0) = @pk_empid                                   
+empcode =  case when @pk_empid is null or @pk_empid = '' then empcode else @pk_empid end   and                        
+fk_locid = case when @fk_locid is null or @fk_locid = '' then empcode else @fk_locid end          
+order by description,loginname                  
+                                
+                       
+end                                      
+ end 
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------
+
+
+CREATE Procedure [dbo].[RSM_SP_Scheme]                        
+@mode varchar(10) ,                    
+@pk_anc int = null,              
+@ddoid varchar(10),              
+@empid varchar(20)    
+as                        
+begin                       
+                     
+ if(@mode = 'Get')                 
+ begin  
+   
+ select distinct pk_anc, Headcode, HeadDescription + ' ('+Headcode +')' HeadDescription, pk_finid     
+ from Acct_HeadCode H    
+ --inner join BMS_DDOBudgetHeadMapp_Mst M on M.fk_anc = H.pk_anc    
+ --inner join SAL_Financial_Year on pk_finid = fk_finyearid    
+ --where pk_finid in (select pk_finid from SAL_Financial_Year where getdate() between date1 and date2)   
+ , SAL_Financial_Year Y where Y.active = 'Y'  
+  
+ end    
+     
+ if(@mode = 'Edit')                 
+ begin                
+   
+ select distinct pk_anc, Headcode, HeadDescription, pk_finid     
+ from Acct_HeadCode H        
+ --inner join BMS_DDOBudgetHeadMapp_Mst M on M.fk_anc = H.pk_anc        
+ --inner join SAL_Financial_Year on pk_finid = fk_finyearid        
+ --where pk_finid in (select pk_finid from SAL_Financial_Year where getdate() between date1 and date2) and pk_anc = @pk_anc    
+ , SAL_Financial_Year Y where Y.active = 'Y' and pk_anc = @pk_anc  
+  
+ end             
+          
+ if(@mode = 'GShc')          
+ begin          
+ select distinct pk_anc, Headcode, HeadDescription + ' ('+Headcode +')' HeadDescription, pk_finid        
+ from Acct_HeadCode H    
+ --inner join BMS_DDOBudgetHeadMapp_Mst M on M.fk_anc = H.pk_anc    
+ --inner join SAL_Financial_Year on pk_finid = fk_finyearid    
+ --where pk_finid in (select pk_finid from SAL_Financial_Year where getdate() between date1 and date2)   
+ , SAL_Financial_Year Y where Y.active = 'Y'  
+-- and fk_ddoid = case when @ddoid is null then fk_ddoid else @ddoid end    
+  end    
+    
+end 
+
+
+
+------------------------------------------------------------------------------------------------------------------------------
+
+
+
+                                              
+--/*                                                                                                      
+CREATE PROCEDURE [dbo].[RSM_BindDropDown_ALL]                                                                                                      
+(                                                                                                      
+ @Doc nvarchar(max)=null,                                                                                                      
+ @mode int =2                                                                                                           
+)                                                                                                      
+AS                                                                                                      
+--*/                                                                                                       
+/*                                                                                                      
+Declare @Doc nvarchar(max)=null,                                                                                                                  
+@mode int=2                                                                                                     
+--*/                                                                                                      
+Declare @Idoc Int                                                                                                                                          
+BEGIN                                                                                                                                          
+                                                                                                                                      
+BEGIN TRAN                                                                                                                                          
+BEGIN TRY                                                                                                                   
+--INS                                                                                                                  
+  EXEC sp_xml_preparedocument @Idoc OUTPUT, @Doc                                                                                                                                          
+ SET TRANSACTION ISOLATION LEVEL SERIALIZABLE                                                                                                                            
+-- Bind Financer Category                                                                                                      
+if(@mode=0)                                                                                                      
+BEGIN                                                                                                      
+  Select '' pk_fcid,'-- Select Financer Category --' FCname                                                                                                       
+  Union                                                                                                      
+  Select pk_fcid,FCname from RSM_FinanceCategory_Mst                                                                                           
+  order by FCname                                                                                        
+END                                                                                                      
+-- Bind Committee Type                                                                                                    
+Else if(@mode=1)                                                                                                      
+BEGIN                                                                                                      
+  Select '' pk_ctid,'-- Select Committee Type --' ComType      
+  Union                                                              
+  Select pk_ctid,ComType from RSM_Committee_Type                                                                      
+END                    
+                                      
+-- Bind DropDown for Research Submission                                                                                          
+Else if(@mode=2)                                        
+BEGIN                                               
+                                                
+  --0 Research Sector                                                               
+                                            
+  Select '' pk_rsid,'-- Select Research Sector --' RSname                                                                                        
+  Union                                                                             
+  Select pk_rsid,RSname from RSM_ResearchSector_Mst                                                                                                    
+                                                                               
+  --1 Research Category                                                                       
+  Select '' pk_rcid,'-- Select Research Category --' RCname                                                                                                  
+  Union                                                                       
+  Select pk_rcid,RCname from RSM_ResearchCategory_Mst                                                                                    
+                                                                                                    
+  --2 Implementaion Agency                                                            
+  Select '' pk_agid,'-- Select Implementation Agency --' Agencyname                                                                                                 
+  Union                                                                                                      
+  Select pk_agid,Agencyname from RSM_Agency_Mst                                                                               
+                                                                                                   
+   --3 Research Center                                                                                                  
+ Select '' pk_rscid,'-- Select Center  --' Rname                                                                                                    
+  Union                                                                      
+  Select pk_rscid,Rname from RSM_ResarchCenter_Mst                                                                                       
+                                                                                              
+                                                                                  
+   --4 Member Master                                                                                                  
+                                                                                                    
+  Select '' pk_memberid, '-- Select Member Name --' membername                                                   
+  union                                                  
+  select pk_memberid, membername from RSM_Member_Mst                                                   
+  --where membertype = Case when Isnull((Select membertype                                                                                                       
+  --From OPENXML(@Idoc, '/NewDataSet/Member_Type', 2)                                                                                                               
+  --WITH (membertype varchar(1))), '') = '' then RSM_Member_Mst.membertype else (Select membertype                                                                                                       
+  --From OPENXML(@Idoc, '/NewDataSet/Member_Type', 2)                                                       
+  --WITH (membertype varchar(1))) end                                    
+                                                                                                    
+    --5 Role                                                                                          
+  Select '' pk_roleid,'-- Select Role Name --' Rolename                                                                                                    
+  Union                                                                         
+  Select pk_roleid,Rolename from RSM_Role_Mst                                                                           
+  where Isactive=1                                                                                                 
+                                               
+                                                                                                    
+  --6 Financer_Category                                                                           
+                                                      
+  Select '' pk_fcid,'-- Select Financer Category --' FCname                                                                                    
+  Union                                                           
+  Select pk_fcid,FCname from RSM_FinanceCategory_Mst                                                       
+                                                                                                    
+   --7 Financer Name                                                                                               
+                                                                                                    
+  Select '' pk_fid,'-- Select Financer Name --' Fname                                                                                                       
+                                         
+ ----  8 Implementation Department                                                                                                  
+ -- Select '' pk_rdid,'-- Select Implementation Department --' RDname                                                                                            
+ -- Union                                                                                                      
+ -- Select pk_rdid,RDname from  RSM_ResearchDepartment_Mst                                                                            
+                                                                          
+ -- Department of HRMS                                                                         
+  --Select '' pk_rdid,'-- Select Research Sector Department --' RDname                                                                                                   
+  --Union                                                                                                      
+  Select pk_deptid pk_rdid, description RDname from  Department_Mst                                                                           
+                                                                                                
+-- 9 District                                                                                              
+  Select '' pk_districid,'-- Select District --' Description                                                                                                   
+  Union                                                                              
+  Select pk_districid,Description from distric_mst                                                                                                
+                                        
+  -- 10 DDO                                                                                              
+  Select '' pk_ddoid,'-- Select DDO --' Description                                                                                                   
+  Union                                  
+  Select pk_ddoid, Description from DDO_Mst                    
+                        
+  -- 11 Salutation                       
+  Select 0 PK_Salutation_ID, '-- Salutation --' Salutation_Name                                                        
+  Union                         
+  Select PK_Salutation_ID, Salutation_Name From SAL_Salutation_Mst (nolock)                      
+                          
+END                                                                                                   
+ -- Member Master                            
+Else if (@mode=3)                                                             
+BEGIN                                                                                                  
+  Select '' pk_memberid,'-- Select Member Name --' membername                                                                                                    
+  Union                                                                        
+  Select pk_memberid,membername from RSM_Member_Mst                     
+  where membertype =                                                                                                  
+  (Select membertype                                                
+  From OPENXML(@Idoc,'/NewDataSet/Member_Type',2)                                                                                                               
+  WITH (membertype varchar(1)))                                                                    
+                                                                        
+                                              
+                                                                                                     
+  Select pk_memberid,membername,department,designation from RSM_Member_Mst                                                                                                    
+  where pk_memberid=                           
+  (Select pk_memberid                                                                                                       
+  From OPENXML(@Idoc,'/NewDataSet/Member_Type',2)                                                                                                              
+  WITH (pk_memberid int))                                  
+                                                                                                  
+END                                                                                                  
+-- Financername                                                    
+Else if (@mode=4)                                                                   
+BEGIN                                                                                                  
+  Select '' pk_fid,'-- Select Financer Name --' Fname                                                     
+  Union                                                                                                          
+  Select pk_fid,Fname from RSM_Financer_Mst                                                      
+  where fk_fcid =                                                                                                  
+  (Select Fcat                                                                                                       
+  From OPENXML(@Idoc,'/NewDataSet/Fcat',2)  WITH (Fcat varchar(5)))                                                                                      
+END                                                                                                  
+                                                                                                
+-- Research Title & Department For DAC                                                  
+Else if (@mode=5)                                                                                                  
+BEGIN                                                                                
+  -- Page load --                                                       
+  Select '' pk_research_ID,'-- Select Research Title --' Research_title                                                              
+  Union                                                                                                          
+  Select pk_research_ID ,Research_title from RSM_ResearchSubmission_Dtl                                                        
+  where submit=1 and pk_research_ID not in (Select fk_research_id from RSM_DACMeeting_dtl)                                                                      
+  --added new condition                                                                
+  and pk_research_ID not in(Select fk_research_id from RSM_IntimationtoDR_Dtl )                                                                                  
+  and Experiment='N'                                                                                                
+                                                                                             
+  --Select '' pk_rdid,'-- Select Department/Section Name --' RDname                                         
+  --Union                                                                                                      
+  ----Select pk_rdid,RDname from RSM_ResearchDepartment_Mst                                                                      
+    --Select '' pk_rdid,'-- Select Department/Section Name --' RDname                                                                      
+ -- Union                                                                                                     
+  Select pk_deptid pk_rdid,description RDname from Department_Mst                                     
+                                                                                                    
+  Select '' pk_memberid,'-- Select Member Name --' membername                                                      
+  union                                                  
+    select pk_memberid,membername from RSM_Member_Mst                                                   
+  where membertype =                                                                                                  
+  (Select membertype                                                                        
+  From OPENXML(@Idoc,'/NewDataSet/Member_Type',2)                                                                                                               
+  WITH (membertype varchar(1)))                                                     
+                                                                                                  
+  -- Edit --                                                                        
+  Select '' pk_research_ID,'-- Select Research Title --' Research_title                                                                                                   
+  Union                                                               
+  Select pk_research_ID ,Research_title from RSM_ResearchSubmission_Dtl                                                                                                     
+  where submit=1                                                                        
+                                                                      
+                                                                        
+  --Select '' pk_research_ID,'-- Select  Researcher name --' Researcher_name                                                     
+  --Union                                                                                                          
+  --Select pk_research_ID ,Research_title from RSM_ResearchSubmission_Dtl                                                                                                     
+  --where submit=0 and pk_research_ID not in (Select fk_research_id from RSM_DACMeeting_dtl)                                                                   
+  ----added new condition                                                                       
+  --and pk_research_ID not in(Select fk_research_id from RSM_IntimationtoDR_Dtl )      
+  --and Experiment='N'                                                                                                   
+END                                                                                                  
+                   
+-- Research Title for CRPC                                                                                                 
+Else if (@mode=6)                                                                                                  
+BEGIN                            
+ -- Page load --                                                                                                
+  Select '' pk_research_ID,'-- Select Research Title --' Research_title                                                              
+  Union                                                                            
+  Select pk_research_ID ,Research_title from RSM_ResearchSubmission_Dtl                                                                                                     
+  inner join RSM_DACMeeting_dtl On pk_research_ID=fk_research_id                     
+  where RSM_DACMeeting_dtl.submit=1 and Meeting_Status<>'R' and                                                                       
+  pk_research_ID not in (Select fk_research_id from RSM_CPRCMeeting_dtl)                                                                       
+--added new condition                                                                       
+  and pk_research_ID not in(Select fk_research_id from RSM_IntimationtoDR_Dtl )                                                                                                    
+  Union                                                                               
+  select pk_research_ID ,Research_title from RSM_ResearchSubmission_Dtl                                                                    
+  where submit=1 and Experiment='Y' and pk_research_ID not in (Select fk_research_id from RSM_CPRCMeeting_dtl)                                                                                                 
+                                                                                                  
+                                                                                                  
+  -- Edit --                                 
+Select '' pk_research_ID,'-- Select Research Title --' Research_title                                                                                                   
+  Union                                          
+  Select pk_research_ID ,Research_title from RSM_ResearchSubmission_Dtl                                                                                      
+  inner join RSM_CPRCMeeting_dtl On pk_research_ID=fk_research_id                                                                       
+  where RSM_ResearchSubmission_Dtl.submit=1                                                                                                 
+                                                                    
+                                                                                                  
+  Select '' pk_memberid,'-- Select Member Name --' membername                                                   
+  union                                                   
+  select pk_memberid,membername from RSM_Member_Mst                                                   
+  where membertype =                                                                                                  
+  (Select membertype                                                                                                       
+  From OPENXML(@Idoc,'/NewDataSet/Member_Type',2)                                                                                                            
+  WITH (membertype varchar(1)))                                              
+                                                         
+ --and pk_research_ID not in (Select fk_research_id from RSM_CPRCMeeting_dtl                               
+END                                                                                   
+--Researcher Name for CRPC and DAC                                                                                                
+Else if (@mode=7)                             
+BEGIN                                                                        
+                                                                  
+  --Select RS.Researcher_name, convert(varchar(10), RS.Research_Start_Date, 103) Research_Start_Date, convert(varchar(10), RS.Research_Completion_Date, 103) RS.Research_Completion_Date, RS.Scheme_name,RS.Scheme_code,RS.fk_Scid,          
+  --ISNULL(DM.submit,0) dac,ISNULL(CM.submit,0) cprc, ISNULL(dtl.submit,0) dean     
+  --from RSM_ResearchSubmission_Dtl RS     
+    
+  --left outer join RSM_DACMeeting_dtl DM On RS.pk_research_ID=DM.fk_research_id                            
+  --left outer join RSM_CPRCMeeting_dtl CM On RS.pk_research_ID=CM.fk_research_id                                                                       
+  --left outer join RSM_Meeting_research_dtl dtl On RS.pk_research_ID= dtl.fk_resid    
+  --left outer join RSM_Meeting_dtl On pk_macid= fk_macid     
+      
+  SELECT     
+    RS.Researcher_name,     
+    CONVERT(VARCHAR(10), RS.Research_Start_Date, 103) AS Research_Start_Date,     
+    CONVERT(VARCHAR(10), RS.Research_Completion_Date, 103) AS Research_Completion_Date,     
+    RS.Scheme_name,    
+    RS.Scheme_code,    
+    RS.fk_Scid,    
+    ISNULL(DM.submit, 0) AS dac,    
+    ISNULL(CM.submit, 0) AS cprc,    
+    ISNULL(dtl.submit, 0) AS dean     
+FROM     
+    RSM_ResearchSubmission_Dtl RS     
+LEFT OUTER JOIN     
+    RSM_DACMeeting_dtl DM ON RS.pk_research_ID = DM.fk_research_id    
+LEFT OUTER JOIN     
+    RSM_CPRCMeeting_dtl CM ON RS.pk_research_ID = CM.fk_research_id    
+LEFT OUTER JOIN     
+    RSM_Meeting_research_dtl dtl ON RS.pk_research_ID = dtl.fk_resid    
+LEFT OUTER JOIN     
+    RSM_Meeting_dtl MD ON dtl.fk_macid = MD.pk_macid    
+    
+                                                                                   
+  where pk_research_ID =                                                                                                  
+  (Select pk_research_ID                                                                                  
+  From OPENXML(@Idoc,'/NewDataSet/pk_research_ID',2)                                                     
+  WITH (pk_research_ID int))             
+          
+   Select distinct fk_Schemeid, HeadDescription, RSM_ResearchScheme_Dtl.Headchode                                    
+ from RSM_ResearchScheme_Dtl                                                    
+ inner join Acct_HeadCode H on pk_anc = fk_Schemeid                                                         
+ inner join BMS_DDOBudgetHeadMapp_Mst M on M.fk_anc = H.pk_anc                                                  
+ inner join SAL_Financial_Year on pk_finid = fk_finyearid                                                              
+ where fk_research_ID = (Select pk_research_ID                                                                                  
+  From OPENXML(@Idoc,'/NewDataSet/pk_research_ID',2)                                                     
+  WITH (pk_research_ID int))        
+      
+  select *,                                                
+ CONVERT(varchar(10), dfrom, 103) df, CONVERT(varchar(10), dto, 103) dt,                                     
+ isnull(Designation, '') des,                                     
+ isnull(Payscale, '') pay, isnull(salary, '') salary, empname                                                
+ from RSM_Research_Members_dtl                           
+ inner join sal_employee_mst on pk_empid = fk_memberid                                                             
+  where fk_research_ID = (Select pk_research_ID                                                                                  
+  From OPENXML(@Idoc,'/NewDataSet/pk_research_ID',2)                                                     
+  WITH (pk_research_ID int))                                    
+                 
+ select * from RSM_Research_Objectives                                                              
+  where fk_research_ID = (Select pk_research_ID                                                                                  
+  From OPENXML(@Idoc,'/NewDataSet/pk_research_ID',2)                                                     
+  WITH (pk_research_ID int))                                                             
+                                  
+END                                                                          
+--RSM_Meeting_research_dtl                     
+--sp_tables '%RSM_Meeting%'                                                                                            
+-- Research Title for DR                                                                                                 
+Else if (@mode=8)                                                                 
+BEGIN                                    
+ -- Page load --                                                                         
+  Select '' pk_research_ID,'-- Select Research Title --' Research_title                                                                                                   
+  Union                                                                                                          
+  Select pk_research_ID ,Research_title from RSM_ResearchSubmission_Dtl RSD                                                                                                     
+  --inner join RSM_CPRCMeeting_dtl On pk_research_ID=fk_research_id                     
+  --inner join RSM_IntimationtoDR_Dtl On pk_research_ID=fk_research_id                    
+  inner join RSM_Meeting_dtl RMD on RMD.Fk_commitid=RSD.pk_comid                    
+  where RMD.Meeting_Status='A' and RMD.submit = 0  and pk_research_ID not in (Select fk_research_id from RSM_IntimationtoDR_Dtl)                                                                               
+ Select '' pk_research_ID,'-- Select Research Title --' Research_title                                                                                                 
+ Union                                                                                                        
+ Select pk_research_ID ,Research_title from RSM_ResearchSubmission_Dtl                                                                       
+ --inner join RSM_Meeting_research_dtl on  pk_research_ID=fk_resid and  isnull(RSM_Meeting_research_dtl.submit,0)=1                        
+ where pk_research_ID not in                                                                          
+ (--select fk_research_id from RSM_CPRCMeeting_dtl where Meeting_Status='R'                                                                              
+ --union                                                                              
+ --Select fk_research_id from RSM_DACMeeting_dtl where Meeting_Status='R'                                                                              
+ --union                                  
+ Select fk_research_id from RSM_IntimationtoDR_Dtl                                                                              
+ )                                                                                                   
+                                                                                                
+  -- Edit --                                  
+  Select '' pk_research_ID,'-- Select Research Title --' Research_title                                                         Union                                                               
+  Select pk_research_ID ,Research_title from RSM_ResearchSubmission_Dtl                                                                                        
+                                                                                                
+END          --Research Title for ResearchApproval                                                                                                
+Else if (@mode=9)                                                  
+BEGIN                                                             
+  -- Page load --                                                                                                
+ Select '' pk_research_ID,'-- Select Research Title --' Research_title                                               
+ Union                                                                                           
+ Select pk_research_ID ,Research_title from RSM_ResearchSubmission_Dtl                                                                                                     
+ inner join RSM_IntimationtoDR_Dtl On pk_research_ID=fk_research_id                                                                                           
+ where pk_research_ID not in (Select fk_research_id from RSM_ResearchApproval)                                         
+ and RSM_IntimationtoDR_Dtl.submit <> 2                                        
+                         
+ -- Edit --                                                                                                
+ Select '' pk_research_ID,'-- Select Research Title --' Research_title                                                                                
+ Union                                                                                                          
+ Select pk_research_ID ,Research_title from RSM_ResearchSubmission_Dtl              
+    --2 Research Agency                                                                                                  
+ Select '' pk_agid,'-- Select Agency  --' Agencyname                                                                                                    
+  Union                                                                      
+  Select pk_agid,Agencyname from RSM_Agency_Mst                
+END                                                                                                 
+--Research Cost                               
+ELSE IF (@mode=10)                                                          
+                                                          
+BEGIN                                                                                                
+                                                                               
+ SELECT '' pk_research_ID, '-- Select Research Title --' Research_title                                          
+ Union                                                                                                          
+ Select pk_research_ID ,Research_title from RSM_ResearchSubmission_Dtl                                                                                                     
+ inner join RSM_ResearchApproval On pk_research_ID = fk_research_id                                                                                                
+                                                                     
+ SELECT '' pk_research_ID, '-- Select Research Title --' Research_title                           
+ UNION                                                                                                          
+ SELECT pk_research_ID, Research_title FROM RSM_ResearchSubmission_Dtl                                                                                                     
+ INNER JOIN RSM_ResearchApproval ON pk_research_ID = fk_research_id                                                                                                
+                                
+ SELECT '' pk_rscid, '-- Select Research Center --' Rname                             
+ UNION                                                 
+ SELECT pk_rscid, Rname FROM RSM_ResarchCenter_Mst                                                                               
+                                                                                            
+END                                                                                               
+--Monthly  Yearly & Final Research Submission                                                                  
+ELSE IF(@mode=11)                                                           
+                                                  
+BEGIN                                                                       
+                                                     
+ SELECT '' pk_research_ID, '-- Select Research Title --' Research_title                                                                                            
+ UNION                                                                                                    
+ SELECT pk_research_ID, Research_title FROM RSM_ResearchSubmission_Dtl                                                                            
+ INNER JOIN RSM_ResearchApproval ON pk_research_ID = fk_research_id                                                                                                
+ WHERE fk_insUserID = (SELECT userid FROM OPENXML(@Idoc, '/NewDataSet/userid', 2) WITH (userid varchar(15)))                                                                        
+   AND fk_locid = (SELECT locid FROM OPENXML(@Idoc, '/NewDataSet/userid', 2) WITH (locid varchar(15)))                                                           
+   AND pk_research_ID NOT IN (SELECT fk_research_id FROM RSM_FinalResearch_Submission)                                                                                                 
+   AND App_Initiation = 'Y'                                              
+   AND ISNULL(IsDirectEntry, 0) = 0                                            
+ UNION                                             
+ SELECT pk_research_ID, Research_title FROM RSM_ResearchSubmission_Dtl WHERE IsDirectEntry = 1                                            
+                                                                                            
+ SELECT '' pk_yearID, '-- Select Year --' description                                                                     
+ UNION                                                                  
+ SELECT pk_yearID, description FROM Year_Mst                                                                                                
+ ORDER BY pk_yearID Desc                                                         
+                                                                                                 
+ SELECT '' pk_MonthId, '-- Select Month --' descriptiion                                  
+ UNION                                                                                                 
+ SELECT pk_MonthId, descriptiion FROM Month_Mst                                                                                                                                                                       
+ --Edit--                                                                                                
+ SELECT '' pk_research_ID, '-- Select Research Title --' Research_title                                                                                               
+ UNION                                                                                                
+ SELECT pk_research_ID, Research_title FROM RSM_ResearchSubmission_Dtl                                                                                                  
+ INNER JOIN RSM_ResearchApproval ON pk_research_ID=fk_research_id                                                                                                   
+                      
+ SELECT '' pk_districid, '-- Select District --' Description                                                                                                   
+ UNION                                                                                               
+ SELECT pk_districid, Description FROM distric_mst                                                                                              
+ --INNER JOIN RSM_FinalResearch_Submission ON pk_research_ID = fk_research_id                                                                                    
+                                                               
+ SELECT '' Pk_Asst_FinYrId, '-- Select Financial Year --' FYear                                                                                                 
+ UNION                                                                                                 
+ SELECT Pk_Asst_FinYrId, Convert(varchar(5), (Datepart(YYYY, FromDate)))+' - '+ Convert(varchar(5),Datepart(YYYY, ToDate)) AS FYear                                                          
+ FROM ASST_FinancialYear_Mst WHERE IsEnabled = 1                                                      
+                                                                
+ --SELECT '' pk_yearID, '-- Select Year --' description                                                                   
+ --UNION                                                                
+ SELECT pk_finid pk_yearID, Cast(year(date1) as varchar)+ ' - ' + cast(year(date2)as varchar)description                                     
+ FROM SAL_Financial_Year                                    
+ ORDER BY description Desc                                        
+                                                            
+END                                                                                                
+                                                         
+--Utilization Certificate                                                                                                
+Else if(@mode=12)                                                                                                
+BEGIN                                                                                                
+ Select '' pk_research_ID,'-- Select Research Title --' Research_title                                                                                                   
+ Union                                                                                                          
+ Select pk_research_ID ,Research_title from RSM_ResearchSubmission_Dtl                                                                                                     
+ inner join RSM_ResearchApproval On pk_research_ID=fk_research_id                                                                                                
+ where fk_insUserID = Case when (                              
+  (Select top 1 userid                                                                                                       
+  From OPENXML(@Idoc,'/NewDataSet/userid',2)                                                                                                          
+  WITH (userid varchar(15))))<>'' then   (Select top 1 userid                                                    
+  From OPENXML(@Idoc,'/NewDataSet/userid',2)                                                                                   
+  WITH (userid varchar(15))) Else   fk_insUserID End                                                                                       
+END                                                                                                  
+--Media Type                                                                                                
+Else if @mode=13                                                                                            
+BEGIN                             
+ Select '' pk_medid, '-- Select Media Type --' Media_tpe                                                                                                 
+ Union                                                                                                
+ Select pk_medid,Media_tpe from RSM_Mediatype                                                                      
+                                                                           
+  Select '' pk_pbid, '-- Select Publication Type --' Pubname            
+ Union                                                                                                
+ Select pk_pbid,Pubname from RSM_Publication_mst                                                   
+END                                                                                                
+--Research for Patent Management                                                                                                   
+Else if @mode=14                                                                                                
+BEGIN                                                                                                
+ Select '' pk_research_ID,'-- Select Research Title --' Research_title                                                                    
+ Union                                                          
+ Select pk_research_ID ,Research_title from RSM_ResearchSubmission_Dtl                                                                   
+ inner join RSM_FinalResearch_Submission On pk_research_ID=fk_research_id                          
+                                                                                              
+Select '' pk_research_ID,'-- Select Research Title --' Research_title                                                     
+ Union                                                                                                          
+ Select pk_research_ID ,Research_title from RSM_ResearchSubmission_Dtl                                                                                                     
+ inner join RSM_FinalResearch_Submission On pk_research_ID=fk_research_id                                                                                   
+                                                                                                 
+ Select '' pk_rscid,'-- Select Research Center --' Rname                                                                                        
+ Union                                                                                                      
+ Select pk_rscid,Rname from RSM_ResarchCenter_Mst                                    
+END                                                                                                 
+  Else if(@mode=15)                                                                                                
+BEGIN                                                                                                
+                                                                      
+  declare @pk_acid int                                                                      
+  set @pk_acid=(select  pk_acid From OPENXML(@Idoc,'/NewDataSet/userid',2)                                                                                                        
+  WITH (pk_acid int))                                                             
+--     Select distinct  pk_comid, pk_research_ID ,Research_title ,Researcher_name,isnull(Remarks,'')  Remarks,cast(case when isnull(pk_redtlid,0)=0 then 0 else 1 end as bit) checked                                                       
+--  from RSM_ResearchSubmission_Dtl                                                                                      
+--  --inner join RSM_CPRCMeeting_dtl On pk_research_ID=fk_research_id                                      
+--  left join RSM_Meeting_research_dtl on  pk_research_ID=fk_resid  and  fk_macid in(select pk_macid from RSM_Meeting_dtl where  Fk_commitid=@pk_acid)                                                                                             
+--where --RSM_ResearchSubmission_Dtl.submit=0 and                                                          
+--   pk_comid= @pk_acid and Implementation_Dept = case when (Select  deptid From OPENXML(@Idoc,'/NewDataSet/userid',2) WITH (deptid varchar(15))) = '' or                                                                  
+--     (Select  deptid From OPENXML(@Idoc,'/NewDataSet/userid',2) WITH (deptid varchar(15))) is null then  Implementation_Dept else                                                                   
+--  (Select  deptid From OPENXML(@Idoc,'/NewDataSet/userid',2) WITH (deptid varchar(15))) end                                                                  
+--   and fk_insUserID = (Select  userid From OPENXML(@Idoc,'/NewDataSet/userid',2) WITH (userid varchar(15)))                                                                  
+--   and fk_locid=  (Select  locid From OPENXML(@Idoc,'/NewDataSet/userid',2) WITH (locid varchar(15)))                                           
+                                          
+ Select distinct  pk_comid, pk_research_ID ,Research_title ,Researcher_name,isnull(RSM_Meeting_research_dtl.Remarks,'')  Remarks,cast(case when isnull(pk_redtlid,0)=0 then 0 else 1 end as bit) checked                                                      
+ 
+  from RSM_ResearchSubmission_Dtl                                         
+  --inner join RSM_CPRCMeeting_dtl On pk_research_ID=fk_research_id                                        
+  inner join RSM_IntimationtoDR_Dtl On pk_research_ID=fk_research_id                           
+  left join RSM_Meeting_research_dtl on  pk_research_ID=fk_resid                                         
+   and  fk_macid in(select pk_macid from RSM_Meeting_dtl where  Fk_commitid=50)                                         
+    where --RSM_ResearchSubmission_Dtl.submit=0 and                          
+ fk_depto = case when (Select  deptid From OPENXML(@Idoc,'/NewDataSet/userid',2) WITH (deptid varchar(15))) = '' or                                                        
+                          
+     (Select  deptid From OPENXML(@Idoc,'/NewDataSet/userid',2) WITH (deptid varchar(15))) is null then  fk_depto else                                                                   
+  (Select  deptid From OPENXML(@Idoc,'/NewDataSet/userid',2) WITH (deptid varchar(15))) end                                                                  
+   and fk_insUserID = (Select  userid From OPENXML(@Idoc,'/NewDataSet/userid',2) WITH (userid varchar(15)))                                                                  
+   and fk_locid=  (Select  locid From OPENXML(@Idoc,'/NewDataSet/userid',2) WITH (locid varchar(15)))                                           
+  and RSM_IntimationtoDR_Dtl.submit <> 2                                        
+                                          
+                                                                                    
+END                                                              
+   Else if (@mode=16)                                                                 
+BEGIN                                                      
+ -- Page load --                                                                                            
+  --Select '' pk_research_ID,'-- Select Research Title --' Research_title                 
+  --Union                                                                                                      
+  --Select pk_research_ID ,Research_title from RSM_ResearchSubmission_Dtl                                                                                                 
+  --inner join RSM_CPRCMeeting_dtl On pk_research_ID=fk_research_id                                                                                           
+  --where RSM_CPRCMeeting_dtl.submit=0 and Meeting_Status<>'R'  and pk_research_ID not in (Select fk_research_id from RSM_IntimationtoDR_Dtl)                                                                           
+ Select '' pk_research_ID,'-- Select Research Title --' Research_title                                                                                             
+ Union                                                                                                    
+ Select pk_research_ID ,Research_title from RSM_ResearchSubmission_Dtl                                                                   
+ --inner join RSM_Meeting_research_dtl on  pk_research_ID=fk_resid and  isnull(RSM_Meeting_research_dtl.submit,0)=1                                                                                              
+ where pk_research_ID not in                      
+ (--select fk_research_id from RSM_CPRCMeeting_dtl where Meeting_Status='R'                                                                          
+ --union                                                                          
+ --Select fk_research_id from RSM_DACMeeting_dtl where Meeting_Status='R'                                                                          
+ --union                              
+ Select fk_research_id from RSM_IntimationtoDR_Dtl                                                                          
+ )                                                                                               
+                                                                                            
+  -- Edit --                              
+  Select '' pk_research_ID,'-- Select Research Title --' Research_title                       Union                                                                                                      
+  Select pk_research_ID ,Research_title from RSM_ResearchSubmission_Dtl                                                                                                 
+                                                                                            
+END          --Research Title for ResearchApproval                                                                                            
+                                                  
+COMMIT TRAN                                                                                                        
+END TRY                                                
+BEGIN CATCH                                                                                              
+IF @@TRANCOUNT > 0                                         
+ROLLBACK                                                                                                                        
+-- Raise an error with the details of the exception                                                                                                                                          
+DECLARE @ErrMsg nvarchar(4000), @ErrSeverity int                                                                                                              
+SELECT @ErrMsg = ERROR_MESSAGE(),                                                                                                                                    
+@ErrSeverity = ERROR_SEVERITY()                                                                                                                           
+RAISERROR(@ErrMsg, @ErrSeverity, 1)                                                                                                
+END CATCH                                                                                         
+                                                                                 
+EXEC sp_xml_removedocument @Idoc                                                                                    
+                                                                                                     
+END 
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+/*                                                                  
+ Alterd By: Jaipal Sajwan                                                                  
+ On Date  : 01 Sept 2015                                                        
+*/                                                             
+--/*                                                                  
+CREATE PROCEDURE [dbo].[RSM_ResearchproposalSubmission_ALL]                                                        
+(                                                                  
+ @Doc nvarchar(max),                                                                  
+ @pk_id int,                                                               
+ @mode int                                                                          
+)                                                                  
+AS                                                                  
+--*/                                                                  
+/*                                                                  
+Declare @Doc nvarchar(max) = '<NewDataSet>      
+  <RSM_ResearchSubmission_Dtl>      
+    <pk_research_ID>0</pk_research_ID>      
+    <Research_no>RPCAU/0011</Research_no>      
+    <Research_title>Engine Exp</Research_title>      
+    <Researcher_name>EXpert</Researcher_name>      
+    <Research_fk_rsid>1</Research_fk_rsid>      
+    <Research_fk_rcid>1</Research_fk_rcid>      
+    <Scheme_name>Imprest/Suspense  (Imprest ),CCCS(GOI)  (testDemo)</Scheme_name>      
+    <Research_Description />      
+    <Research_Duration>5</Research_Duration>      
+    <Research_Start_Date>2024-01-01T00:00:00+05:30</Research_Start_Date>      
+    <Research_Completion_Date>2029-12-31T00:00:00+05:30</Research_Completion_Date>      
+    <Research_fk_rscid>13</Research_fk_rscid>      
+    <Cost_Expected />      
+    <Cost_Remarks />      
+    <Total_Budget>2500000</Total_Budget>      
+    <Experiment>N</Experiment>      
+    <Exp_comment />      
+    <Funding_agency />      
+    <submit>1</submit>      
+    <fk_insUserID>AH-1</fk_insUserID>      
+    <fk_updUserID>AH-1</fk_updUserID>      
+    <Exp_Approved>N</Exp_Approved>      
+    <fk_Scid>5384</fk_Scid>      
+    <pk_comid>4</pk_comid>      
+    <pk_comidTo>0</pk_comidTo>      
+    <fk_depto>CA-334</fk_depto>      
+    <Fk_Locid>AH-1</Fk_Locid>      
+    <Scheme_code>Imprest ,testDemo</Scheme_code>      
+    <fk_ddoId>AH-1</fk_ddoId>      
+  </RSM_ResearchSubmission_Dtl>      
+  <RSM_Research_Cost_dtl>      
+    <pk_costtypeid>0</pk_costtypeid>      
+    <fk_research_ID>0</fk_research_ID>      
+    <Costtype />      
+  </RSM_Research_Cost_dtl>      
+  <RSM_Research_Objectives>      
+    <pk_activityid>0</pk_activityid>      
+    <objective>y</objective>      
+    <ExpectedOutput>Expected Output</ExpectedOutput>      
+    <ExpectedGrowth>Expected Outcom</ExpectedGrowth>      
+    <Remarks>Remarks</Remarks>      
+  </RSM_Research_Objectives>      
+</NewDataSet> ',      
+      
+      
+@pk_id int = 18, @mode int = 1                                                              
+--*/                                                                  
+Declare @Idoc Int                                                                                          
+BEGIN                                                                                          
+                                                                                      
+BEGIN TRAN                                                                                          
+BEGIN TRY                                                                   
+--INS                                                                  
+if @mode=0                                                                  
+BEGIN                                                                  
+ EXEC sp_xml_preparedocument @Idoc OUTPUT, @Doc                                                                                          
+ SET TRANSACTION ISOLATION LEVEL SERIALIZABLE                              
+                               
+ Insert Into RSM_ResearchSubmission_Dtl           
+ (                              
+  Research_no, Researcher_name, Total_Budget, Experiment, Exp_comment, Exp_Approved, Funding_agency,                                           
+  Research_title, Research_Proposal_Date, Research_fk_rsid, Research_fk_rcid, Scheme_name,                              
+  Implementation_Dept, Implementation_fk_agid, Research_Description, icarcode, Research_Duration,                               
+  Research_Start_Date, Research_Completion_Date, Research_fk_rscid, Division_name, Cost_Expected,                               
+  Cost_fk_fcid, Cost_fk_fid, Cost_Remarks, submit, fk_insUserID, fk_insDateID, District, fk_Scid,                               
+  pk_comid, pk_comidTo, fk_depto, Fk_Locid, Scheme_code, P_Sr_No, T_Details, pk_catid, fk_seasonid,                       
+  IsDirectEntry, fk_ddoId                             
+ )                                                     
+ Select Research_no, Researcher_name, Total_Budget, Experiment, Exp_comment, Exp_Approved, Funding_agency,                                                        
+ Research_title, Research_Proposal_Date, Research_fk_rsid, Research_fk_rcid, Scheme_name,                               
+ Implementation_Dept, Implementation_fk_agid, Research_Description, icarcode, Research_Duration,                               
+ Research_Start_Date, Research_Completion_Date, Research_fk_rscid, Division_name, Cost_Expected,                               
+ Cost_fk_fcid, Cost_fk_fid, Cost_Remarks, submit, fk_insUserID, GETDATE(), District, fk_Scid, pk_comid,                               
+ pk_comidTo, fk_depto, Fk_Locid, Scheme_code, P_Sr_No, T_Details, pk_catid, fk_seasonid,                   
+ IsDirectEntry, fk_ddoId                                          
+ From OPENXML(@Idoc, '/NewDataSet/RSM_ResearchSubmission_Dtl', 2)                                                                     
+ WITH (Research_no varchar(35), Researcher_name varchar(100), Total_Budget varchar(20), Experiment varchar(1), Exp_comment varchar(255),                               
+ Exp_Approved varchar(1), Funding_agency varchar(255), Research_title varchar(255), Research_Proposal_Date varchar(10),                               
+ Research_fk_rsid int, Research_fk_rcid int, Scheme_name varchar(max), Implementation_Dept varchar(15),                               
+ Implementation_fk_agid int, Research_Description nvarchar(max), icarcode varchar(20), Research_Duration varchar(255),           
+ Research_Start_Date varchar(10), Research_Completion_Date varchar(10), Research_fk_rscid int, Division_name varchar(255),          
+ Cost_Expected varchar(10), Cost_fk_fcid int, Cost_fk_fid int, Cost_Remarks varchar(255), submit int, fk_insUserID varchar(15),                               
+ fk_updUserID varchar(15), fk_insDateID varchar(15), fk_updDateID varchar(15), District varchar(1000), fk_Scid varchar(100),                               
+ pk_comid int, pk_comidTo int, fk_depto varchar(10), Fk_Locid varchar(10), Scheme_code varchar(500), P_Sr_No nvarchar(100),                               
+ T_Details nvarchar(2000), pk_catid char(1), fk_seasonid int, IsDirectEntry int, fk_ddoId varchar(15))            
+          
+ Declare @pkid int                                                        
+ set @pkid = @@IDENTITY                                                        
+                               
+ Insert into RSM_ResearchDistrict_Dtl                                                      
+ (                              
+  fk_districtid,                               
+  fk_research_id                              
+ )                                                      
+  Select fk_districtid, @pkid                                                      
+  From OPENXML(@Idoc, '/NewDataSet/RSM_ResearchDistrict_Dtl', 2)                                                       
+  With(fk_districtid int)                                         
+                                                       
+  Insert into RSM_Research_Members_dtl       
+  (                               
+   fk_research_ID, fk_memberid, fk_type, fk_roleid, active, dfrom, dto, Remarks, Designation, Payscale, salary                              
+  )                                                        
+ Select @pkid, fk_memberid, fk_type, fk_roleid, active, dfrom, dto, Remarks, Designation, Payscale, salary                                                      
+ From OPENXML(@Idoc, '/NewDataSet/RSM_Research_Members_dtl', 2)                                                             
+ With(fk_memberid varchar(15), fk_type char(1), fk_roleid int, active bit, dfrom varchar(10), dto varchar(10),                               
+ Remarks varchar(255), Designation varchar(80), Payscale varchar(80), salary varchar(80))                                                        
+                                                         
+ Insert into RSM_Research_Objectives                                                        
+ (                              
+  fk_research_ID, objective, ExpectedOutput, ExpectedGrowth, Remarks, Fk_sessionid, Praposal, SeasonId                              
+ )                                                        
+ Select @pkid, objective, ExpectedOutput, ExpectedGrowth, Remarks, Fk_sessionid, Praposal, SeasonId                                                        
+ From  OPENXML(@Idoc,'/NewDataSet/RSM_Research_Objectives',2)                                                             
+ With(objective nvarchar(max), ExpectedOutput nvarchar(max), ExpectedGrowth nvarchar(max), Remarks nvarchar(max),                               
+ Fk_sessionid varchar(10), Praposal varchar(250), SeasonId int)                                                        
+                                                         
+ Insert into RSM_Research_Cost_dtl                                                        
+ (                              
+  fk_research_ID, fK_YearId, fk_finid, fk_quarterid, Costtype, Amount                              
+ )                                                        
+ Select @pkid, fK_YearId, fk_finid, fk_quarterid, Costtype, Amount                                                        
+ From OPENXML(@Idoc, '/NewDataSet/RSM_Research_Cost_dtl', 2)                                                             
+ With(fK_YearId varchar(10), fk_finid varchar(15), fk_quarterid int, Costtype varchar(50), Amount numeric(18, 2))                                                        
+                                
+Insert into RSM_Research_FileDtl                                                        
+ (                              
+  fk_research_ID, typeofresource, uploadfile, uploadfileName, typeoffile, FilePath                              
+ )                                                        
+ Select @pkid, typeofresource, uploadfile, uploadfileName, typeoffile, FilePath                                                        
+ From OPENXML(@Idoc, '/NewDataSet/RSM_Research_FileDtl', 2)                                                             
+ With(typeofresource varchar(5), uploadfile varchar(250), uploadfileName varchar(250), typeoffile varchar(10),                               
+ FilePath varchar(500))                                                        
+                                           
+ Insert into RSM_ResearchScheme_Dtl                                                      
+ (                              
+  fk_Schemeid, fk_research_id, Headchode                              
+ )                              
+ Select distinct fk_schemeid, @pkid, Headchode                              
+ From OPENXML(@Idoc, '/NewDataSet/RSM_ResearchScheme_Dtl', 2)                               
+ With(fk_schemeid int, Headchode varchar(10))                                            
+                                          
+END                                  
+--UPD                                                                  
+if @mode=1                                                                  
+BEGIN                          
+ EXEC sp_xml_preparedocument @Idoc OUTPUT, @Doc                                                                                        
+ SET TRANSACTION ISOLATION LEVEL SERIALIZABLE                                                                      
+                                                               
+ Update RSM_ResearchSubmission_Dtl                                                        
+ set                       
+ Research_no=x.Research_no,                      
+ Researcher_name=x.Researcher_name,                                                        
+ Total_Budget=x.Total_Budget,                                                        
+ Experiment=x.Experiment,                                                
+ Exp_comment=x.Exp_comment,                                                      
+ Exp_Approved=x.Exp_Approved,                                                      
+ Funding_agency=x.Funding_agency,                                                        
+ Research_title=x.Research_title ,                                         
+ Research_Proposal_Date=x.Research_Proposal_Date,                                                        
+ Research_fk_rsid=x.Research_fk_rsid,                                                        
+ Research_fk_rcid=x.Research_fk_rcid,                                                  
+ Scheme_name=x.Scheme_name,                                                        
+ Implementation_Dept=x.Implementation_Dept,                                                        
+ Implementation_fk_agid=x.Implementation_fk_agid,                                                        
+ Research_Description=x.Research_Description,                                                        
+ icarcode=x.icarcode,                                                        
+ Research_Duration=x.Research_Duration,                                                        
+ Research_Start_Date=x.Research_Start_Date,                                                        
+ Research_Completion_Date=x.Research_Completion_Date,                                                   
+ Research_fk_rscid=x.Research_fk_rscid,                                                        
+ Division_name=x.Division_name,                                                        
+ Cost_Expected=x.Cost_Expected,                                                        
+ Cost_fk_fcid=x.Cost_fk_fcid,                                                        
+ Cost_fk_fid=x.Cost_fk_fid,                                                        
+ Cost_Remarks=x.Cost_Remarks,                                                        
+ fk_updUserID=x.fk_updUserID,                            
+ fk_updDateID=getdate(),                                                        
+ submit=x.submit  ,                                                      
+ District=x.District,          
+ fk_Scid =x.fk_Scid,                                          
+ pk_comid =x.pk_comid,                                          
+ pk_comidTo =x.pk_comidTo,                                          
+ fk_depto=x.fk_depto,                                          
+ Fk_Locid=x.Fk_Locid,                                          
+ Scheme_code=x.Scheme_code,                                           
+ P_Sr_No=x.P_Sr_No,                                          
+ T_Details=x.T_Details ,                                          
+ pk_catid =x.pk_catid ,                                          
+ fk_seasonid=x.fk_seasonid,                            
+ IsDirectEntry = x.IsDirectEntry,                  
+ fk_ddoId=x.fk_ddoId                  
+ From OPENXML(@Idoc, '/NewDataSet/RSM_ResearchSubmission_Dtl', 2)                                                                     
+ WITH (Research_no varchar(35), Researcher_name varchar(100), Total_Budget varchar(20), Experiment varchar(1), Exp_comment varchar(255),                               
+ Exp_Approved varchar(1), Funding_agency varchar(255), Research_title varchar(255), Research_Proposal_Date varchar(10),                               
+ Research_fk_rsid int, Research_fk_rcid int, Scheme_name varchar(max), Implementation_Dept varchar(15),                               
+ Implementation_fk_agid int, Research_Description nvarchar(max), icarcode varchar(20), Research_Duration varchar(255),                               
+ Research_Start_Date varchar(10), Research_Completion_Date varchar(10), Research_fk_rscid int, Division_name varchar(255),                               
+ Cost_Expected varchar(10), Cost_fk_fcid int, Cost_fk_fid int, Cost_Remarks varchar(255), submit int,                               
+ fk_insUserID varchar(15), fk_updUserID varchar(15), fk_insDateID varchar(15), fk_updDateID varchar(15),                               
+ District varchar(1000), fk_Scid varchar(100), pk_comid int, pk_comidTo int, fk_depto varchar(10),                               
+ Fk_Locid varchar(10), Scheme_code varchar(500), P_Sr_No nvarchar(100), T_Details nvarchar(2000),                               
+ pk_catid char(1), fk_seasonid int, IsDirectEntry int, fk_ddoId varchar(15)) x                                                        
+ where RSM_ResearchSubmission_Dtl.pk_research_ID = @pk_id      
+      
+ -- select * into #temp from RSM_Research_Objectives where fk_research_id = @pk_id    
+   
+ Delete from RSM_Research_Objectives where fk_research_id = @pk_id   
+                               
+ Delete from RSM_ResearchDistrict_Dtl where fk_research_id=@pk_id                                                        
+                                                      
+ Delete from RSM_Research_Members_dtl where fk_research_ID=@pk_id                                                        
+                                                         
+ Delete from RSM_Research_Objectives where fk_research_ID=@pk_id                                                        
+                                                     
+ Delete from RSM_Research_Cost_dtl where fk_research_ID=@pk_id                                                        
+                                                         
+ Delete from RSM_Research_FileDtl where fk_research_ID=@pk_id                              
+                               
+ Delete from RSM_ResearchScheme_Dtl where fk_research_id=@pk_id                              
+                               
+ Insert into RSM_ResearchDistrict_Dtl                                                      
+ (                              
+  fk_districtid, fk_research_id                              
+ )                              
+ Select fk_districtid, @pk_id                              
+ From OPENXML(@Idoc, '/NewDataSet/RSM_ResearchDistrict_Dtl', 2)                              
+ With(fk_districtid int)                              
+                               
+ Insert into RSM_ResearchScheme_Dtl                                                      
+ (                              
+  fk_Schemeid, fk_research_id, headchode                              
+ )                              
+ Select distinct fk_Schemeid, @pk_id, Headchode                               
+ From OPENXML(@Idoc, '/NewDataSet/RSM_ResearchScheme_Dtl', 2)                              
+ With(fk_Schemeid int, Headchode varchar(10))                              
+                               
+ Insert into RSM_Research_Members_dtl                                                        
+ (                         
+  fk_research_ID, fk_memberid, fk_type, fk_roleid, active, dfrom, dto, Remarks, Designation, Payscale, salary                               
+ )                                                        
+ Select @pk_id, fk_memberid, fk_type, fk_roleid, active, dfrom, dto, Remarks, Designation, Payscale, salary                                                         
+ From OPENXML(@Idoc, '/NewDataSet/RSM_Research_Members_dtl', 2)                                                   
+ With(fk_memberid varchar(15), fk_type char(1), fk_roleid int, active bit, dfrom varchar(10), dto varchar(10),                               
+ Remarks varchar(255), Designation varchar(80), Payscale varchar(80), salary varchar(80) )                                                        
+               
+ Insert into RSM_Research_Objectives                                                        
+ (                              
+  fk_research_ID, objective, ExpectedOutput, ExpectedGrowth, Remarks, Fk_sessionid, Praposal, SeasonId                              
+ )                                                        
+ Select @pk_id, objective, ExpectedOutput, ExpectedGrowth, Remarks, Fk_sessionid, Praposal, SeasonId                                                        
+ From OPENXML(@Idoc, '/NewDataSet/RSM_Research_Objectives', 2)                       
+ With(objective nvarchar(max), ExpectedOutput nvarchar(max), ExpectedGrowth nvarchar(max),                               
+ Remarks nvarchar(max), Fk_sessionid varchar(10), Praposal varchar(250), SeasonId int)                              
+                               
+ Insert into RSM_Research_Cost_dtl                              
+ (                              
+  fk_research_ID, fK_YearId, fk_finid, fk_quarterid, Costtype, Amount                              
+ )                                                        
+ Select @pk_id, fK_YearId, fk_finid, fk_quarterid, Costtype, Amount                                                        
+ From  OPENXML(@Idoc, '/NewDataSet/RSM_Research_Cost_dtl', 2)                                                             
+ With(fK_YearId varchar(10), fk_finid varchar(15), fk_quarterid int, Costtype varchar(50), Amount numeric(18, 2))                              
+                               
+ Insert into RSM_Research_FileDtl                                                        
+ (                              
+  fk_research_ID, typeofresource, uploadfile, uploadfileName, typeoffile, FilePath                              
+ )                                                        
+ Select @pk_id, typeofresource, uploadfile, uploadfileName, typeoffile, FilePath                             
+ From OPENXML(@Idoc, '/NewDataSet/RSM_Research_FileDtl', 2)                                                             
+ With(typeofresource varchar(5), uploadfile varchar(250), uploadfileName varchar(250),                               
+ typeoffile varchar(10), FilePath varchar(500))                              
+                               
+ --update RSM_Research_Objectives                               
+ --set RSM_Research_Objectives.ExpectedOutput = #temp.ExpectedOutput                                  
+ --from #temp   
+ --where RSM_Research_Objectives.fk_research_ID = #temp.fk_research_ID   
+                                   
+ --drop table #temp       
+                              
+END                                                               
+--FillGrid                               
+if @mode=2                                                                  
+BEGIN                                          
+ EXEC sp_xml_preparedocument @Idoc OUTPUT, @Doc                                                                                          
+ SET TRANSACTION ISOLATION LEVEL SERIALIZABLE                               
+                               
+ select pk_research_ID, Research_title, CONVERT(varchar(10), Research_Start_Date, 103) Research_Start_Date,                      
+ CONVERT(varchar(10), Research_Completion_Date, 103) Research_Completion_Date, Rname,                               
+ Cast(isnull(submit, 0) as bit) submit,                               
+ case when pk_catid = 'T' then 'Technical programme' else 'Project' end category                                          
+ from RSM_ResearchSubmission_Dtl                           
+ Left outer join RSM_ResarchCenter_Mst On pk_rscid = Research_fk_rscid                                                       
+ where fk_insUserID = case when (select fk_insUserID From OPENXML(@Idoc, '/NewDataSet/RSM_ResearchSubmission_Dtl', 2)                              
+ WITH (fk_insUserID varchar(15), Fk_Locid varchar(10)) ) = 'LU-1' then fk_insUserID else                               
+ (select fk_insUserID From OPENXML(@Idoc, '/NewDataSet/RSM_ResearchSubmission_Dtl', 2)                                      
+ WITH (fk_insUserID varchar(15), Fk_Locid varchar(10)) )end                                            
+ --where fk_insUserID =(select fk_insUserID  From OPENXML(@Idoc,'/NewDataSet/RSM_ResearchSubmission_Dtl',2)                                                                      
+ --WITH (fk_insUserID varchar(15),Fk_Locid varchar(10)))                                          
+ and Fk_Locid = (select Fk_Locid From OPENXML(@Idoc, '/NewDataSet/RSM_ResearchSubmission_Dtl', 2)                                                                     
+ WITH (fk_insUserID varchar(15), Fk_Locid varchar(10)))                         
+ and Cast(isnull(isdirectEntry, 0) as int ) = 0                        
+END                                           
+                                                 
+--DELETE                                                                  
+if @mode=3                                                                  
+BEGIN                              
+                              
+ Delete from RSM_Research_Members_dtl where fk_research_ID = @pk_id                                                        
+                                                         
+ Delete from RSM_Research_Objectives where fk_research_ID = @pk_id                                                        
+                                                         
+ Delete from RSM_Research_Cost_dtl where fk_research_ID = @pk_id                                                        
+                                                         
+ Delete from RSM_Research_FileDtl where fk_research_ID = @pk_id                                                        
+                                                       
+ Delete from RSM_ResearchDistrict_Dtl where fk_research_ID = @pk_id                                                        
+                                                         
+ Delete from RSM_ResearchSubmission_Dtl  where pk_research_ID = @pk_id                               
+                               
+END                                                                  
+--EDIT                                                                  
+if @mode=4                                                             
+BEGIN                                                                  
+ select *,                                          
+ CONVERT(varchar(10), dfrom, 103) df, CONVERT(varchar(10), dto, 103) dt,                               
+ isnull(Designation, '') des,                               
+ isnull(Payscale, '') pay, isnull(salary, '') salary, empname                                          
+ from RSM_Research_Members_dtl                     
+ inner join sal_employee_mst on pk_empid = fk_memberid                                                       
+ where fk_research_ID =  @pk_id                              
+           
+ select * from RSM_Research_Objectives                                                        
+ where fk_research_ID=@pk_id                                                        
+                                                         
+ select pk_costtypeid, fk_research_ID, fK_YearId, fk_finid, fk_quarterid, Costtype,                               
+ Cast(Amount as float) Amount                               
+ from RSM_Research_Cost_dtl                                                        
+ where fk_research_ID = @pk_id                                                        
+                         
+ select *, CONVERT(varchar(10), Research_Start_Date, 103) RSD,                               
+ CONVERT(varchar(10), Research_Completion_Date, 103) RCD,                               
+ ISNULL(submit, 0) sub, CAST(Total_Budget as float) TB                                     
+ from RSM_ResearchSubmission_Dtl                                                        
+ where pk_research_ID = @pk_id                                                        
+                                          
+ select * from RSM_Research_FileDtl where fk_research_ID = @pk_id        
+                                                       
+ Select fk_districtid, distric_mst.Description                               
+ from RSM_ResearchDistrict_Dtl                                                      
+ inner join distric_mst On pk_districid = fk_districtid                                                      
+ where fk_research_ID = @pk_id                                          
+                               
+ Select distinct fk_Schemeid, HeadDescription, RSM_ResearchScheme_Dtl.Headchode                            
+ from RSM_ResearchScheme_Dtl                                            
+ inner join Acct_HeadCode H on pk_anc = fk_Schemeid                                                 
+ inner join BMS_DDOBudgetHeadMapp_Mst M on M.fk_anc = H.pk_anc                                          
+ inner join SAL_Financial_Year on pk_finid = fk_finyearid                                                      
+ where fk_research_ID = @pk_id                              
+                              
+END                               
+                        
+if @mode=5                                                                  
+BEGIN                                          
+ EXEC sp_xml_preparedocument @Idoc OUTPUT, @Doc                                                                                          
+ SET TRANSACTION ISOLATION LEVEL SERIALIZABLE                               
+                               
+ select pk_research_ID, Research_title, CONVERT(varchar(10), Research_Start_Date, 103) Research_Start_Date,                               
+ CONVERT(varchar(10), Research_Completion_Date, 103) Research_Completion_Date, Rname,                               
+ Cast(isnull(submit, 0) as bit) submit,                               
+ case when pk_catid = 'T' then 'Technical programme' else 'Project' end category                                          
+ from RSM_ResearchSubmission_Dtl                                                        
+ Left outer join RSM_ResarchCenter_Mst On pk_rscid = Research_fk_rscid                                                       
+ where fk_insUserID = case when (select fk_insUserID From OPENXML(@Idoc, '/NewDataSet/RSM_ResearchSubmission_Dtl', 2)                        
+ WITH (fk_insUserID varchar(15), Fk_Locid varchar(10)) ) = 'LU-1' then fk_insUserID else                               
+ (select fk_insUserID From OPENXML(@Idoc, '/NewDataSet/RSM_ResearchSubmission_Dtl', 2)                                                                      
+ WITH (fk_insUserID varchar(15), Fk_Locid varchar(10)) )end                                            
+ --where fk_insUserID =(select fk_insUserID  From OPENXML(@Idoc,'/NewDataSet/RSM_ResearchSubmission_Dtl',2)                                                                      
+ --WITH (fk_insUserID varchar(15),Fk_Locid varchar(10)))                                          
+ and Fk_Locid = (select Fk_Locid From OPENXML(@Idoc, '/NewDataSet/RSM_ResearchSubmission_Dtl', 2)                       
+ WITH (fk_insUserID varchar(15), Fk_Locid varchar(10)))                    
+ and IsDirectEntry = 1                       
+     END                                  
+                                                        
+COMMIT TRAN                                                        
+END TRY                                                            
+BEGIN CATCH                                                                                          
+IF @@TRANCOUNT > 0                       
+ROLLBACK                                                                                          
+-- Raise an error with the details of the exception                                                                                          
+DECLARE @ErrMsg nvarchar(4000), @ErrSeverity int                                                                                          
+SELECT @ErrMsg = ERROR_MESSAGE(), @ErrSeverity = ERROR_SEVERITY()                                                        
+RAISERROR(@ErrMsg, @ErrSeverity, 1)                                                               
+END CATCH                                                                             
+if @mode=0 OR @mode=1                                                                               
+EXEC sp_xml_removedocument @Idoc                                              
+END 
+
+
+------------------------------------------------------------------------------------------------------------------------------------------
+
+/*            
+ Alterd By: Jaipal Sajwan            
+ On Date   : 26 Aug 2015  
+*/            
+--/*            
+CREATE PROCEDURE [dbo].[RSM_ResearchSector_ALL]            
+(            
+ @Doc nvarchar(max),            
+ @pk_rsid int,         
+ @mode int,  
+ @department varchar(10)       
+ --@fk_clientid int,            
+ --@fk_locid int,                    
+)            
+AS            
+--*/            
+/*            
+Declare @Doc nvarchar(max)='            
+          
+',            
+@pk_rscid int=3,            
+ @fk_clientid int=1,            
+ @fk_locid int=2,            
+ @mode int=1            
+             
+*/            
+Declare @Idoc Int                                    
+BEGIN                                    
+                                
+BEGIN TRAN                                    
+BEGIN TRY             
+--INS            
+if @mode=0            
+BEGIN            
+ EXEC sp_xml_preparedocument @Idoc OUTPUT, @Doc                                    
+ SET TRANSACTION ISOLATION LEVEL SERIALIZABLE             
+   
+             
+ Insert Into RSM_ResearchSector_Mst  
+ (RSname,Remarks,Fk_Deptid)            
+ Select RSname,Remarks,Fk_Deptid           
+ From OPENXML(@Idoc,'/NewDataSet/RSM_ResearchSector_Mst',2)               
+ WITH (RSname varchar(100),Remarks  varchar(500),Fk_Deptid varchar(15))            
+END            
+--UPD            
+if @mode=1            
+BEGIN            
+ EXEC sp_xml_preparedocument @Idoc OUTPUT, @Doc                                    
+ SET TRANSACTION ISOLATION LEVEL SERIALIZABLE                
+             
+ Update RSM_ResearchSector_Mst            
+ Set RSname=x.RSname,Remarks=x.Remarks,Fk_Deptid=x.Fk_Deptid        
+ From OPENXML(@Idoc,'/NewDataSet/RSM_ResearchSector_Mst',2)               
+ WITH (RSname varchar(100),Remarks  varchar(500),Fk_Deptid varchar(15))x            
+ where RSM_ResearchSector_Mst.pk_rsid=@pk_rsid  
+END            
+--FillGrid            
+if @mode=2            
+BEGIN            
+ Select pk_rsid,RSname,Remarks,description,Pk_deptid from RSM_ResearchSector_Mst    
+ left join department_mst on pk_deptid=fk_deptid          
+END            
+--DELETE            
+if @mode=3            
+BEGIN            
+ Delete from RSM_ResearchSector_Mst            
+ where pk_rsid=@pk_rsid  
+END            
+--EDIT            
+if @mode=4            
+BEGIN            
+ Select RSM_ResearchSector_Mst.*,description,Pk_deptid from RSM_ResearchSector_Mst   
+ left join department_mst on pk_deptid=fk_deptid            
+ where pk_rsid=@pk_rsid  
+END    
+if @mode=5           
+BEGIN            
+ Select RSM_ResearchSector_Mst.*,description,Pk_deptid from RSM_ResearchSector_Mst   
+ left join department_mst on pk_deptid=fk_deptid            
+ where Fk_Deptid in(@department)  
+  
+END            
+  
+COMMIT TRAN  
+END TRY                                    
+BEGIN CATCH                                    
+IF @@TRANCOUNT > 0                                    
+ROLLBACK                                    
+-- Raise an error with the details of the exception                                    
+DECLARE @ErrMsg nvarchar(4000), @ErrSeverity int                                    
+SELECT @ErrMsg = ERROR_MESSAGE(),                                    
+@ErrSeverity = ERROR_SEVERITY()                                    
+RAISERROR(@ErrMsg, @ErrSeverity, 1)                                    
+END CATCH                       
+if @mode=0 OR @mode=1                         
+EXEC sp_xml_removedocument @Idoc                                    
+END  
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
